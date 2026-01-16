@@ -1,0 +1,24 @@
+# === Java / Spring / Gradle ===
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# === IntelliJ IDEA ===
+.idea/
+*.iml
+
+# === Node / Angular ===
+node_modules/
+dist/
+.angular/
+
+# === OS мусор ===
+Thumbs.db
+.DS_Store
+
+# === Логи ===
+*.log
+
+# === Секреты ===
+.env

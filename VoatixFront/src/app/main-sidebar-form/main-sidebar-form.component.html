@@ -1,0 +1,64 @@
+<div class="horizontal-div-wrapper"
+    style="width: 1500px; height: 8cqh; background-color: #F2F2FF; justify-content: space-between;">
+    <div class="mainDiv">
+
+        <div class="logo">
+            <img src="/assets/VoatixMiniCutted.png" alt="Voatix logo" style="width: 65px; margin-left: 15px;">
+            <span class="logo-text">oatix</span>
+        </div>
+
+        <div class="simpleSelect">
+            <div class="selected" (click)="toggle()">
+                {{ selectedProject?.title || '' }}
+            </div>
+
+            <div class="options" *ngIf="isOpen">
+                <div class="option" *ngFor="let p of projects" (click)="selectProject(p); $event.stopPropagation()">
+                    {{ p.title }}
+                </div>
+            </div>
+        </div>
+
+
+        <div class="section" (click)="clickOnIdeas()">
+            <img *ngIf="selectedSection === 'ideas'" src="assets/icons/rectangle-filled.png" style="width: 30px;"
+                alt="rectangle">
+            <img *ngIf="selectedSection !== 'ideas'" src="assets/icons/rectangle-hollow.png" style="width: 30px;"
+                alt="rectangle">
+            <span class="sectionText">Предложения</span>
+        </div>
+        <div class="section" (click)="clickOnSurveys()">
+            <img *ngIf="selectedSection === 'surveys'" src="assets/icons/rectangle-filled.png" style="width: 30px;"
+                alt="rectangle">
+            <img *ngIf="selectedSection !== 'surveys'" src="assets/icons/rectangle-hollow.png" style="width: 30px;"
+                alt="rectangle">
+            <span class="sectionText">Голосования</span>
+        </div>
+        <div class="section" (click)="clickOnMessages()">
+            <img *ngIf="selectedSection === 'messages'" src="assets/icons/rectangle-filled.png" style="width: 30px;"
+                alt="rectangle">
+            <img *ngIf="selectedSection !== 'messages'" src="assets/icons/rectangle-hollow.png" style="width: 30px;"
+                alt="rectangle">
+            <span class="sectionText">Сообщения</span>
+        </div>
+
+        <div
+            style="height: 455px; width: 200px; margin-top: 20px; display: flex; flex-direction: column; justify-content: flex-end;">
+            <div class="section" style="margin-bottom: 10px;">
+                <img src="/assets/icons/user.png" style="width: 40px; margin-right: 18px;" alt="rectangle">
+                <span class="sectionText" style="font-size: 25;">Профиль</span>
+            </div>
+            <div class="section" style="margin-bottom: 10px;">
+                <img src="/assets/icons/faq.png" style="width: 40px; margin-right: 19px;" alt="rectangle">
+                <span class="sectionText" style="font-size: 25;">Справка</span>
+            </div>
+            <div class="section" style="margin-bottom: 20px;" (click)="clickOnExit()">
+                <img src="/assets/icons/exit.png" style="width: 40px; margin-right: 15px; margin-left: 5px;"
+                    alt="rectangle">
+                <span class="sectionText" style="font-size: 25;">Выход</span>
+            </div>
+        </div>
+
+    </div>
+    <router-outlet></router-outlet>
+</div>

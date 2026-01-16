@@ -1,0 +1,39 @@
+<div class="rightSideDiv">
+    <div class="headlineDiv" style="height: 90px;">
+
+        <h1 style="margin-top: 20px;">Голосования и опросы</h1>
+    </div>
+    <div class="headlineDiv" style="height: 690px; margin-top: 20px; width: 1210px;">
+        <div class="idea-list">
+
+            <div class="voatix-survey-panel" style="justify-content: space-around; height: 600px;" *ngIf="survey">
+                <div class="survey-title">{{ survey.title }}</div>
+
+                <div style="height: 1px; width: 1150px; background-color: #a7a7a7;"><span style="color: White;">a</span>
+                </div>
+
+                <div class="survey-options">
+                    <div style="height: 450px; display: flex; flex-direction: column; justify-content: space-around;">
+                        <div class="option" *ngFor="let p of survey.points">
+                            <div class="option-header">
+                                <span class="option-label" [class.selected]="p.selectedByCurrentUser">
+                                    {{ p.title }}
+                                </span>
+                                <span class="option-percent">{{ p.percent }}%</span>
+                            </div>
+
+                            <div class="option-bar">
+                                <div class="option-fill" [style.width.%]="p.percent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="height: 1px; width: 1150px; background-color: #a7a7a7;"><span style="color: White;">a</span>
+                </div>
+                <div class="survey-description">
+                    {{ survey.description }}
+                </div>
+
+            </div>
+
+        </div>

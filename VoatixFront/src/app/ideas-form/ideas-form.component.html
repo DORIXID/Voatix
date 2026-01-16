@@ -1,0 +1,68 @@
+<div class="rightSideDiv">
+    <div class="headlineDiv" style="height: 200px;">
+
+        <h1 style="margin-top: 20px;">Идеи и предложения</h1>
+
+        <div class="search-wrapper">
+            <input type="text" class="search-input" placeholder="Поиск по ключевому слову" [(ngModel)]="searchedValue">
+            <mat-icon class="searchButton" (click)="loadIdeas(selectedProject!)">search</mat-icon>
+        </div>
+
+        <div class="voatix-tabs">
+            <button class="tab active" (click)="selectTab($event, 'Все')">Все</button>
+            <button class="tab" (click)="selectTab($event, 'Создан')">Создан</button>
+            <button class="tab" (click)="selectTab($event, 'В работе')">В работе</button>
+            <button class="tab" (click)="selectTab($event, 'Готово')">Готово</button>
+            <button class="tab" (click)="selectTab($event, 'Отклонено')">Отклонено</button>
+        </div>
+
+    </div>
+
+    <div class="headlineDiv" style="height: 580px; margin-top: 20px;">
+        <div class="newIdeaDiv" (click)="doNothing()"
+            style="margin-top: 15px; flex-direction: row; display: flex; align-items: center; justify-content: center;">
+            <mat-icon style="margin-right: 15px;">edit</mat-icon>
+            <span>Предложить свою идею</span>
+        </div>
+
+        <div #ideasList class="idea-list">
+            <div class="idea-card" *ngFor="let idea of ideas">
+                <div class="idea-header">
+                    <h3>{{ idea.idea.title }}</h3>
+
+                    <span class="idea-status" [ngClass]="getStatusClass(idea.idea.status)">
+                        {{ IdeaStatusRu[idea.idea.status] }}
+                    </span>
+                </div>
+
+                <div style="display: flex; justify-content: flex-start; align-items: flex-start; height: 90px;">
+                    <p class="idea-description">{{ idea.idea.description }}</p>
+                </div>
+
+                <div class="idea-footer">
+                    <div style="display: flex; align-items: center;">
+
+                        <img class="buttonEffect" src="\assets\icons\likeArrow.png" style="width: 25px;"
+                            (click)="doNothing()" alt="likeArrow">
+
+                        <span class="idea-votes" style="margin-right: 5px; margin-left: 3px;">{{idea.likes - idea.disLikes}}</span>
+
+                        <img class="buttonEffect" src="\assets\icons\dislikeArrow.png" style="width: 25px;"
+                            (click)="doNothing()" alt="dislikeArrow">
+                    </div>
+
+                    <span class="idea-date">{{ idea.idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</span>
+                </div>
+            </div>
+            <!-- Пагинация -->
+            <div *ngIf="totalPages > 1"
+                style="margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <button class="paginator-button" (click)="prevPage()" [disabled]="page === 0">‹</button>
+                {{ page * limit + 1 }} –
+                {{ (page + 1) * limit > totalElements ? totalElements : (page + 1) * limit }}
+                из {{ totalElements }}
+                <button class="paginator-button" (click)="nextPage()" [disabled]="page >= totalPages - 1">›</button>
+            </div>
+        </div>
+    </div>
+</div>

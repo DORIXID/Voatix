@@ -1,0 +1,31 @@
+<div class="logo">
+    <img src="assets/VoatixMiniCutted.png" alt="Voatix logo" style="width: 80px;">
+    <span class="logo-text">oatix</span>
+</div>
+<div class="vertical-div-wrapper" style="width: 500px; height: 600px;">
+    <form (ngSubmit)="loginBtnClick()" class="vertical-div-wrapper" style="width: 500px; height: 600px;">
+        <h1>Вход</h1>
+        <mat-form-field style="width: 350px;">
+            <input matInput [(ngModel)]="username" name="username" placeholder="Логин">
+        </mat-form-field>
+        <mat-form-field style="width: 350px;">
+            <input matInput [(ngModel)]="password" name="password" placeholder="Пароль"
+                [type]="hide ? 'password' : 'text'">
+            <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+        </mat-form-field>
+        <div *ngIf="error" class="error-text">
+            {{ error }}
+        </div>
+        <button type="submit" class="button" style="width: 370px; height: 45px; font-size: large;">
+            <span>Войти</span>
+        </button>
+        <div class="horizontal-div-wrapper">
+            <div class="line"></div>
+            <span class="or-text">ИЛИ</span>
+            <div class="line"></div>
+        </div>
+        <div style="margin-bottom: 30px;">
+            <span>У вас еще нет акканута? </span><a routerLink="/registration">Зарегистрироваться</a>
+        </div>
+    </form>
+</div>

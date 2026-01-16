@@ -1,0 +1,283 @@
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    max-width: 365px;
+
+    background-color: #f3e6ff;
+    border-radius: 20px;
+    padding: 8px 16px;
+
+    border: 1px solid #cf78ef;
+    transition: 0.2s ease;
+}
+
+.search-wrapper:focus-within {
+    box-shadow: 0 0 0 1px #cf78ef;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    outline: none;
+    color: #000;
+}
+
+//Tab-Filter
+
+.voatix-tabs {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    padding: 4px;
+    background: #f3e6ff;
+    border-radius: 20px;
+}
+
+.voatix-tabs .tab {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.voatix-tabs .tab.active {
+    background: #cf78ef;
+    color: white;
+    font-weight: 500;
+}
+
+.newIdeaDiv {
+    width: 1190px;
+    height: 50px;
+    border-radius: 30px;
+    background: #f3e6ff;
+}
+
+.newIdeaDiv span {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 42px;
+    color: #3B3B3B;
+}
+
+.newIdeaDiv:hover {
+    background-color: #efddff;
+}
+
+.newIdeaDiv:active {
+    background-color: #e3c4ff;
+    transform: translateY(1px);
+}
+
+//idea cards
+.idea-list {
+    padding-right: 5px;
+    padding-top: 5px;
+    /* display: flex; ← УБРАТЬ */
+    /* flex-direction: column; ← УБРАТЬ */
+    gap: 16px;
+    margin-top: 20px;
+    width: 1190px;
+    height: 475px;
+}
+
+
+
+.idea-card {
+    background: #fff;
+    height: 125px;
+    border-radius: 16px;
+    padding: 10px 10px;
+    box-shadow: 0 2px 3px 3px rgba(0, 0, 0, 0.05);
+    border-left: 6px solid #cf78ef;
+    margin-bottom: 16px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.idea-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.idea-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.idea-status {
+    font-size: 14px;
+    color: #888;
+    background: #f3e6ff;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.idea-description {
+    margin: 12px 0;
+    font-size: 15px;
+    color: #444;
+}
+
+.idea-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #666;
+}
+
+.idea-votes {
+    font-weight: 500;
+    color: #cf78ef;
+}
+
+.idea-status {
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Готово — серый */
+.status-done {
+    background: #bfbfbf;
+}
+
+/* В работе — зелёный */
+.status-progress {
+    background: #4caf50;
+}
+
+/* Создан / На рассмотрении — фиолетовый */
+.status-new {
+    background: #cf78ef;
+}
+
+/* Отклонено — красный */
+.status-rejected {
+    background: #e25e5c;
+}
+
+/* fallback */
+.status-default {
+    background: #888;
+}
+
+
+//Buttons
+.buttonEffect {
+    border-radius: 10px;
+}
+
+.buttonEffect:hover {
+    background-color: #fafafa;
+}
+
+.buttonEffect:active {
+    background-color: #ececec;
+    transform: translateY(1px);
+}
+
+
+.voatix-survey-panel {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 18px 20px;
+    border: 1px solid #bdbdbd;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    color: #000000;
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 46px;
+    font-weight: 600;
+
+    .survey-title {
+
+        color: #000000;
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 30px;
+        line-height: 46px;
+        font-weight: 600;
+    }
+
+    .survey-options {
+        margin-top: -20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .option {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            .option-header {
+                display: flex;
+                justify-content: space-between;
+                font-size: 13px;
+
+                .option-label {
+                    color: #000000;
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 25px;
+                    line-height: 46px;
+                }
+
+                .option-percent {
+                    font-family: 'Inter';
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 25px;
+                    line-height: 46px;
+                    color: #000000;
+                }
+            }
+
+            .option-bar {
+                width: 100%;
+                height: 15px;
+                border-radius: 4px;
+                background: #eaeaea;
+                overflow: hidden;
+
+                .option-fill {
+                    height: 100%;
+                    border-radius: inherit;
+                    background: linear-gradient(90deg, #e7c4ff, #bc86e2);
+                    transition: width 0.25s ease-out;
+                }
+            }
+        }
+    }
+
+    .survey-description {
+        font-size: 20px;
+        color: #000000;
+        font-weight: 300;
+        line-height: 1.4;
+        margin-bottom: 100px;
+    }
+}

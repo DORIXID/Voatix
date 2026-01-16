@@ -1,0 +1,34 @@
+.logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 300;
+    height: 100;
+    margin-top: 20;
+    margin-left: 20;
+}
+
+.logo-text {
+    position: relative;
+    font-family: 'Inter';
+    font-style: normal;
+    font-size: 50px;
+    font-weight: 400;
+    color: #CF78EF;
+    top: -15px;
+}
+
+.or-text {
+    font-family: 'Inter';
+    font-style: normal;
+    line-height: 24px;
+    text-align: center;
+    color: #BEBEBE;
+    margin: 10px;
+}
+
+.line {
+    width: 155px;
+    height: 0px;
+    border: 1px solid #BEBEBE;
+}

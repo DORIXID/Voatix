@@ -1,0 +1,28 @@
+<div class="logo">
+    <img src="assets/VoatixMiniCutted.png" alt="Voatix logo" style="width: 80px;">
+    <span class="logo-text">oatix</span>
+</div>
+<div class="vertical-div-wrapper" style="width: 500px; height: 600px;">
+    <h1>Регистрация</h1>
+    <mat-form-field style="width: 350px;">
+        <input matInput placeholder="Почта">
+    </mat-form-field>
+    <mat-form-field style="width: 350px;">
+        <input matInput placeholder="Логин">
+    </mat-form-field>
+    <mat-form-field style="width: 350px;">
+        <input matInput placeholder="Пароль" [type]="hide ? 'password' : 'text'">
+        <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+    </mat-form-field>
+    <button class="button" (click)="registrationBtnClick()" style="width: 370px; height: 45px;">
+        <span>Зарегистрироваться</span>
+    </button>
+    <div class="horizontal-div-wrapper">
+        <div class="line"></div>
+        <span class="or-text">ИЛИ</span>
+        <div class="line"></div>
+    </div>
+    <div style="margin-bottom: 30px;">
+        <span>У вас уже есть акканут? </span><a routerLink="/login">Войти</a>
+    </div>
+</div>

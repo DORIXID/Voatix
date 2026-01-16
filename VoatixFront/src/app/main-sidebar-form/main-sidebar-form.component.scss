@@ -1,0 +1,174 @@
+.logo {
+  width: 300px;
+  height: 80px;
+  margin-top: 15px;
+  margin-left: 85px;
+  justify-content: center;
+}
+
+
+.logo-text {
+  position: relative;
+  font-family: 'Inter';
+  font-style: normal;
+  font-size: 50px;
+  font-weight: 400;
+  color: #CF78EF;
+  top: -10px;
+}
+
+.mainDiv {
+  width: 250px;
+  height: 800px;
+
+  background: #FFFFFF;
+  border-radius: 20px;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profileText {
+  width: 225px;
+  height: 33px;
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 34px;
+
+  color: #000000;
+}
+
+
+.sectionText {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 24px;
+
+  color: #000000;
+}
+
+.faqText {
+  width: 225px;
+  height: 33px;
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 34px;
+
+  color: #000000;
+}
+
+.exitText {
+  width: 225px;
+  height: 33px;
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 34px;
+
+  color: #000000;
+}
+
+
+.faqIco {
+  width: 38px;
+  height: 38px;
+
+  background: url(/assets/icons/help.png);
+}
+
+.exitIco {
+  width: 37px;
+  height: 37px;
+
+  background: url(/assets/icons/exit.png);
+}
+
+.userIco {
+  width: 41px;
+  height: 41px;
+
+  background: url(/assets/icons/user.png);
+}
+
+
+
+.section {
+  justify-content: start;
+  width: 210px;
+  height: 50px;
+  align-items: center;
+  display: flex;
+  border-radius: 10px;
+}
+
+.section:hover {
+  background-color: #fafafa;
+}
+
+.section:active {
+  background-color: #ececec;
+  transform: translateY(1px);
+}
+
+
+
+.simpleSelect {
+  width: 210px;
+  position: relative;
+  user-select: none;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.selected {
+  padding: 10px;
+  background: #efd8ff;
+  height: 35px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-size: 23px;
+  font-weight: 400;
+  color: #CF78EF;
+}
+
+.options {
+  position: absolute;
+  top: 55px;
+  width: 100%;
+  background: #f7eaff;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+  font-family: 'Inter';
+  font-style: normal;
+  font-size: 23px;
+  font-weight: 400;
+  color: #CF78EF;
+}
+
+.option {
+  padding: 10px 10px;
+  cursor: pointer;
+  border-radius: 20px;
+
+  &:hover {
+    background: #f0dcff;
+  }
+}
