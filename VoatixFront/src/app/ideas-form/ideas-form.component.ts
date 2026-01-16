@@ -8,7 +8,6 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CommonModule } from '@angular/common';
 import { IdeaStatus, IdeaStatusRu } from '../service/enums/idea-status.enum';
 import { OnInit } from '@angular/core';
-import { Idea } from '../service/interfaces/idea.interface';
 import { IdeaService } from '../service/idea.service';
 import { ChangeDetectorRef } from '@angular/core';
 import localeRu from '@angular/common/locales/ru';
@@ -60,7 +59,7 @@ export class IdeasFormComponent implements OnInit {
     private projectService: ProjectService,
     private ideaService: IdeaService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.projectService.selectedProject$.subscribe(project => {
@@ -80,7 +79,15 @@ export class IdeasFormComponent implements OnInit {
       .loadIdeas(project.title, this.page, this.limit, filterBy, this.searchedValue)
       .subscribe({
         next: (data) => {
-          this.ideas = data.content as IdeaWithStats[];
+          this.ideas = data.content.map((i: any) => ({
+            ...i,
+            userVote: i.vote === true
+              ? 'like'
+              : i.vote === false
+                ? 'dislike'
+                : ''
+          }));
+
           this.totalPages = data.totalPages;
           this.totalElements = data.totalElements;
 
@@ -90,6 +97,7 @@ export class IdeasFormComponent implements OnInit {
         error: (err) => console.error('Ошибка загрузки идей:', err)
       });
   }
+
 
   private mapStatusToBackend(status: string): string {
     const map: Record<string, string> = {
@@ -123,6 +131,41 @@ export class IdeasFormComponent implements OnInit {
     this.loadIdeas(this.selectedProject!);
   }
 
+  toggleLike(idea: IdeaWithStats) {
+    if (idea.userVote === 'like') {
+      this.ideaService.doVote(idea.idea.id, null).subscribe(() => {});
+      idea.likes = idea.likes - 1;
+      idea.userVote = '';
+    } else if (idea.userVote === 'dislike') {
+      this.ideaService.doVote(idea.idea.id, true).subscribe(() => {});
+      idea.disLikes = idea.disLikes - 1;
+      idea.likes = idea.likes + 1;
+      idea.userVote = 'like';
+    } else {
+      this.ideaService.doVote(idea.idea.id, true).subscribe(() => {});
+      idea.likes = idea.likes + 1;
+      idea.userVote = 'like';
+    }
+  }
+
+  toggleDislike(idea: IdeaWithStats) {
+    if (idea.userVote === 'dislike') {
+      idea.userVote = '';
+      this.ideaService.doVote(idea.idea.id, null).subscribe(() => {});
+      idea.disLikes = idea.disLikes - 1;
+    } else if (idea.userVote === 'like') {
+      this.ideaService.doVote(idea.idea.id, false).subscribe(() => {});
+      idea.likes = idea.likes - 1;
+      idea.disLikes = idea.disLikes + 1;
+      idea.userVote = 'dislike';
+    } else {
+      this.ideaService.doVote(idea.idea.id, false).subscribe(() => {});
+      idea.disLikes = idea.disLikes + 1;
+      idea.userVote = 'dislike';
+    }
+  }
+
+
   //Пагинация
   nextPage() {
     if (this.page < this.totalPages - 1) {
@@ -139,5 +182,5 @@ export class IdeasFormComponent implements OnInit {
   }
 
   //Затычка
-  doNothing() {}
+  doNothing() { }
 }

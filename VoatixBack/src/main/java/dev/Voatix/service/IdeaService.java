@@ -1,11 +1,14 @@
 package dev.Voatix.service;
 
-import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.entity.IdeaEntity;
+import dev.Voatix.entity.UserEntity;
+import dev.Voatix.entity.VotingEstimatesEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import dev.Voatix.mapper.IdeaMapper;
 import dev.Voatix.repositories.IdeaRepository;
+import dev.Voatix.repositories.UserRepository;
+import dev.Voatix.repositories.VotingEstimatesRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
+
 @Slf4j
 @Service
 @Transactional
@@ -24,8 +29,10 @@ public class IdeaService {
 
     private final IdeaRepository ideaRepository;
     private final IdeaMapper ideaMapper;
+    private final UserRepository userRepository;
+    private final VotingEstimatesRepository votingEstimatesRepository;
 
-    public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue) {
+    public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal) {
         IdeaStatusEnum statusEnum;
         if (filterBy.isBlank() || filterBy.equals("ALL")) {
             statusEnum = null;
@@ -37,7 +44,29 @@ public class IdeaService {
             }
         }
         Pageable pageParam = PageRequest.of(page, limit);
-        Page<Object[]> result = ideaRepository.findIdeas(project, statusEnum, searchedValue, pageParam);
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        Page<Object[]> result = ideaRepository.findIdeas(project, userEntity, statusEnum, searchedValue, pageParam);
         return ideaMapper.toStatsPage(result);
+    }
+
+    public void upsertLike(Long ideaId, Boolean isLike, Principal principal) {
+        IdeaEntity ideaEntity = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea not found"));
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        VotingEstimatesEntity votingEstimatesEntity = votingEstimatesRepository.findByUserIdAndIdeaId(userEntity.getId(), ideaEntity.getId())
+                .orElse(null);
+        if (isLike == null){
+            if(votingEstimatesEntity != null) {
+                votingEstimatesRepository.delete(votingEstimatesEntity);
+            } return;
+        } else if (votingEstimatesEntity == null) {
+            votingEstimatesEntity = new VotingEstimatesEntity();
+            votingEstimatesEntity.setIdea(ideaEntity);
+            votingEstimatesEntity.setUser(userEntity);
+        }
+        votingEstimatesEntity.setIsLike(isLike);
+        votingEstimatesRepository.save(votingEstimatesEntity);
     }
 }

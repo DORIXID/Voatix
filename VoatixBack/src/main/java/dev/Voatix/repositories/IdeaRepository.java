@@ -3,18 +3,26 @@ package dev.Voatix.repositories;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.entity.IdeaEntity;
 
+import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
 
     @Query("""
                 select i,
                 sum(case when v.isLike = true then 1 else 0 end) as likes,
-                sum(case when v.isLike = false then 1 else 0 end) as disLikes
+                sum(case when v.isLike = false then 1 else 0 end) as disLikes,
+                (
+                select ve.isLike
+                from VotingEstimatesEntity ve
+                where ve.idea = i and ve.user = :user
+                ) as vote
                 from IdeaEntity i
                 join i.project p
                 left join i.votingEstimates v
@@ -26,9 +34,13 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
             """)
     Page<Object[]> findIdeas(
             String project,
+            UserEntity user,
             IdeaStatusEnum status,
             String search,
             Pageable pageable
     );
 
+    Optional<IdeaEntity> findById(Long id);
+
+    UserEntity user(UserEntity user);
 }

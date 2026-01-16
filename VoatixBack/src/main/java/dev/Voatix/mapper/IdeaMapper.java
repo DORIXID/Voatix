@@ -20,11 +20,13 @@ public abstract class IdeaMapper {
         IdeaEntity idea = (IdeaEntity) row[0];
         Long likes = (Long) row[1];
         Long dislikes = (Long) row[2];
+        Boolean voted = (Boolean) row[3];
 
         return new IdeaWithStatsDTO(
                 toDto(idea),
                 likes,
-                dislikes
+                dislikes,
+                voted
         );
     }
 

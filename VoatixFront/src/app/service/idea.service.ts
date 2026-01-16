@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 
 @Injectable({ providedIn: 'root' })
 export class IdeaService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   loadIdeas(project: string, page: number, limit: number, filterBy: string, searchedValue: string = '') {
     return this.http.get<any>('http://localhost:8080/api/base/ideas', {
@@ -11,4 +11,13 @@ export class IdeaService {
       withCredentials: true
     });
   }
+
+  doVote(ideaId: number, isLike: boolean | null) {
+    return this.http.put<any>(
+      `http://localhost:8080/api/base/ideas/${ideaId}/likes?isLike=${isLike}`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
 }

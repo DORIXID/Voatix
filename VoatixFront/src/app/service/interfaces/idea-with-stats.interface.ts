@@ -4,4 +4,5 @@ export interface IdeaWithStats {
   idea: Idea;
   likes: number;
   disLikes: number;
+  userVote?: String;
 }

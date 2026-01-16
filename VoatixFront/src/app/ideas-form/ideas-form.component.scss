@@ -194,12 +194,17 @@
 }
 
 .buttonEffect:hover {
-  background-color: #fafafa;
+    background-color: #fafafa;
 }
 
 .buttonEffect:active {
-  background-color: #ececec;
-  transform: translateY(1px);
+    background-color: #ececec;
+    transform: translateY(1px);
+}
+
+.buttonEffect.active {
+    background-color: #f1f1f1;
+    transform: scale(1.05);
 }
 
 .searchButton {
@@ -207,9 +212,11 @@
     height: 25px;
     border-radius: 10px;
 }
+
 .searchButton:hover {
     background-color: #00000013;
 }
+
 .searchButton:active {
     background-color: #0000001f;
 }

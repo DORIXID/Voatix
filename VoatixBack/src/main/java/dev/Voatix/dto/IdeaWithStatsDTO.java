@@ -8,16 +8,17 @@ import lombok.Setter;
 @Setter
 @Getter
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IdeaWithStatsDTO {
     private IdeaDTO idea;
     private Long likes;
     private Long disLikes;
+    private Boolean vote;
 
-    public IdeaWithStatsDTO(IdeaDTO idea, Long likes, Long disLikes) {
+    public IdeaWithStatsDTO(IdeaDTO idea, Long likes, Long disLikes, Boolean vote) {
         this.idea = idea;
         this.likes = likes;
         this.disLikes = disLikes;
+        this.vote = vote;
     }
 
     public IdeaWithStatsDTO() {
