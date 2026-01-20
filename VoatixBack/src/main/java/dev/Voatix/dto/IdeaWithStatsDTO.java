@@ -12,13 +12,14 @@ public class IdeaWithStatsDTO {
     private IdeaDTO idea;
     private Long likes;
     private Long disLikes;
-    private Boolean vote;
-
-    public IdeaWithStatsDTO(IdeaDTO idea, Long likes, Long disLikes, Boolean vote) {
+    private Long vote;
+    private Long commentsCount;
+    public IdeaWithStatsDTO(IdeaDTO idea, Long likes, Long disLikes, Long vote, Long commentsCount) {
         this.idea = idea;
         this.likes = likes;
         this.disLikes = disLikes;
         this.vote = vote;
+        this.commentsCount = commentsCount;
     }
 
     public IdeaWithStatsDTO() {

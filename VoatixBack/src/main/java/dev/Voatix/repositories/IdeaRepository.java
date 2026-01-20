@@ -18,11 +18,17 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
                 select i,
                 sum(case when v.isLike = true then 1 else 0 end) as likes,
                 sum(case when v.isLike = false then 1 else 0 end) as disLikes,
-                (
-                select ve.isLike
+                COALESCE((select case when ve.isLike = true then 1L
+                             when ve.isLike = false then -1L
+                                         else 0L end
                 from VotingEstimatesEntity ve
                 where ve.idea = i and ve.user = :user
-                ) as vote
+                ), 0L) as vote,
+                (
+                select count(c)
+                from CommentEntity c
+                where c.idea = i
+                ) as commentsCount
                 from IdeaEntity i
                 join i.project p
                 left join i.votingEstimates v
@@ -31,6 +37,7 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
                   and (i.status = :status or :status is null)
                   and p.title like :project
                 group by i
+                order by i.id
             """)
     Page<Object[]> findIdeas(
             String project,

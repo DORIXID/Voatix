@@ -81,11 +81,11 @@ export class IdeasFormComponent implements OnInit {
         next: (data) => {
           this.ideas = data.content.map((i: any) => ({
             ...i,
-            userVote: i.vote === true
-              ? 'like'
-              : i.vote === false
-                ? 'dislike'
-                : ''
+            userVote: i.vote === 1
+              ? 1
+              : i.vote === -1
+                ? -1
+                : 0
           }));
 
           this.totalPages = data.totalPages;
@@ -132,36 +132,36 @@ export class IdeasFormComponent implements OnInit {
   }
 
   toggleLike(idea: IdeaWithStats) {
-    if (idea.userVote === 'like') {
-      this.ideaService.doVote(idea.idea.id, null).subscribe(() => {});
+    if (idea.userVote === 1) {
+      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
       idea.likes = idea.likes - 1;
-      idea.userVote = '';
-    } else if (idea.userVote === 'dislike') {
-      this.ideaService.doVote(idea.idea.id, true).subscribe(() => {});
+      idea.userVote = 0;
+    } else if (idea.userVote === -1) {
+      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
       idea.likes = idea.likes + 1;
-      idea.userVote = 'like';
+      idea.userVote = 1;
     } else {
-      this.ideaService.doVote(idea.idea.id, true).subscribe(() => {});
+      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
       idea.likes = idea.likes + 1;
-      idea.userVote = 'like';
+      idea.userVote = 1;
     }
   }
 
   toggleDislike(idea: IdeaWithStats) {
-    if (idea.userVote === 'dislike') {
-      idea.userVote = '';
-      this.ideaService.doVote(idea.idea.id, null).subscribe(() => {});
+    if (idea.userVote === -1) {
+      idea.userVote = 0;
+      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
-    } else if (idea.userVote === 'like') {
-      this.ideaService.doVote(idea.idea.id, false).subscribe(() => {});
+    } else if (idea.userVote === 1) {
+      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
       idea.likes = idea.likes - 1;
       idea.disLikes = idea.disLikes + 1;
-      idea.userVote = 'dislike';
+      idea.userVote = -1;
     } else {
-      this.ideaService.doVote(idea.idea.id, false).subscribe(() => {});
+      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
       idea.disLikes = idea.disLikes + 1;
-      idea.userVote = 'dislike';
+      idea.userVote = -1;
     }
   }
 

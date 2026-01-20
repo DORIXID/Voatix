@@ -7,6 +7,7 @@ import dev.Voatix.entity.enums.RoleOfUserEnum;
 import dev.Voatix.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 @Component
 @Transactional
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class TestInitializer implements CommandLineRunner {
     private final PasswordEncoder encoder;
     private final ModeratorRepository moderatorRepository;
     private final VotingEstimatesRepository votingEstimatesRepository;
+    private final CommentRepository commentRepository;
 
     private final Random random = new Random();
 
@@ -85,32 +88,26 @@ public class TestInitializer implements CommandLineRunner {
                 "Установить более удобные стулья",
                 "Текущие стулья выглядят красиво, но сидеть на них долго неудобно",
                 "12.08.25", IdeaStatusEnum.IN_WORK);
-
         createIdea(coffeeWay, user1,
                 "Уменьшить порции кофе",
                 "Не хочется переплачивать за кофе, которое я всё равно не выпью",
                 "16.06.25", IdeaStatusEnum.CANCELLED);
-
         createIdea(coffeeWay, user2,
                 "Добавить сезонные напитки",
                 "Хотелось бы больше лимонадов и авторских напитков летом",
                 "03.07.25", IdeaStatusEnum.CREATED);
-
         createIdea(coffeeWay, admin,
                 "Ввести бонусную систему",
                 "Копить баллы за покупки и обменивать на напитки",
                 "22.04.25", IdeaStatusEnum.IN_WORK);
-
         createIdea(coffeeWay, user1,
                 "Установить зарядки для телефонов",
                 "Очень не хватает USB‑розеток возле столиков",
                 "11.03.25", IdeaStatusEnum.DONE);
-
         createIdea(coffeeWay, user2,
                 "Добавить растительное молоко бесплатно",
                 "Сейчас за него приходится доплачивать, что не очень приятно",
                 "19.09.25", IdeaStatusEnum.CREATED);
-
         createIdea(coffeeWay, admin,
                 "Сделать музыку тише",
                 "Иногда слишком громко, сложно работать или разговаривать",
@@ -156,6 +153,16 @@ public class TestInitializer implements CommandLineRunner {
 
     // ---------------- Методы ----------------
 
+    private void addComment(IdeaEntity idea, UserEntity author, String text) {
+        CommentEntity c = new CommentEntity();
+        c.setIdea(idea);
+        c.setUser(author);
+        c.setText(text);
+        c.setDateTime(new Timestamp(System.currentTimeMillis()));
+        commentRepository.save(c);
+    }
+
+
     private UserEntity createUser(String nickname, String rawPassword, RoleOfUserEnum role) {
 
         UserEntity user = new UserEntity();
@@ -197,6 +204,21 @@ public class TestInitializer implements CommandLineRunner {
         idea.setDateTime(Timestamp.valueOf(formatted));
 
         ideaRepository.save(idea);
+
+        UserEntity user = userRepository.findById(2L).get();
+
+        VotingEstimatesEntity v = new VotingEstimatesEntity();
+        v.setIdea(idea);
+        v.setUser(user);
+        v.setIsLike(false);
+        votingEstimatesRepository.save(v);
+        //Комментиарии
+        addComment(idea, user, "Отличная идея!");
+        addComment(idea, user, "Поддерживаю");
+        addComment(idea, user, "Не уверен, что это нужно");
+        addComment(idea, user, "шрусшзтщлтзлмтлщ");
+        addComment(idea, user, "Тестовый комментарий");
+
     }
 
     private ModeratorEntity addModerator(UserEntity user, ProjectEntity project, RoleOfProjectManager role) {

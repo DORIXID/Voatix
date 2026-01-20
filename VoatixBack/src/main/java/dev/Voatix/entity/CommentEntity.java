@@ -3,6 +3,7 @@ package dev.Voatix.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Setter
@@ -23,6 +24,9 @@ public class CommentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private UserEntity user;
+
+    @Column(nullable = false)
+    private Timestamp dateTime;
 
     @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "comment_id")

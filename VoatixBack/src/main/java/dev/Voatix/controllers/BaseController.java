@@ -1,12 +1,10 @@
 package dev.Voatix.controllers;
 
-import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.ProjectOfUserDTO;
 import dev.Voatix.service.IdeaService;
 import dev.Voatix.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +24,6 @@ public class BaseController {
     private ProjectService projectService;
 
 
-
     //http://localhost:8080/api/base/ideas?project=CoffeeWay&page=0&limit=10&filterBy=ALL&searchedValue=
     @GetMapping("ideas")
     public Page<IdeaWithStatsDTO> getIdeas(
@@ -36,7 +33,7 @@ public class BaseController {
             @RequestParam(defaultValue = "", required = false) String filterBy,
             @RequestParam(required = false) String searchedValue,
             Principal principal) {
-        return  ideaService.getIdeas(
+        return ideaService.getIdeas(
                 project,
                 page,
                 limit,
@@ -50,13 +47,14 @@ public class BaseController {
         return projectService.getProjectsOfUser(principal);
     }
 
-    //http://localhost:8080/api/base/ideas/1/likes?isLike=true
+    //http://localhost:8080/api/base/ideas/1/likes?isLike=1
     @PutMapping("ideas/{ideaId}/likes")
     public ResponseEntity<Void> upsertIdeaLike(
-        @PathVariable() Long ideaId,
-        @RequestParam(required = false) Boolean isLike,
-        Principal principal){
-        ideaService.upsertLike(ideaId, isLike, principal);
+            @PathVariable() Long ideaId,
+            @RequestParam() Long like,
+            Principal principal) {
+        log.info("\nlike = {}\n", like);
+        ideaService.upsertLike(ideaId, like, principal);
         return ResponseEntity.ok().build();
     }
 }

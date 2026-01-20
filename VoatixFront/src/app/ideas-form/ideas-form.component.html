@@ -39,17 +39,26 @@
                     <p class="idea-description">{{ ideaWithStats.idea.description }}</p>
                 </div>
 
-                <div class="idea-footer">
+                <div class="idea-footer" style="position: relative;">
                     <div style="display: flex; align-items: center;">
 
-                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote === 'like'"
+                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == -1"
+                            src="/assets/icons/dislikeArrow.png" style="width: 25px;"
+                            (click)="toggleDislike(ideaWithStats)">
+                        <div style="width: 30px; text-align: center;">
+                            <span class="idea-votes" style="margin-right: 5px; margin-left: 3px;">{{ideaWithStats.likes
+                                -
+                                ideaWithStats.disLikes}}</span>
+                        </div>
+                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == 1"
                             src="/assets/icons/likeArrow.png" style="width: 25px;" (click)="toggleLike(ideaWithStats)">
 
-                        <span class="idea-votes" style="margin-right: 5px; margin-left: 3px;">{{ideaWithStats.likes -
-                            ideaWithStats.disLikes}}</span>
+                    </div>
 
-                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote === 'dislike'"
-                            src="/assets/icons/dislikeArrow.png" style="width: 25px;" (click)="toggleDislike(ideaWithStats)">
+                    <div style="margin-left: 100px; position: absolute;">
+                        <span>
+                        Комментариев: {{ ideaWithStats.commentsCount }}
+                        </span>
                     </div>
 
                     <span class="idea-date">{{ ideaWithStats.idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</span>

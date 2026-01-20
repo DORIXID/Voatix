@@ -12,9 +12,9 @@ export class IdeaService {
     });
   }
 
-  doVote(ideaId: number, isLike: boolean | null) {
+  doVote(ideaId: number, like: number) {
     return this.http.put<any>(
-      `http://localhost:8080/api/base/ideas/${ideaId}/likes?isLike=${isLike}`,
+      `http://localhost:8080/api/base/ideas/${ideaId}/likes?like=${like}`,
       {},
       { withCredentials: true }
     );

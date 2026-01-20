@@ -50,14 +50,14 @@ public class IdeaService {
         return ideaMapper.toStatsPage(result);
     }
 
-    public void upsertLike(Long ideaId, Boolean isLike, Principal principal) {
+    public void upsertLike(Long ideaId, Long like, Principal principal) {
         IdeaEntity ideaEntity = ideaRepository.findById(ideaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea not found"));
         UserEntity userEntity = userRepository.findByNickname(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
         VotingEstimatesEntity votingEstimatesEntity = votingEstimatesRepository.findByUserIdAndIdeaId(userEntity.getId(), ideaEntity.getId())
                 .orElse(null);
-        if (isLike == null){
+        if (like == 0L){
             if(votingEstimatesEntity != null) {
                 votingEstimatesRepository.delete(votingEstimatesEntity);
             } return;
@@ -66,7 +66,7 @@ public class IdeaService {
             votingEstimatesEntity.setIdea(ideaEntity);
             votingEstimatesEntity.setUser(userEntity);
         }
-        votingEstimatesEntity.setIsLike(isLike);
+        votingEstimatesEntity.setIsLike(like == 1L);
         votingEstimatesRepository.save(votingEstimatesEntity);
     }
 }
