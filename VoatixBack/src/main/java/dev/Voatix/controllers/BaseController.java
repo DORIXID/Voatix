@@ -1,5 +1,7 @@
 package dev.Voatix.controllers;
 
+import dev.Voatix.dto.CreateIdeaDTO;
+import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.ProjectOfUserDTO;
 import dev.Voatix.service.IdeaService;
@@ -47,8 +49,8 @@ public class BaseController {
         return projectService.getProjectsOfUser(principal);
     }
 
-    //http://localhost:8080/api/base/ideas/1/likes?isLike=1
-    @PutMapping("ideas/{ideaId}/likes")
+    //http://localhost:8080/api/base/idea/1/likes?like=1
+    @PutMapping("idea/{ideaId}/likes")
     public ResponseEntity<Void> upsertIdeaLike(
             @PathVariable() Long ideaId,
             @RequestParam() Long like,
@@ -56,5 +58,13 @@ public class BaseController {
         log.info("\nlike = {}\n", like);
         ideaService.upsertLike(ideaId, like, principal);
         return ResponseEntity.ok().build();
+    }
+
+    //http://localhost:8080/api/base/idea/1
+    @GetMapping("idea/{ideaId}")
+    public IdeaWithStatsDTO getIdea(
+            @PathVariable() Long ideaId,
+            Principal principal) {
+        return ideaService.getIdea(ideaId, principal);
     }
 }

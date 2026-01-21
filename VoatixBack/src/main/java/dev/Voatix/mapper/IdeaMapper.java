@@ -1,43 +1,51 @@
 package dev.Voatix.mapper;
 
 
+
 import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
-import dev.Voatix.entity.IdeaEntity;
+import dev.Voatix.dto.projection.CommentCountProjection;
+import dev.Voatix.dto.projection.IdeaProjection;
+import dev.Voatix.dto.projection.VoteStatsProjection;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 
 @Mapper(componentModel = "spring")
-public abstract class IdeaMapper {
+public interface IdeaMapper {
 
+    public abstract IdeaDTO toDto(IdeaProjection projection);
 
-    public abstract IdeaDTO toDto(IdeaEntity idea);
+    @Mapping(target = "idea", source = "ideaProj")
+    @Mapping(target = "likes", source = "votes.likes", defaultValue = "0L")
+    @Mapping(target = "disLikes", source = "votes.dislikes", defaultValue = "0L")
+    @Mapping(target = "vote", source = "votes.userVote", defaultValue = "0L")
+    @Mapping(target = "commentsCount", source = "commentProj.count", defaultValue = "0L")
+    public abstract IdeaWithStatsDTO toStatsDto(
+            IdeaProjection ideaProj,
+            VoteStatsProjection votes,
+            CommentCountProjection commentProj
+    );
 
-    public IdeaWithStatsDTO toStatsDto(Object[] row) {
-        IdeaEntity idea = (IdeaEntity) row[0];
-        Long likes = (Long) row[1];
-        Long dislikes = (Long) row[2];
-        Long voted = (Long) row[3];
-        Long commentsCount = (Long) row[4];
+    default Page<IdeaWithStatsDTO> toPageDto(
+            Page<IdeaProjection> ideaPage,
+            List<VoteStatsProjection> votes,
+            List<CommentCountProjection> comments) {
 
-        return new IdeaWithStatsDTO(
-                toDto(idea),
-                likes,
-                dislikes,
-                voted,
-                commentsCount
-        );
-    }
+        Map<Long, VoteStatsProjection> voteMap = votes.stream()
+                .collect(Collectors.toMap(VoteStatsProjection::getIdeaId, v -> v));
 
-    public Page<IdeaWithStatsDTO> toStatsPage(Page<Object[]> page) {
-        List<IdeaWithStatsDTO> list = page.getContent()
-                .stream()
-                .map(this::toStatsDto)
-                .toList();
+        Map<Long, CommentCountProjection> commentMap = comments.stream()
+                .collect(Collectors.toMap(CommentCountProjection::getIdeaId, c -> c));
 
-        return new PageImpl<>(list, page.getPageable(), page.getTotalElements());
+        return ideaPage.map(idea -> toStatsDto(
+                idea,
+                voteMap.get(idea.getId()),
+                commentMap.get(idea.getId())
+        ));
     }
 }

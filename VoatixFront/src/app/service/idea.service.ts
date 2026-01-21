@@ -14,7 +14,7 @@ export class IdeaService {
 
   doVote(ideaId: number, like: number) {
     return this.http.put<any>(
-      `http://localhost:8080/api/base/ideas/${ideaId}/likes?like=${like}`,
+      `http://localhost:8080/api/base/idea/${ideaId}/likes?like=${like}`,
       {},
       { withCredentials: true }
     );

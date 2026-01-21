@@ -1,6 +1,10 @@
 package dev.Voatix.service;
 
+import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
+import dev.Voatix.dto.projection.CommentCountProjection;
+import dev.Voatix.dto.projection.IdeaProjection;
+import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
 import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.VotingEstimatesEntity;
@@ -9,6 +13,7 @@ import dev.Voatix.mapper.IdeaMapper;
 import dev.Voatix.repositories.IdeaRepository;
 import dev.Voatix.repositories.UserRepository;
 import dev.Voatix.repositories.VotingEstimatesRepository;
+import dev.Voatix.utils.exceptions.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -32,6 +38,8 @@ public class IdeaService {
     private final UserRepository userRepository;
     private final VotingEstimatesRepository votingEstimatesRepository;
 
+
+    //todo: сделать кастом exceptions
     public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal) {
         IdeaStatusEnum statusEnum;
         if (filterBy.isBlank() || filterBy.equals("ALL")) {
@@ -46,8 +54,26 @@ public class IdeaService {
         Pageable pageParam = PageRequest.of(page, limit);
         UserEntity userEntity = userRepository.findByNickname(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-        Page<Object[]> result = ideaRepository.findIdeas(project, userEntity, statusEnum, searchedValue, pageParam);
-        return ideaMapper.toStatsPage(result);
+        Page<IdeaProjection> ideasProj = ideaRepository.findIdeas(project, statusEnum, searchedValue, pageParam);
+
+        List<Long> ids = ideasProj.getContent().stream().map(IdeaProjection::getId).toList();
+
+        List<VoteStatsProjection> voteStatsProj = ideaRepository.getVoteStats(ids, userEntity.getId());
+        List<CommentCountProjection> commentsProj = ideaRepository.getCommentCounts(ids);
+        return ideaMapper.toPageDto(ideasProj, voteStatsProj, commentsProj);
+    }
+
+    public IdeaWithStatsDTO getIdea(Long ideaId, Principal principal) {
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+
+        IdeaProjection ideaProjection = ideaRepository.findIdeaById(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea with id " + ideaId + " not found"));
+        VoteStatsProjection voteStatsProjection = ideaRepository.getVoteStatsIdeaById(ideaId, userEntity.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "VoteStats for ideaId " + ideaId + " not found"));
+        CommentCountProjection commentCountProjection = ideaRepository.getCommentCountByIdeaId(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CommentCount for ideaId " + ideaId + " not found"));
+        return ideaMapper.toStatsDto(ideaProjection, voteStatsProjection, commentCountProjection);
     }
 
     public void upsertLike(Long ideaId, Long like, Principal principal) {
@@ -69,4 +95,5 @@ public class IdeaService {
         votingEstimatesEntity.setIsLike(like == 1L);
         votingEstimatesRepository.save(votingEstimatesEntity);
     }
+
 }

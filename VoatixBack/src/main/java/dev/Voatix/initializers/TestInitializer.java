@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
+//todo: lombok инициализация, переделать на дто репозиторий,
 @Slf4j
 @Component
 @Transactional

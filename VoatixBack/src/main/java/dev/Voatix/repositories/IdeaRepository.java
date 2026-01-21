@@ -1,6 +1,9 @@
 package dev.Voatix.repositories;
 
 import dev.Voatix.dto.IdeaWithStatsDTO;
+import dev.Voatix.dto.projection.CommentCountProjection;
+import dev.Voatix.dto.projection.IdeaProjection;
+import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
 
 import dev.Voatix.entity.UserEntity;
@@ -9,45 +12,98 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
 
-    @Query("""
-                select i,
-                sum(case when v.isLike = true then 1 else 0 end) as likes,
-                sum(case when v.isLike = false then 1 else 0 end) as disLikes,
-                COALESCE((select case when ve.isLike = true then 1L
-                             when ve.isLike = false then -1L
-                                         else 0L end
-                from VotingEstimatesEntity ve
-                where ve.idea = i and ve.user = :user
-                ), 0L) as vote,
-                (
-                select count(c)
-                from CommentEntity c
-                where c.idea = i
-                ) as commentsCount
-                from IdeaEntity i
-                join i.project p
-                left join i.votingEstimates v
-                where (i.description ilike CONCAT('%', :search, '%')
-                   or i.title ilike CONCAT('%', :search, '%'))
-                  and (i.status = :status or :status is null)
-                  and p.title like :project
-                group by i
-                order by i.id
-            """)
-    Page<Object[]> findIdeas(
-            String project,
-            UserEntity user,
-            IdeaStatusEnum status,
-            String search,
-            Pageable pageable
-    );
 
     Optional<IdeaEntity> findById(Long id);
 
-    UserEntity user(UserEntity user);
+
+    @Query(value = """
+            select i.*
+                from ideas i
+                join projects p on p.id = i.project_id
+                where (i.description ilike CONCAT('%', :search, '%')
+                   or i.title ilike CONCAT('%', :search, '%'))
+                  and (i.status = CAST(:status AS varchar) or CAST(:status AS varchar) is null)
+                  and p.title like :project
+                order by i.id
+            """, nativeQuery = true)
+    Page<IdeaProjection> findIdeas(
+            @Param("project") String project,
+            @Param("status") IdeaStatusEnum status,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query(value = """ 
+            SELECT
+               v.idea_id as ideaId,
+               COUNT(CASE WHEN v.is_like = true THEN 1 END) as likes,
+               COUNT(CASE WHEN v.is_like = false THEN 1 END) as dislikes,
+               COALESCE(MAX(CASE WHEN v.user_id = :userId THEN (CASE WHEN v.is_like = true THEN 1 ELSE -1 END) END), 0) as userVote
+                   FROM votingestimates v
+                   WHERE v.idea_id IN :ideaIds
+                   GROUP BY v.idea_id
+            """, nativeQuery = true)
+    List<VoteStatsProjection> getVoteStats(
+            @Param("ideaIds") List<Long> ideaIds,
+            @Param("userId") Long userId
+    );
+
+
+    @Query(value = """ 
+            SELECT
+                i.id as ideaId,
+                COUNT(c.id) as count
+                    FROM ideas i
+                    LEFT JOIN comments c ON c.idea_id = i.id
+                    WHERE i.id IN :ideaIds
+                    GROUP BY i.id
+            """, nativeQuery = true)
+    List<CommentCountProjection> getCommentCounts(
+            @Param("ideaIds") List<Long> ideaIds
+    );
+
+    @Query(value = """
+            select i.*
+                from ideas i
+                join projects p on p.id = i.project_id
+                where i.id = :id
+            """, nativeQuery = true)
+    Optional<IdeaProjection> findIdeaById(
+            @Param("id") Long id
+    );
+
+    @Query(value = """ 
+            SELECT
+               v.idea_id as ideaId,
+               COUNT(CASE WHEN v.is_like = true THEN 1 END) as likes,
+               COUNT(CASE WHEN v.is_like = false THEN 1 END) as dislikes,
+               COALESCE(MAX(CASE WHEN v.user_id = :userId THEN (CASE WHEN v.is_like = true THEN 1 ELSE -1 END) END), 0) as userVote
+                   FROM votingestimates v
+                   WHERE v.idea_id = :ideaId
+                   GROUP BY v.idea_id
+            """, nativeQuery = true)
+    Optional<VoteStatsProjection> getVoteStatsIdeaById(
+            @Param("ideaId") Long ideaId,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """ 
+            SELECT
+                i.id as ideaId,
+                COUNT(c.id) as count
+                    FROM ideas i
+                    LEFT JOIN comments c ON c.idea_id = i.id
+                    WHERE i.id = :id
+                    GROUP BY i.id
+            """, nativeQuery = true)
+    Optional<CommentCountProjection> getCommentCountByIdeaId(
+            @Param("id") Long id
+    );
 }
