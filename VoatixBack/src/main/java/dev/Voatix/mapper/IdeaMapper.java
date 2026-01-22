@@ -2,11 +2,15 @@ package dev.Voatix.mapper;
 
 
 
+import dev.Voatix.dto.IdeaCreateDTO;
 import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.projection.CommentCountProjection;
 import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
+import dev.Voatix.entity.IdeaEntity;
+import dev.Voatix.entity.ProjectEntity;
+import dev.Voatix.entity.UserEntity;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
 
@@ -18,14 +22,14 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface IdeaMapper {
 
-    public abstract IdeaDTO toDto(IdeaProjection projection);
+    IdeaDTO toDto(IdeaProjection projection);
 
     @Mapping(target = "idea", source = "ideaProj")
     @Mapping(target = "likes", source = "votes.likes", defaultValue = "0L")
     @Mapping(target = "disLikes", source = "votes.dislikes", defaultValue = "0L")
     @Mapping(target = "vote", source = "votes.userVote", defaultValue = "0L")
     @Mapping(target = "commentsCount", source = "commentProj.count", defaultValue = "0L")
-    public abstract IdeaWithStatsDTO toStatsDto(
+    IdeaWithStatsDTO toStatsDto(
             IdeaProjection ideaProj,
             VoteStatsProjection votes,
             CommentCountProjection commentProj
@@ -48,4 +52,13 @@ public interface IdeaMapper {
                 commentMap.get(idea.getId())
         ));
     }
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "project", source = "project")
+    @Mapping(target = "user", source = "user")
+    @Mapping(target = "title", source = "dto.title")
+    @Mapping(target = "description", source = "dto.description")
+    @Mapping(target = "dateTime", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "status", constant = "CREATED")
+    IdeaEntity toEntity (IdeaCreateDTO dto, ProjectEntity project, UserEntity user);
 }

@@ -1,16 +1,19 @@
 package dev.Voatix.service;
 
+import dev.Voatix.dto.IdeaCreateDTO;
 import dev.Voatix.dto.IdeaDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.projection.CommentCountProjection;
 import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
+import dev.Voatix.entity.ProjectEntity;
 import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.VotingEstimatesEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import dev.Voatix.mapper.IdeaMapper;
 import dev.Voatix.repositories.IdeaRepository;
+import dev.Voatix.repositories.ProjectRepository;
 import dev.Voatix.repositories.UserRepository;
 import dev.Voatix.repositories.VotingEstimatesRepository;
 import dev.Voatix.utils.exceptions.UserNotFoundException;
@@ -37,16 +40,16 @@ public class IdeaService {
     private final IdeaMapper ideaMapper;
     private final UserRepository userRepository;
     private final VotingEstimatesRepository votingEstimatesRepository;
+    private final ProjectService projectService;
+    private final ProjectRepository projectRepository;
 
 
     //todo: сделать кастом exceptions
     public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal) {
-        IdeaStatusEnum statusEnum;
-        if (filterBy.isBlank() || filterBy.equals("ALL")) {
-            statusEnum = null;
-        } else {
+        String status = "";
+        if (!filterBy.isBlank() || !filterBy.equals("ALL")) {
             try {
-                statusEnum = IdeaStatusEnum.valueOf(filterBy);
+                status = IdeaStatusEnum.valueOf(filterBy).toString();
             } catch (IllegalArgumentException e) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown status: " + filterBy);
             }
@@ -54,7 +57,7 @@ public class IdeaService {
         Pageable pageParam = PageRequest.of(page, limit);
         UserEntity userEntity = userRepository.findByNickname(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-        Page<IdeaProjection> ideasProj = ideaRepository.findIdeas(project, statusEnum, searchedValue, pageParam);
+        Page<IdeaProjection> ideasProj = ideaRepository.findIdeas(project, status, searchedValue, pageParam);
 
         List<Long> ids = ideasProj.getContent().stream().map(IdeaProjection::getId).toList();
 
@@ -94,6 +97,14 @@ public class IdeaService {
         }
         votingEstimatesEntity.setIsLike(like == 1L);
         votingEstimatesRepository.save(votingEstimatesEntity);
+    }
+
+    public void createIdea(IdeaCreateDTO ideaDTO, Principal principal) {
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        ProjectEntity projectEntity = projectRepository.findById(ideaDTO.getProjectId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project " + ideaDTO.getProjectId() + " not found"));
+        ideaRepository.save(ideaMapper.toEntity(ideaDTO, projectEntity, userEntity));
     }
 
 }

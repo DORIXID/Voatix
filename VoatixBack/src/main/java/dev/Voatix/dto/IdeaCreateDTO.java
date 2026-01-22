@@ -1,25 +1,22 @@
 package dev.Voatix.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.Voatix.entity.enums.IdeaStatusEnum;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IdeaDTO {
-    private Long id;
+
+public class IdeaCreateDTO {
     @Size(min = 10, max = 50)
     private String title;
     @Size(min = 30, max = 1600)
     private String description;
-    private LocalDateTime dateTime;
     private Long projectId;
-    private Long userId;
-    private IdeaStatusEnum status;
 }

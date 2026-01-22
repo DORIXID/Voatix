@@ -29,7 +29,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     JOIN moderators m ON p.id = m.project_id
     WHERE m.user_id = :userId
     """, nativeQuery = true)
-    List<ProjectOfUserProjection> findProjectsByUserId(
+    List<ProjectOfUserProjection> findProjectsOfUserByUserId(
             @Param("userId") Long userId
     );
 }

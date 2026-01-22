@@ -4,7 +4,7 @@ import dev.Voatix.entity.enums.IdeaStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -26,7 +26,7 @@ public class IdeaEntity {
     private String description;
 
     @Column(nullable = true, length = 1600)
-    private Timestamp dateTime;
+    private LocalDateTime dateTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

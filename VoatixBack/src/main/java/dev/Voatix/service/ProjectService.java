@@ -28,7 +28,7 @@ public class ProjectService {
     public List<ProjectOfUserDTO> getProjectsOfUser(Principal principal){
         UserEntity user = userRepository.findByNickname(principal.getName()).
                 orElseThrow(() -> new UserNotFoundException("Пользователь с никнеймом " + principal.getName() + " не найден"));
-        return projectMapper.toDto(projectRepository.findProjectsByUserId(user.getId()));
+        return projectMapper.toDto(projectRepository.findProjectsOfUserByUserId(user.getId()));
     }
 
 }

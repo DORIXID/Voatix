@@ -29,13 +29,13 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
                 join projects p on p.id = i.project_id
                 where (i.description ilike CONCAT('%', :search, '%')
                    or i.title ilike CONCAT('%', :search, '%'))
-                  and (i.status = CAST(:status AS varchar) or CAST(:status AS varchar) is null)
+                  and (i.status = :status or :status = '')
                   and p.title like :project
                 order by i.id
             """, nativeQuery = true)
     Page<IdeaProjection> findIdeas(
             @Param("project") String project,
-            @Param("status") IdeaStatusEnum status,
+            @Param("status") String status,
             @Param("search") String search,
             Pageable pageable
     );

@@ -1,9 +1,6 @@
 package dev.Voatix.controllers;
 
-import dev.Voatix.dto.CreateIdeaDTO;
-import dev.Voatix.dto.IdeaDTO;
-import dev.Voatix.dto.IdeaWithStatsDTO;
-import dev.Voatix.dto.ProjectOfUserDTO;
+import dev.Voatix.dto.*;
 import dev.Voatix.service.IdeaService;
 import dev.Voatix.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
@@ -66,5 +63,14 @@ public class BaseController {
             @PathVariable() Long ideaId,
             Principal principal) {
         return ideaService.getIdea(ideaId, principal);
+    }
+
+    @PostMapping("idea/new")
+    public ResponseEntity<Void> createIdea(
+            @RequestBody() IdeaCreateDTO dto,
+            Principal principal
+            ){
+        ideaService.createIdea(dto, principal);
+        return ResponseEntity.ok().build();
     }
 }

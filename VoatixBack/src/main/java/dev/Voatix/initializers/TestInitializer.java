@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -200,8 +202,15 @@ public class TestInitializer implements CommandLineRunner {
         idea.setStatus(status);
         idea.setProject(project);
 
-        String formatted = "2025-" + date.substring(3, 5) + "-" + date.substring(0, 2) + " 00:00:00";
-        idea.setDateTime(Timestamp.valueOf(formatted));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+// 2. Склеиваем строку (лучше сразу с годом и временем)
+        String dateWithYear = date.substring(0, 2) + "." + date.substring(3, 5) + ".2025 00:00:00";
+
+// 3. Парсим в LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(dateWithYear, formatter);
+
+        idea.setDateTime(dateTime);
 
         ideaRepository.save(idea);
 
@@ -243,8 +252,15 @@ public class TestInitializer implements CommandLineRunner {
         idea.setStatus(status);
         idea.setProject(project);
 
-        String formatted = "2025-" + date.substring(3, 5) + "-" + date.substring(0, 2) + " 00:00:00";
-        idea.setDateTime(Timestamp.valueOf(formatted));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+// 2. Склеиваем строку (лучше сразу с годом и временем)
+        String dateWithYear = date.substring(0, 2) + "." + date.substring(3, 5) + ".2025 00:00:00";
+
+// 3. Парсим в LocalDateTime
+        LocalDateTime dateTime = LocalDateTime.parse(dateWithYear, formatter);
+
+        idea.setDateTime(dateTime);
 
         return ideaRepository.save(idea);
     }
