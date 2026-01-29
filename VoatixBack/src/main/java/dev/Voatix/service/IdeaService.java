@@ -1,22 +1,16 @@
 package dev.Voatix.service;
 
 import dev.Voatix.dto.IdeaCreateDTO;
-import dev.Voatix.dto.IdeaDTO;
+import dev.Voatix.dto.IdeaStatusDTO;
+import dev.Voatix.dto.IdeaUpdateDTO;
 import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.projection.CommentCountProjection;
 import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
-import dev.Voatix.entity.IdeaEntity;
-import dev.Voatix.entity.ProjectEntity;
-import dev.Voatix.entity.UserEntity;
-import dev.Voatix.entity.VotingEstimatesEntity;
+import dev.Voatix.entity.*;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import dev.Voatix.mapper.IdeaMapper;
-import dev.Voatix.repositories.IdeaRepository;
-import dev.Voatix.repositories.ProjectRepository;
-import dev.Voatix.repositories.UserRepository;
-import dev.Voatix.repositories.VotingEstimatesRepository;
-import dev.Voatix.utils.exceptions.UserNotFoundException;
+import dev.Voatix.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +34,16 @@ public class IdeaService {
     private final IdeaMapper ideaMapper;
     private final UserRepository userRepository;
     private final VotingEstimatesRepository votingEstimatesRepository;
-    private final ProjectService projectService;
     private final ProjectRepository projectRepository;
+    private final ModeratorRepository moderatorRepository;
 
 
     //todo: сделать кастом exceptions
     public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal) {
         String status = "";
-        if (!filterBy.isBlank() || !filterBy.equals("ALL")) {
+        if (!filterBy.isBlank() && !filterBy.equals("ALL")) {
             try {
+                log.info("\"" + filterBy + "\"");
                 status = IdeaStatusEnum.valueOf(filterBy).toString();
             } catch (IllegalArgumentException e) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown status: " + filterBy);
@@ -86,10 +81,11 @@ public class IdeaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
         VotingEstimatesEntity votingEstimatesEntity = votingEstimatesRepository.findByUserIdAndIdeaId(userEntity.getId(), ideaEntity.getId())
                 .orElse(null);
-        if (like == 0L){
-            if(votingEstimatesEntity != null) {
+        if (like == 0L) {
+            if (votingEstimatesEntity != null) {
                 votingEstimatesRepository.delete(votingEstimatesEntity);
-            } return;
+            }
+            return;
         } else if (votingEstimatesEntity == null) {
             votingEstimatesEntity = new VotingEstimatesEntity();
             votingEstimatesEntity.setIdea(ideaEntity);
@@ -106,5 +102,42 @@ public class IdeaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project " + ideaDTO.getProjectId() + " not found"));
         ideaRepository.save(ideaMapper.toEntity(ideaDTO, projectEntity, userEntity));
     }
+
+    public void updateIdea(IdeaUpdateDTO ideaUpdateDTO, Long ideaId, Principal principal) {
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        IdeaEntity ideaEntity = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea " + ideaId + " not found"));
+        if (ideaEntity.getUser().getId().equals(userEntity.getId())) {
+            log.info("\n\n\n" + userEntity.getId() + " = " + ideaEntity.getUser().getId());
+            ideaMapper.updateEntity(ideaUpdateDTO, ideaEntity);
+        } else  {
+            log.info("\n\n\n" + userEntity.getId() + " != " + ideaEntity.getUser().getId());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access");
+        }
+    }
+
+    public void deleteIdea(Long ideaId, Principal principal) {
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        IdeaEntity ideaEntity = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea " + ideaId + " not found"));
+        ProjectEntity projectEntity = ideaEntity.getProject();
+        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userEntity.getId(), projectEntity.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access"));
+        ideaRepository.delete(ideaEntity);
+    }
+
+    public void updateStatus(Long ideaId, IdeaStatusDTO dto, Principal principal) {
+        UserEntity userEntity = userRepository.findByNickname(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        IdeaEntity ideaEntity = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Idea " + ideaId + " not found"));
+        ProjectEntity projectEntity = ideaEntity.getProject();
+        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userEntity.getId(), projectEntity.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access"));
+        ideaMapper.updateEntity(dto, ideaEntity);
+        ideaRepository.save(ideaEntity);
+        }
 
 }

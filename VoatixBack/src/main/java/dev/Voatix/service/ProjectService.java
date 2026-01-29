@@ -3,7 +3,6 @@ package dev.Voatix.service;
 import dev.Voatix.dto.ProjectOfUserDTO;
 import dev.Voatix.entity.UserEntity;
 import dev.Voatix.mapper.ProjectMapper;
-import dev.Voatix.repositories.ModeratorRepository;
 import dev.Voatix.repositories.ProjectRepository;
 import dev.Voatix.repositories.UserRepository;
 import dev.Voatix.utils.exceptions.UserNotFoundException;

@@ -14,13 +14,17 @@ import lombok.*;
 public class CredentialsEntity {
 
     @Id
-    @Column(name = "user_id")
+    @Column()
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", unique = true)
     private UserEntity user;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "password_id", nullable = false)
+    private PasswordEntity password;
 
     @Column(nullable = true)
     private String eMail;
@@ -31,8 +35,4 @@ public class CredentialsEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleOfUserEnum role;
-
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "password_id", nullable = false)
-    private PasswordEntity password;
 }

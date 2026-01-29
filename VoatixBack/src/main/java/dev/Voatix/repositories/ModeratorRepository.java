@@ -16,4 +16,12 @@ public interface ModeratorRepository extends JpaRepository<ModeratorEntity, Long
             "WHERE m.user.id = :userId")
     List<ModeratorEntity> findByUserId(Long userId);
 
+    @Query(value = """
+            SELECT *
+                        FROM moderators
+                        WHERE user_id = :userId
+                        AND project_id = :projectId
+            """, nativeQuery = true)
+    Optional<ModeratorEntity> findByUserIdAndProjectId(Long userId, Long projectId);
+
 }

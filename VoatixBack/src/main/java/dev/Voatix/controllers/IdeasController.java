@@ -1,8 +1,10 @@
 package dev.Voatix.controllers;
 
 import dev.Voatix.dto.*;
+import dev.Voatix.entity.enums.IdeaStatusEnum;
 import dev.Voatix.service.IdeaService;
 import dev.Voatix.service.ProjectService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,8 +16,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("api/base")
-public class BaseController {
+@RequestMapping("api/ideas")
+public class IdeasController {
 
     @Autowired
     private IdeaService ideaService;
@@ -23,8 +25,8 @@ public class BaseController {
     private ProjectService projectService;
 
 
-    //http://localhost:8080/api/base/ideas?project=CoffeeWay&page=0&limit=10&filterBy=ALL&searchedValue=
-    @GetMapping("ideas")
+    //http://localhost:8080/api/ideas?project=CoffeeWay&page=0&limit=10&filterBy=ALL&searchedValue=
+    @GetMapping("")
     public Page<IdeaWithStatsDTO> getIdeas(
             @RequestParam(required = true) String project,
             @RequestParam() Integer page,
@@ -41,13 +43,8 @@ public class BaseController {
                 principal);
     }
 
-    @GetMapping("projects")
-    public List<ProjectOfUserDTO> getProjectsOfUser(Principal principal) {
-        return projectService.getProjectsOfUser(principal);
-    }
-
     //http://localhost:8080/api/base/idea/1/likes?like=1
-    @PutMapping("idea/{ideaId}/likes")
+    @PutMapping("{ideaId}/likes")
     public ResponseEntity<Void> upsertIdeaLike(
             @PathVariable() Long ideaId,
             @RequestParam() Long like,
@@ -58,19 +55,42 @@ public class BaseController {
     }
 
     //http://localhost:8080/api/base/idea/1
-    @GetMapping("idea/{ideaId}")
+    @GetMapping("{ideaId}")
     public IdeaWithStatsDTO getIdea(
             @PathVariable() Long ideaId,
             Principal principal) {
         return ideaService.getIdea(ideaId, principal);
     }
 
-    @PostMapping("idea/new")
+    @PostMapping("")
     public ResponseEntity<Void> createIdea(
-            @RequestBody() IdeaCreateDTO dto,
+            @Valid @RequestBody() IdeaCreateDTO dto,
             Principal principal
             ){
         ideaService.createIdea(dto, principal);
+        return ResponseEntity.ok().build();
+    }
+
+    //todo: по возвращаемому значению разобраться что лучше
+    @PatchMapping("{ideaId}")
+    public ResponseEntity<Void> updateIdea(
+            @RequestBody() IdeaUpdateDTO ideaDTO,
+            @Valid @PathVariable() Long ideaId,
+            Principal principal
+    ){
+        ideaService.updateIdea(ideaDTO, ideaId, principal);
+        return ResponseEntity.ok().build();
+    }
+
+    //Project owner/manager operations
+
+    @PatchMapping("{ideaId}/status")
+    public ResponseEntity<Void> updateIdea(
+            @PathVariable() Long ideaId,
+            @Valid @RequestBody() IdeaStatusDTO dto,
+            Principal principal
+            ){
+        ideaService.updateStatus(ideaId, dto, principal);
         return ResponseEntity.ok().build();
     }
 }

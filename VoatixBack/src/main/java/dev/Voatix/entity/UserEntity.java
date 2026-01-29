@@ -24,7 +24,6 @@ public class UserEntity {
     @JoinColumn(name = "avatar_id", nullable = true)
     private FileEntity avatar;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "user")
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "user")
     private CredentialsEntity credentials;
 }
-

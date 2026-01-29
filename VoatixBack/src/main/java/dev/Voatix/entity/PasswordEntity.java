@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -21,5 +22,5 @@ public class PasswordEntity {
     private String password;
 
     @Column(name = "date_of_change", nullable = false)
-    private Timestamp dateOfChange;
+    private LocalDateTime dateOfChange;
 }

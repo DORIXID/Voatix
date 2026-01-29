@@ -2,9 +2,7 @@ package dev.Voatix.mapper;
 
 
 
-import dev.Voatix.dto.IdeaCreateDTO;
-import dev.Voatix.dto.IdeaDTO;
-import dev.Voatix.dto.IdeaWithStatsDTO;
+import dev.Voatix.dto.*;
 import dev.Voatix.dto.projection.CommentCountProjection;
 import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
@@ -17,7 +15,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 
 @Mapper(componentModel = "spring")
 public interface IdeaMapper {
@@ -61,4 +58,12 @@ public interface IdeaMapper {
     @Mapping(target = "dateTime", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "status", constant = "CREATED")
     IdeaEntity toEntity (IdeaCreateDTO dto, ProjectEntity project, UserEntity user);
+
+    @Mapping(target = "id", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntity(IdeaUpdateDTO dto, @MappingTarget IdeaEntity entity);
+
+    @Mapping(target = "id", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntity(IdeaStatusDTO dto, @MappingTarget IdeaEntity entity);
 }

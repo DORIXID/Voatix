@@ -23,7 +23,7 @@ public class ModeratorEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user = new UserEntity();
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("projectId")

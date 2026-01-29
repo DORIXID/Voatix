@@ -3,8 +3,6 @@ package dev.Voatix.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Setter
