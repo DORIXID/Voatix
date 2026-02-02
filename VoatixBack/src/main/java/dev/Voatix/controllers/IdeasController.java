@@ -2,6 +2,7 @@ package dev.Voatix.controllers;
 
 import dev.Voatix.dto.*;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
+import dev.Voatix.service.FileService;
 import dev.Voatix.service.IdeaService;
 import dev.Voatix.service.ProjectService;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
@@ -21,11 +23,8 @@ public class IdeasController {
 
     @Autowired
     private IdeaService ideaService;
-    @Autowired
-    private ProjectService projectService;
 
 
-    //http://localhost:8080/api/ideas?project=CoffeeWay&page=0&limit=10&filterBy=ALL&searchedValue=
     @GetMapping("")
     public Page<IdeaWithStatsDTO> getIdeas(
             @RequestParam(required = true) String project,
@@ -34,6 +33,7 @@ public class IdeasController {
             @RequestParam(defaultValue = "", required = false) String filterBy,
             @RequestParam(required = false) String searchedValue,
             Principal principal) {
+        log.info("n\\n\n\n\n\n\n\n\n\n\\n\n\n\n\n\n\\n\n\n\n\n\n\n\\n");
         return ideaService.getIdeas(
                 project,
                 page,
@@ -93,4 +93,14 @@ public class IdeasController {
         ideaService.updateStatus(ideaId, dto, principal);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("{ideaId}")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable() Long ideaId,
+            Principal principal
+    ){
+        ideaService.deleteIdea(ideaId, principal);
+        return ResponseEntity.ok().build();
+    }
+
 }

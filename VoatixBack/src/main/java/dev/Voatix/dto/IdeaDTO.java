@@ -5,13 +5,12 @@ import dev.Voatix.entity.enums.IdeaStatusEnum;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IdeaDTO {
     private Long id;
     @Size(min = 10, max = 50)
@@ -21,5 +20,7 @@ public class IdeaDTO {
     private LocalDateTime dateTime;
     private Long projectId;
     private Long userId;
+    private Long userAvatarId;
     private IdeaStatusEnum status;
+    private List<String> fileKeys;
 }

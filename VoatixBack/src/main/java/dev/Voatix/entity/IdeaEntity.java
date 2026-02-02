@@ -3,6 +3,8 @@ package dev.Voatix.entity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cascade;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,7 +50,8 @@ public class IdeaEntity {
     private List<VotingEstimatesEntity> votingEstimates;
 
 
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
     @JoinColumn(name = "idea_id")
     private List<FileEntity> files;
 }

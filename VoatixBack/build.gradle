@@ -43,12 +43,15 @@ dependencies {
     // PostgreSQL
     implementation 'org.postgresql:postgresql:42.7.3'
 
-    //JakartaValid
+    // JakartaValid
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Liquibase
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.liquibase:liquibase-core:4.25.1'
+
+    // Minio
+    implementation 'io.minio:minio:8.5.7'
 }
 
 tasks.named('test') {

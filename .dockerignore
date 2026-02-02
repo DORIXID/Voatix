@@ -1,0 +1,21 @@
+# Папки гита
+.git
+.gitignore
+
+# Папки бека
+**/build/
+**/.gradle/
+**/target/
+.idea/
+
+# Зависимости фрона
+**/node_modules/
+**/dist/
+.angular/
+npm-debug.log
+
+# Прочее
+.DS_Store
+*.md
+docker-compose.yml
+Dockerfile

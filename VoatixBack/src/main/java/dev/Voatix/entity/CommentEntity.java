@@ -2,8 +2,10 @@ package dev.Voatix.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
-import java.sql.Timestamp;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -26,9 +28,10 @@ public class CommentEntity {
     private UserEntity user;
 
     @Column(nullable = false)
-    private Timestamp dateTime;
+    private LocalDateTime dateTime;
 
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
     @JoinColumn(name = "comment_id")
     private List<FileEntity> files;
 

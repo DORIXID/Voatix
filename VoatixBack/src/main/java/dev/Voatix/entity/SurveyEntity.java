@@ -4,7 +4,7 @@ import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -26,10 +26,10 @@ public class SurveyEntity {
     private String description;
 
     @Column(nullable = false, name = "start_date")
-    private Timestamp startDate;
+    private LocalDateTime startDate;
 
     @Column(nullable = false, name = "end_date")
-    private Timestamp endDate;
+    private LocalDateTime endDate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

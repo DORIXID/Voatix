@@ -24,18 +24,20 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
 
 
     @Query(value = """
-            select i.*
-                from ideas i
-                join projects p on p.id = i.project_id
-                where (i.description ilike CONCAT('%', :search, '%')
-                   or i.title ilike CONCAT('%', :search, '%'))
-                  and (i.status = :status or :status = '')
-                  and p.title like :project
-                order by i.id
-            """, nativeQuery = true)
-    Page<IdeaProjection> findIdeas(
+        select i
+            from IdeaEntity i
+            join fetch i.project p
+            join fetch i.user u
+            left join fetch u.avatar a
+            where (i.description ilike CONCAT('%', :search, '%')
+               or i.title ilike CONCAT('%', :search, '%'))
+              and (:status is null or i.status = :status)
+              and p.title like :project
+            order by i.id
+        """)
+    Page<IdeaEntity> findIdeas(
             @Param("project") String project,
-            @Param("status") String status,
+            @Param("status") IdeaStatusEnum status,
             @Param("search") String search,
             Pageable pageable
     );
@@ -70,24 +72,25 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     );
 
     @Query(value = """
-            select i.*
-                from ideas i
-                join projects p on p.id = i.project_id
+            select i
+                from IdeaEntity i
+                join i.project p
                 where i.id = :id
-            """, nativeQuery = true)
-    Optional<IdeaProjection> findIdeaById(
+            """)
+    Optional<IdeaEntity> findIdeaById(
             @Param("id") Long id
     );
 
     @Query(value = """ 
             SELECT
-               v.idea_id as ideaId,
+               i.id as ideaId,
                COUNT(CASE WHEN v.is_like = true THEN 1 END) as likes,
                COUNT(CASE WHEN v.is_like = false THEN 1 END) as dislikes,
                COALESCE(MAX(CASE WHEN v.user_id = :userId THEN (CASE WHEN v.is_like = true THEN 1 ELSE -1 END) END), 0) as userVote
-                   FROM votingestimates v
-                   WHERE v.idea_id = :ideaId
-                   GROUP BY v.idea_id
+                FROM ideas i
+                LEFT JOIN votingestimates v ON i.id = v.idea_id
+                WHERE i.id = :ideaId
+                GROUP BY i.id
             """, nativeQuery = true)
     Optional<VoteStatsProjection> getVoteStatsIdeaById(
             @Param("ideaId") Long ideaId,

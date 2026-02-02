@@ -6,6 +6,7 @@ import dev.Voatix.dto.*;
 import dev.Voatix.dto.projection.CommentCountProjection;
 import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
+import dev.Voatix.entity.FileEntity;
 import dev.Voatix.entity.IdeaEntity;
 import dev.Voatix.entity.ProjectEntity;
 import dev.Voatix.entity.UserEntity;
@@ -19,21 +20,32 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface IdeaMapper {
 
-    IdeaDTO toDto(IdeaProjection projection);
+    default String map(FileEntity file) {
+        if (file == null) {
+            return null;
+        }
+        return file.getKey();
+    }
 
-    @Mapping(target = "idea", source = "ideaProj")
-    @Mapping(target = "likes", source = "votes.likes", defaultValue = "0L")
-    @Mapping(target = "disLikes", source = "votes.dislikes", defaultValue = "0L")
-    @Mapping(target = "vote", source = "votes.userVote", defaultValue = "0L")
-    @Mapping(target = "commentsCount", source = "commentProj.count", defaultValue = "0L")
+    @Mapping(target = "projectId", source = "idea.project.id")
+    @Mapping(target = "userId", source = "idea.user.id")
+    @Mapping(target = "fileKeys", source = "idea.files")
+    @Mapping(target = "userAvatarId", source = "idea.user.avatar.id")
+    IdeaDTO toDto(IdeaEntity idea);
+
+    @Mapping(target = "idea", source = "idea")
+    @Mapping(target = "likes", expression = "java(stats != null ? stats.getLikes() : 0L)")
+    @Mapping(target = "disLikes", expression = "java(stats != null ? stats.getDislikes() : 0L)")
+    @Mapping(target = "vote", expression = "java(stats != null ? stats.getUserVote() : 0L)")
+    @Mapping(target = "commentsCount", expression = "java(commentCountProj != null ? commentCountProj.getCount() : 0L)")
     IdeaWithStatsDTO toStatsDto(
-            IdeaProjection ideaProj,
-            VoteStatsProjection votes,
-            CommentCountProjection commentProj
+            IdeaEntity idea,
+            VoteStatsProjection stats,
+            CommentCountProjection commentCountProj
     );
 
     default Page<IdeaWithStatsDTO> toPageDto(
-            Page<IdeaProjection> ideaPage,
+            Page<IdeaEntity> ideaPage,
             List<VoteStatsProjection> votes,
             List<CommentCountProjection> comments) {
 
@@ -57,7 +69,8 @@ public interface IdeaMapper {
     @Mapping(target = "description", source = "dto.description")
     @Mapping(target = "dateTime", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "status", constant = "CREATED")
-    IdeaEntity toEntity (IdeaCreateDTO dto, ProjectEntity project, UserEntity user);
+    @Mapping(target = "files", source = "files")
+    IdeaEntity toEntity (IdeaCreateDTO dto, ProjectEntity project, UserEntity user, List<FileEntity> files);
 
     @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

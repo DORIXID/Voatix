@@ -3,7 +3,7 @@ package dev.Voatix.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -22,7 +22,7 @@ public class MessageEntity {
     private String text;
 
     @Column(nullable = false)
-    private Timestamp date;
+    private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user_id", nullable = false)
@@ -32,7 +32,7 @@ public class MessageEntity {
     @JoinColumn(name = "reciver_user_id", nullable = false)
     private UserEntity reciver;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "message_id")
     private List<FileEntity> files;
 

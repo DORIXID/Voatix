@@ -92,6 +92,7 @@ public class SecurityConfig {
         return new ProviderManager(authenticationProvider);
     }
 
+    //todo: мб в отдельный конфиг вынести
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
