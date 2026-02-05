@@ -20,7 +20,7 @@ public class IdeaDTO {
     private LocalDateTime dateTime;
     private Long projectId;
     private Long userId;
-    private Long userAvatarId;
+    private String userAvatarUrl;
     private IdeaStatusEnum status;
     private List<String> fileKeys;
 }

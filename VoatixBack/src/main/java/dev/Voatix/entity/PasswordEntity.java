@@ -5,10 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @Entity
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "passwords")

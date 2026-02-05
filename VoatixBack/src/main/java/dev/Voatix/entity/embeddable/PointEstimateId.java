@@ -8,11 +8,11 @@ import java.io.Serializable;
 
 @Data
 @Embeddable
-public class VotingEstimatesId implements Serializable {
-
-    @Column(name = "idea_id", insertable=false, updatable=false)
-    private Long ideaId;
+public class PointEstimateId implements Serializable {
 
     @Column(name = "user_id", insertable=false, updatable=false)
     private Long userId;
+
+    @Column(name = "point_id", insertable=false, updatable=false)
+    private Long pointId;
 }

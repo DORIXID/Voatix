@@ -8,12 +8,11 @@ import org.hibernate.annotations.BatchSize;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Setter
-@Getter
+
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "comments")
 public class CommentEntity {
     @Id
@@ -36,7 +35,7 @@ public class CommentEntity {
     private List<FileEntity> files;
 
     @OneToMany( mappedBy = "comment", fetch = FetchType.LAZY, orphanRemoval = true )
-    private List<CommentRaitingsEntity> commentRaitings;
+    private List<CommentRatingEntity> commentRaitings;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idea_id",  nullable = false)

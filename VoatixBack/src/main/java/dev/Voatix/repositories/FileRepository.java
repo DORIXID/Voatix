@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface FilesRepository extends JpaRepository<FileEntity, Long> {
+public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 
     @Query(value = """

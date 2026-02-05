@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 public interface CredentialsMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "isActive", expression = "java(true)")
+    @Mapping(target = "active", expression = "java(true)")
     @Mapping(target = "role", expression = "java(dev.Voatix.entity.enums.RoleOfUserEnum.USER)")
     @Mapping(target = "user", source = "dto")
     @Mapping(target = "password", source = "dto")

@@ -4,10 +4,8 @@ import dev.Voatix.entity.enums.RoleOfUserEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter
-@Setter
 @Entity
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "credentials")
@@ -30,7 +28,7 @@ public class CredentialsEntity {
     private String eMail;
 
     @Column(nullable = false)
-    private boolean isActive;
+    private boolean active;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

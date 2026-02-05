@@ -3,12 +3,10 @@ package dev.Voatix.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "files")
 public class FileEntity {
     @Id

@@ -10,6 +10,7 @@ import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,12 +24,14 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     Optional<IdeaEntity> findById(Long id);
 
 
+    @EntityGraph(attributePaths = {"project", "user", "user.avatar", "user.credentials", "files"})
     @Query(value = """
         select i
             from IdeaEntity i
-            join fetch i.project p
-            join fetch i.user u
-            left join fetch u.avatar a
+            join i.project p
+            join i.user u
+            join u.credentials c
+            left join u.avatar a
             where (i.description ilike CONCAT('%', :search, '%')
                or i.title ilike CONCAT('%', :search, '%'))
               and (:status is null or i.status = :status)

@@ -4,8 +4,7 @@ package dev.Voatix.controllers;
 import dev.Voatix.dto.CommentDTO;
 import dev.Voatix.dto.CommentUpdateDTO;
 import dev.Voatix.dto.CommentWithStatsDTO;
-import dev.Voatix.dto.IdeaUpdateDTO;
-import dev.Voatix.service.CommentsService;
+import dev.Voatix.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import java.security.Principal;
 public class CommentsController {
 
     @Autowired
-    private CommentsService commentsService;
+    private CommentService commentsService;
 
     @GetMapping("")
     public Page<CommentWithStatsDTO> getComments(
@@ -41,7 +40,6 @@ public class CommentsController {
         return ResponseEntity.ok().build();
     }
 
-    //todo: не протестил на возможность удаления пользователем без прав
     @DeleteMapping("{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable() Long commentId,
@@ -58,6 +56,16 @@ public class CommentsController {
             Principal principal
     ){
         commentsService.updateComment(dto, commentId, principal);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("{commentId}/likes")
+    public ResponseEntity<Void> upsertLike(
+            @PathVariable("commentId") Long commentId,
+            @RequestParam() Long like,
+            Principal principal) {
+        log.info("\nlike = {}\n", like);
+        commentsService.upsertLike(commentId, like, principal);
         return ResponseEntity.ok().build();
     }
 }

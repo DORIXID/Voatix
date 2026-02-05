@@ -5,7 +5,7 @@ import dev.Voatix.dto.FileResponseDTO;
 import dev.Voatix.entity.FileEntity;
 import dev.Voatix.entity.UserEntity;
 import dev.Voatix.mapper.FileMapper;
-import dev.Voatix.repositories.FilesRepository;
+import dev.Voatix.repositories.FileRepository;
 import dev.Voatix.repositories.UserRepository;
 import dev.Voatix.service.minio.MinioService;
 import jakarta.transaction.Transactional;
@@ -32,7 +32,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileService {
     private final MinioService minioService;
-    private final FilesRepository filesRepository;
+    private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final FileMapper fileMapper;
 
@@ -56,7 +56,7 @@ public class FileService {
             UserEntity uploader = userRepository.findByNickname(principal.getName())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
             FileEntity fileEntity = fileMapper.toEntity(requestDto, uploader);
-            FileEntity savedFile = filesRepository.save(fileEntity);
+            FileEntity savedFile = fileRepository.save(fileEntity);
             FileResponseDTO responseDto = fileMapper.toDTO(savedFile);
             log.info("File {} uploaded successfully" + responseDto.getName() + " "+ responseDto.getKey() + " "+ responseDto.getBucket());
             return responseDto;
@@ -67,7 +67,7 @@ public class FileService {
     }
 
     public ResponseEntity<Resource> download(String key) {
-        FileEntity file = filesRepository.findByKey(key)
+        FileEntity file = fileRepository.findByKey(key)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
 
         InputStream stream = minioService.getObject(file.getBucket(), file.getKey());

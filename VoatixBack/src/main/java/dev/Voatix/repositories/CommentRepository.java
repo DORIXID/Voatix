@@ -4,6 +4,7 @@ import dev.Voatix.dto.projection.CommentStatsProjection;
 import dev.Voatix.entity.CommentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
+    @EntityGraph(attributePaths = {"files"})
     @Query(value = """
             SELECT c
                    FROM CommentEntity c
@@ -39,6 +41,13 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             @Param("userId") Long userId
     );
 
-    Optional<CommentEntity> findById(Long commentId);
+    @Query(value = """
+            select c
+            FROM CommentEntity c
+            where c.id = :commentId
+            """)
+    Optional<CommentEntity> findById(
+            @Param("commentId") Long commentId
+    );
 
 }

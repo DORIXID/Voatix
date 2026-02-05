@@ -4,10 +4,8 @@ import dev.Voatix.entity.enums.RoleOfUserEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter
-@Setter
 @Entity
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "users")

@@ -70,7 +70,7 @@ public class SecurityConfig {
         JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
 
         manager.setUsersByUsernameQuery(
-                "SELECT u.nickname, p.password, c.is_active FROM users u \n" +
+                "SELECT u.nickname, p.password, c.active FROM users u \n" +
                         "JOIN credentials c ON u.id = c.user_id \n" +
                         "JOIN passwords p ON c.password_id = p.id \n" +
                         "WHERE u.nickname = ?");

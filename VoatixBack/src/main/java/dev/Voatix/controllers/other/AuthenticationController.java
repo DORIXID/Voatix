@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.other;
 
 import dev.Voatix.dto.auth.JwtRequestDTO;
 import dev.Voatix.dto.auth.JwtResponseDTO;

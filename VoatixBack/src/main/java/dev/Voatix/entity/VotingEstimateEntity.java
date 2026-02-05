@@ -1,19 +1,17 @@
 package dev.Voatix.entity;
 
-import dev.Voatix.entity.embeddable.VotingEstimatesId;
+import dev.Voatix.entity.embeddable.VotingEstimateId;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "votingestimates")
-public class VotingEstimatesEntity {
+public class VotingEstimateEntity {
     @EmbeddedId
-    private VotingEstimatesId id = new VotingEstimatesId();
+    private VotingEstimateId id = new VotingEstimateId();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
@@ -25,6 +23,6 @@ public class VotingEstimatesEntity {
     @JoinColumn(name = "idea_id", nullable = false)
     private IdeaEntity idea = new IdeaEntity();
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_like")
     private Boolean isLike;
 }

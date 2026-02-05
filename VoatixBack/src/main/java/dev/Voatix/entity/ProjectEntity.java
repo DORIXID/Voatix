@@ -5,12 +5,10 @@ import lombok.*;
 
 import java.util.List;
 
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "projects")
 public class ProjectEntity {
 

@@ -4,16 +4,15 @@ import dev.Voatix.entity.embeddable.CommentsRaitingId;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Setter
-@Getter
+
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "commentraitings")
-public class CommentRaitingsEntity {
+public class CommentRatingEntity {
     @EmbeddedId
-    private CommentsRaitingId commentsRaitingId =  new CommentsRaitingId();
+    private CommentsRaitingId id =  new CommentsRaitingId();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
@@ -26,6 +25,6 @@ public class CommentRaitingsEntity {
     private CommentEntity comment = new CommentEntity();
 
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_like")
     private Boolean isLike;
 }

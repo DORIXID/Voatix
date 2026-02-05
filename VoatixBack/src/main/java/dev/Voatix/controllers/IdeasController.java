@@ -33,7 +33,6 @@ public class IdeasController {
             @RequestParam(defaultValue = "", required = false) String filterBy,
             @RequestParam(required = false) String searchedValue,
             Principal principal) {
-        log.info("n\\n\n\n\n\n\n\n\n\n\\n\n\n\n\n\n\\n\n\n\n\n\n\n\\n");
         return ideaService.getIdeas(
                 project,
                 page,
@@ -45,8 +44,8 @@ public class IdeasController {
 
     //http://localhost:8080/api/base/idea/1/likes?like=1
     @PutMapping("{ideaId}/likes")
-    public ResponseEntity<Void> upsertIdeaLike(
-            @PathVariable() Long ideaId,
+    public ResponseEntity<Void> upsertLike(
+            @PathVariable("ideaId") Long ideaId,
             @RequestParam() Long like,
             Principal principal) {
         log.info("\nlike = {}\n", like);

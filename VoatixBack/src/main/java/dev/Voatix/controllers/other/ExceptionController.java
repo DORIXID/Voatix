@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.other;
 
 import dev.Voatix.utils.exceptions.InvalidCredentialsException;
 import dev.Voatix.utils.exceptions.UserDisabledException;

@@ -44,13 +44,13 @@ VALUES (1, 'admin1'),
 -- ==========================================================
 -- 3. ЗАПОЛНЕНИЕ ТАБЛИЦЫ CREDENTIALS
 -- ==========================================================
-INSERT INTO public.credentials (user_id, password_id, role, is_active)
+INSERT INTO public.credentials (user_id, password_id, role, active)
 VALUES (1, 1, 'ADMIN', true),
        (2, 2, 'USER', true),
        (3, 3, 'USER', true);
 
 -- Все боты тоже активные USER
-INSERT INTO public.credentials (user_id, password_id, role, is_active)
+INSERT INTO public.credentials (user_id, password_id, role, active)
 SELECT i, i, 'USER', true
 FROM generate_series(4, 20) AS i;
 
@@ -290,4 +290,5 @@ $$
             END LOOP;
     END
 $$;
+
 GO

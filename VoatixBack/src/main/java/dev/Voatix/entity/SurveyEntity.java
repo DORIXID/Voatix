@@ -7,12 +7,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "surveys")
 public class SurveyEntity {
     @Id
@@ -35,8 +33,12 @@ public class SurveyEntity {
     @Enumerated(EnumType.STRING)
     private TypeOfSurveyEnum type;
 
-    @OneToMany( mappedBy = "survey", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "survey", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true )
     private List<VotingPointEntity> votingPoints;
+
+    @ManyToOne(fetch =  FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
     @ManyToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)

@@ -5,10 +5,8 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
 @Entity
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "votingpoints")
@@ -26,5 +24,5 @@ public class VotingPointEntity {
     private SurveyEntity survey;
 
     @OneToMany( mappedBy = "votingPoint", fetch = FetchType.LAZY, orphanRemoval = true )
-    private List<PointEstimatesEntity> pointEstimates;
+    private List<PointEstimateEntity> pointEstimates;
 }

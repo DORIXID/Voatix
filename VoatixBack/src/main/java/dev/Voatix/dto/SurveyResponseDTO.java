@@ -1,23 +1,26 @@
 package dev.Voatix.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.Size;
+import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IdeaCreateDTO {
-    @Size(min = 10, max = 50)
+public class SurveyResponseDTO {
+
+    private Long id;
     private String title;
-    @Size(min = 30, max = 1600)
     private String description;
-    private String projectName;
-    private List<String> fileKeys= new ArrayList<>();;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private TypeOfSurveyEnum type;
+    private String creatorName;
+    private List<VotingEstimatesDTO> votingEstimates;
 }

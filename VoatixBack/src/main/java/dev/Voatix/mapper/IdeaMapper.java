@@ -30,7 +30,8 @@ public interface IdeaMapper {
     @Mapping(target = "projectId", source = "idea.project.id")
     @Mapping(target = "userId", source = "idea.user.id")
     @Mapping(target = "fileKeys", source = "idea.files")
-    @Mapping(target = "userAvatarId", source = "idea.user.avatar.id")
+    @Mapping(target = "userAvatarUrl",
+            expression = "java(idea.getUser().getAvatar() != null ? \"/api/files/\" + idea.getUser().getAvatar().getKey() + \"/view\" : null)")
     IdeaDTO toDto(IdeaEntity idea);
 
     @Mapping(target = "idea", source = "idea")

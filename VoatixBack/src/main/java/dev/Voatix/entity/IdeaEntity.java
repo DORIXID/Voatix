@@ -4,17 +4,14 @@ import dev.Voatix.entity.enums.IdeaStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cascade;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "ideas")
 public class IdeaEntity {
     @Id
@@ -47,11 +44,10 @@ public class IdeaEntity {
     private List<CommentEntity> comments;
 
     @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY, orphanRemoval = true )
-    private List<VotingEstimatesEntity> votingEstimates;
+    private List<VotingEstimateEntity> votingEstimates;
 
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @BatchSize(size = 10)
     @JoinColumn(name = "idea_id")
     private List<FileEntity> files;
 }

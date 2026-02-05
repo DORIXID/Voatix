@@ -1,22 +1,18 @@
 package dev.Voatix.entity;
 
-import dev.Voatix.entity.embeddable.PointEstimatesId;
+import dev.Voatix.entity.embeddable.PointEstimateId;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
-@Setter
-@Getter
 @Entity
-@Builder
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "pointestimates")
-public class PointEstimatesEntity {
+public class PointEstimateEntity {
 
     @EmbeddedId
-    private PointEstimatesId id = new PointEstimatesId();
+    private PointEstimateId id = new PointEstimateId();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
