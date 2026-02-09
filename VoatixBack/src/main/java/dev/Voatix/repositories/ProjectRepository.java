@@ -19,17 +19,25 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     Optional<ProjectEntity> findByName(String name);
 
     @Query(value = """
-    SELECT 
-        p.id as projectId, 
-        p.title as title, 
-        p.avatar as avatarId, 
-        p.active as active, 
+    SELECT
+        p.id as projectId,
+        p.title as title,
+        f.key as key,
+        p.active as active,
         m.role as roleOfUser
     FROM projects p
+    JOIN files f ON p.avatar = f.id
     JOIN moderators m ON p.id = m.project_id
     WHERE m.user_id = :userId
     """, nativeQuery = true)
     List<ProjectOfUserProjection> findProjectsOfUserByUserId(
             @Param("userId") Long userId
     );
+
+    @Query("""
+        SELECT p.id
+        from ProjectEntity p
+        where p.title = :title
+        """)
+    Optional<Long> findIdByTitle(String title);
 }

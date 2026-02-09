@@ -22,8 +22,11 @@ public class ProjectEntity {
     private Boolean active;
 
     @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "avatar")
+    @JoinColumn(name = "avatar", insertable = false, updatable = false)
     private FileEntity avatar;
+
+    @Column(name = "avatar")
+    private Long avatarId;
 
     @OneToMany( mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true )
     private List<ModeratorEntity> moderators;

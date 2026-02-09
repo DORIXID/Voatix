@@ -3,22 +3,23 @@ package dev.Voatix.service;
 import dev.Voatix.dto.FileRequestDTO;
 import dev.Voatix.dto.FileResponseDTO;
 import dev.Voatix.entity.FileEntity;
-import dev.Voatix.entity.UserEntity;
 import dev.Voatix.mapper.FileMapper;
 import dev.Voatix.repositories.FileRepository;
 import dev.Voatix.repositories.UserRepository;
 import dev.Voatix.service.minio.MinioService;
+import dev.Voatix.utils.exceptions.fileException.FileNotFoundException;
+import dev.Voatix.utils.exceptions.fileException.FileProcessingException;
+import dev.Voatix.utils.exceptions.fileException.InvalidFileTypeException;
+import dev.Voatix.utils.exceptions.commonException.UserUnauthorizedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,22 +54,22 @@ public class FileService {
             requestDto.setContentType(file.getContentType());
             requestDto.setBucket("images");
 
-            UserEntity uploader = userRepository.findByNickname(principal.getName())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-            FileEntity fileEntity = fileMapper.toEntity(requestDto, uploader);
+            Long uploaderId = userRepository.getIdByNickname(principal.getName())
+                    .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+            FileEntity fileEntity = fileMapper.toEntity(requestDto, uploaderId);
             FileEntity savedFile = fileRepository.save(fileEntity);
             FileResponseDTO responseDto = fileMapper.toDTO(savedFile);
-            log.info("File {} uploaded successfully" + responseDto.getName() + " "+ responseDto.getKey() + " "+ responseDto.getBucket());
+            log.info("File uploaded successfully" + responseDto.getName() + " "+ responseDto.getKey() + " "+ responseDto.getBucket());
             return responseDto;
 
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to process file: " + file.getOriginalFilename(), e);
+            throw new FileProcessingException(e.getMessage());
         }
     }
 
     public ResponseEntity<Resource> download(String key) {
         FileEntity file = fileRepository.findByKey(key)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+                .orElseThrow(() -> new FileNotFoundException(key));
 
         InputStream stream = minioService.getObject(file.getBucket(), file.getKey());
         return ResponseEntity.ok()
@@ -79,7 +80,7 @@ public class FileService {
 
     private void validateFileType(MultipartFile file) {
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Разрешены только файлы форматов PNG и JPEG");
+            throw new InvalidFileTypeException(file.getContentType());
         }
     }
 }

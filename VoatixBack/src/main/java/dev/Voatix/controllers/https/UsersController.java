@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.https;
 
 import dev.Voatix.dto.UserCredentialsPasswordDTO;
 import dev.Voatix.service.UserService;
@@ -19,10 +19,9 @@ public class UsersController {
     private UserService userService;
 
     @PostMapping("new")
-    public ResponseEntity<Void> createUser(
+    public void createUser(
             @RequestBody @Valid UserCredentialsPasswordDTO dto
     ) {
         userService.createUser(dto);
-        return ResponseEntity.ok().build();
     }
 }

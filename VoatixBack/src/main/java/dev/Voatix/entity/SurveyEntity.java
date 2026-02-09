@@ -37,11 +37,17 @@ public class SurveyEntity {
     private List<VotingPointEntity> votingPoints;
 
     @ManyToOne(fetch =  FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private UserEntity user;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @ManyToOne(fetch =  FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = false, insertable = false, updatable = false)
     private ProjectEntity project;
+
+    @Column(name = "project_id")
+    private Long projectId;
 
 }

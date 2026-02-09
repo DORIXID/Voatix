@@ -26,6 +26,9 @@ public class FileEntity {
     private String contentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, name = "uploader_id")
+    @JoinColumn(nullable = false, name = "uploader_id", insertable = false, updatable = false)
     private UserEntity uploader;
+
+    @Column(name = "uploader_id")
+    private Long uploaderId;
 }

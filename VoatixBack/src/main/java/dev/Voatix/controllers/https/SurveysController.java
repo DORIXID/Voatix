@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.https;
 
 
 import dev.Voatix.dto.SurveyCreateDTO;
@@ -39,30 +39,28 @@ public class SurveysController {
     }
 
     @PostMapping("new")
-    public ResponseEntity<Void> createSurvey(
+    //либо void либо стринга просто
+    public void createSurvey(
             @Valid @RequestBody SurveyCreateDTO dto,
             Principal principal
     ){
         surveyService.createSurvey(dto, principal);
-        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("{surveyId}")
-    public ResponseEntity<Void> deleteSurvey(
+    public void deleteSurvey(
             @PathVariable("surveyId") Long surveyId,
             Principal principal
     ){
         surveyService.deleteSurvey(surveyId, principal);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("vote/{votingPointId}")
-    public ResponseEntity<Void> voteSurvey(
+    public void voteSurvey(
             @PathVariable("votingPointId") Long votingPointId,
             Principal principal
     ){
         surveyService.doVote(votingPointId, principal);
-        return ResponseEntity.ok().build();
     }
 
 

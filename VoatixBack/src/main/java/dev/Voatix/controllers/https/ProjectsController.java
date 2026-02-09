@@ -1,8 +1,7 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.https;
 
 
 import dev.Voatix.dto.ProjectOfUserDTO;
-import dev.Voatix.repositories.ProjectRepository;
 import dev.Voatix.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

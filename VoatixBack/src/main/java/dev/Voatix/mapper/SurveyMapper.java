@@ -53,10 +53,10 @@ public interface SurveyMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", source = "dto.title")
     @Mapping(target = "description", source = "dto.description")
-    @Mapping(target = "user", source = "user")
-    @Mapping(target = "project", source = "project")
+    @Mapping(target = "userId", source = "user")
+    @Mapping(target = "projectId", source = "project")
     @Mapping(target = "votingPoints", source = "dto.votingPoints")
-    SurveyEntity toEntity(SurveyCreateDTO dto, UserEntity user, ProjectEntity project);
+    SurveyEntity toEntity(SurveyCreateDTO dto, Long user, Long project);
 
     @AfterMapping
     default void afterMapping(@MappingTarget SurveyEntity survey){

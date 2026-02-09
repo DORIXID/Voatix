@@ -32,20 +32,24 @@ public class IdeaEntity {
     private IdeaStatusEnum status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private UserEntity user;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
+    @JoinColumn(name = "project_id", nullable = false, insertable = false, updatable = false)
     private ProjectEntity project;
 
+    @Column(name = "project_id")
+    private Long projectId;
 
     @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY, orphanRemoval = true )
     private List<CommentEntity> comments;
 
     @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY, orphanRemoval = true )
     private List<VotingEstimateEntity> votingEstimates;
-
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "idea_id")

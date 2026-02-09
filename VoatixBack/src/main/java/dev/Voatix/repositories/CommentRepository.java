@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -49,5 +50,21 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     Optional<CommentEntity> findById(
             @Param("commentId") Long commentId
     );
+
+    @Query("select c.id from CommentEntity c where c.id = :commentId")
+    Optional<Long> findIdById(Long commentId);
+
+    @Query("select c.userId from CommentEntity c where c.id = :commentId")
+    Optional<Long> findUserIdById(Long commentId);
+
+    @Query("select c.ideaId from CommentEntity c where c.id = :commentId")
+    Optional<Long> findIdeaIdById(Long commentId);
+
+
+    void deleteById(Long commentId);
+
+    @Modifying
+    @Query("delete from CommentEntity c where c.ideaId = :ideaId")
+    void deleteByIdeaId(Long ideaId);
 
 }

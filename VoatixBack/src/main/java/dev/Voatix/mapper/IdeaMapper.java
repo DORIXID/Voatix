@@ -30,8 +30,8 @@ public interface IdeaMapper {
     @Mapping(target = "projectId", source = "idea.project.id")
     @Mapping(target = "userId", source = "idea.user.id")
     @Mapping(target = "fileKeys", source = "idea.files")
-    @Mapping(target = "userAvatarUrl",
-            expression = "java(idea.getUser().getAvatar() != null ? \"/api/files/\" + idea.getUser().getAvatar().getKey() + \"/view\" : null)")
+    @Mapping(target = "avatarKey",
+            expression = "java(idea.getUser().getAvatar() != null ? idea.getUser().getAvatar().getKey() : null)")
     IdeaDTO toDto(IdeaEntity idea);
 
     @Mapping(target = "idea", source = "idea")
@@ -64,14 +64,14 @@ public interface IdeaMapper {
     }
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "project", source = "project")
-    @Mapping(target = "user", source = "user")
+    @Mapping(target = "projectId", source = "project")
+    @Mapping(target = "userId", source = "user")
     @Mapping(target = "title", source = "dto.title")
     @Mapping(target = "description", source = "dto.description")
     @Mapping(target = "dateTime", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "status", constant = "CREATED")
     @Mapping(target = "files", source = "files")
-    IdeaEntity toEntity (IdeaCreateDTO dto, ProjectEntity project, UserEntity user, List<FileEntity> files);
+    IdeaEntity toEntity (IdeaCreateDTO dto, Long project, Long user, List<FileEntity> files);
 
     @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

@@ -23,5 +23,4 @@ public interface ModeratorRepository extends JpaRepository<ModeratorEntity, Long
                         AND project_id = :projectId
             """, nativeQuery = true)
     Optional<ModeratorEntity> findByUserIdAndProjectId(Long userId, Long projectId);
-
 }

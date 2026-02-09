@@ -15,7 +15,7 @@ public class ProjectOfUserDTO {
     private Long projectId;
     @Size(min = 3, max = 30)
     private String title;
-    private Long avatarId;
+    private String key;
     private Boolean active;
     private RoleOfProjectManager roleOfUser;
 }

@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.https;
 
 
 import dev.Voatix.dto.CommentDTO;
@@ -32,40 +32,36 @@ public class CommentsController {
     }
 
     @PostMapping("new")
-    public ResponseEntity<Void> createComment(
+    public void createComment(
             @Valid @RequestBody() CommentDTO dto,
             Principal principal
     ){
         commentsService.createComment(dto, principal);
-        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("{commentId}")
-    public ResponseEntity<Void> deleteComment(
+    public void deleteComment(
             @PathVariable() Long commentId,
             Principal principal
     ){
         commentsService.deleteComment(commentId, principal);
-        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("{commentId}")
-    public ResponseEntity<Void> updateComment(
+    public void updateComment(
             @RequestBody() CommentUpdateDTO dto,
             @Valid @PathVariable() Long commentId,
             Principal principal
     ){
         commentsService.updateComment(dto, commentId, principal);
-        return ResponseEntity.ok().build();
     }
 
     @PutMapping("{commentId}/likes")
-    public ResponseEntity<Void> upsertLike(
+    public void upsertLike(
             @PathVariable("commentId") Long commentId,
             @RequestParam() Long like,
             Principal principal) {
         log.info("\nlike = {}\n", like);
         commentsService.upsertLike(commentId, like, principal);
-        return ResponseEntity.ok().build();
     }
 }

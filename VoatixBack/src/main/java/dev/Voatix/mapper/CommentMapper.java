@@ -54,11 +54,11 @@ public interface CommentMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "text", source = "dto.text")
-    @Mapping(target = "user", source = "user")
-    @Mapping(target = "idea", source = "idea")
+    @Mapping(target = "userId", source = "user")
+    @Mapping(target = "ideaId", source = "idea")
     @Mapping(target = "files", source = "files")
     @Mapping(target = "dateTime", expression = "java(java.time.LocalDateTime.now())")
-    CommentEntity toEntity(CommentDTO dto, UserEntity user, IdeaEntity idea, List<FileEntity> files);
+    CommentEntity toEntity(CommentDTO dto, Long user, Long idea, List<FileEntity> files);
 
     @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

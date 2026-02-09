@@ -1,17 +1,15 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.IdeaWithStatsDTO;
 import dev.Voatix.dto.projection.CommentCountProjection;
-import dev.Voatix.dto.projection.IdeaProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
 
-import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,9 +18,20 @@ import java.util.Optional;
 
 public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
 
+    Optional<IdeaEntity> findEntityById(Long id);
 
-    Optional<IdeaEntity> findById(Long id);
+    @Modifying
+    @Query("DELETE FROM IdeaEntity i WHERE i.id = :ideaId")
+    void deleteByIdeaId(Long ideaId);
 
+    @Query("select i.id from IdeaEntity i where i.id = :id")
+    Optional<Long> findIdById(Long id);
+
+    @Query("select i.projectId from IdeaEntity i where i.id = :id")
+    Optional<Long> findProjectIdById(Long id);
+
+    @Query("select i.userId from IdeaEntity i where i.id = :id")
+    Optional<Long> findUserIdById(Long id);
 
     @EntityGraph(attributePaths = {"project", "user", "user.avatar", "user.credentials", "files"})
     @Query(value = """

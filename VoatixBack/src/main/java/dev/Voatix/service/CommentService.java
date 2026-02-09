@@ -9,15 +9,23 @@ import dev.Voatix.entity.enums.RoleOfUserEnum;
 import dev.Voatix.mapper.CommentMapper;
 import dev.Voatix.mapper.CommentRatingMapper;
 import dev.Voatix.repositories.*;
+import dev.Voatix.utils.exceptions.commentException.CommentAuthorNotFoundException;
+import dev.Voatix.utils.exceptions.commentException.CommentNotFoundException;
+import dev.Voatix.utils.exceptions.commentException.UserOfCommentNotFoundException;
+import dev.Voatix.utils.exceptions.commonException.AccessDeniedException;
+import dev.Voatix.utils.exceptions.commonException.RoleOfUserNotFoundException;
+import dev.Voatix.utils.exceptions.commonException.UserUnauthorizedException;
+import dev.Voatix.utils.exceptions.fileException.FileOwnershipException;
+import dev.Voatix.utils.exceptions.ideaException.IdeaNotFoundException;
+import dev.Voatix.utils.exceptions.ideaException.ProjectOfIdeaNotFoundException;
+import dev.Voatix.utils.exceptions.moderatorException.ModeratorAccessDeniedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -36,48 +44,53 @@ public class CommentService {
     private final ModeratorRepository moderatorRepository;
     private final CommentRatingRepository commentRatingRepository;
     private final CommentRatingMapper commentRaitingMapper;
+    private final ProjectRepository projectRepository;
+    private final CredentialsRepository credentialsRepository;
 
     public Page<CommentWithStatsDTO> getComments(Long ideaId, Integer page, Integer limit, Principal principal) {
         Pageable pageParam = PageRequest.of(page, limit);
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+        Long findIdeaId = ideaRepository.findIdById(ideaId)
+                .orElseThrow(() -> new IdeaNotFoundException(ideaId));
         Page<CommentEntity> comment = commentRepository.findByIdea(ideaId, pageParam);
 
         List<Long> ids = comment.getContent().stream().map(CommentEntity::getId).toList();
 
-        List<CommentStatsProjection> commStatsProj = commentRepository.getCommentsRaitingsStats(ids, user.getId());
+        List<CommentStatsProjection> commStatsProj = commentRepository.getCommentsRaitingsStats(ids, userId);
         return commentMapper.toPageDto(comment, commStatsProj);
     }
 
     public void createComment(CommentDTO dto, Principal principal) {
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-        IdeaEntity idea = ideaRepository.findById(dto.getIdeaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment with id = " + dto.getIdeaId() + " not found"));
-        if (fileRepository.existsByOwner(dto.getFileKeys(), user.getId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Some files don't belong to you");
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+        Long ideaId = ideaRepository.findIdById(dto.getIdeaId())
+                .orElseThrow(() -> new IdeaNotFoundException(dto.getIdeaId()));
+        if (fileRepository.existsByOwner(dto.getFileKeys(), userId)){
+            throw new FileOwnershipException();
         }
         List<FileEntity> files = fileRepository.findByFileKeys(dto.getFileKeys());
-        commentRepository.save(commentMapper.toEntity(dto, user, idea, files));
+        commentRepository.save(commentMapper.toEntity(dto, userId, ideaId, files));
     }
 
     public void updateComment(CommentUpdateDTO dto, Long commentId, Principal principal) {
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment " + commentId + " not found"));
-        log.info("\n\n\n\n\n\n" + comment.getUser().getId() + " что в комменте и что в пользователе " + user.getId() + "\n\n\n\n\n\n");
-        if (!comment.getUser().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access");
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
+        Long authorId = commentRepository.findUserIdById(comment.getId())
+                .orElseThrow(() -> new CommentAuthorNotFoundException(comment.getId()));
+        if (!authorId.equals(userId)) {
+            throw new AccessDeniedException("You are not author of this comment");
         }
         commentMapper.updateEntity(dto, comment);
     }
 
     public void upsertLike(Long commentId, Long like, Principal principal) {
         CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         CommentRatingEntity commentRating = commentRatingRepository.findByUserIdAndCommentId(user.getId(), comment.getId())
                 .orElse(null);
         if (like == 0L) {
@@ -92,16 +105,25 @@ public class CommentService {
     }
 
     public void deleteComment(Long commentId, Principal principal) {
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-        CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment " + commentId + " not found"));
-        ProjectEntity projectEntity = comment.getIdea().getProject();
-        if (!comment.getUser().getId().equals(user.getId()) && !user.getCredentials().getRole().equals(RoleOfUserEnum.ADMIN)) {
-            ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(user.getId(), projectEntity.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access"));
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+        Long findCommentId = commentRepository.findIdById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
+        Long ideaId = commentRepository.findIdeaIdById(commentId)
+                .orElseThrow(() -> new IdeaNotFoundException(commentId));
+        Long projectId = ideaRepository.findProjectIdById(ideaId)
+                .orElseThrow(() -> new ProjectOfIdeaNotFoundException(ideaId));
+        Long userIdOfComment = commentRepository.findIdById(commentId)
+                .orElseThrow(() -> new UserOfCommentNotFoundException(commentId));
+        RoleOfUserEnum role = credentialsRepository.findRoleOfUserByUserId(userId)
+                .orElseThrow(() -> new RoleOfUserNotFoundException(principal.getName()));
+        if (!userIdOfComment.equals(userId) && !role.equals(RoleOfUserEnum.ADMIN)) {
+            ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, projectId)
+                    .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
         }
-        commentRepository.delete(comment);
+        commentRatingRepository.deleteByCommentId(commentId);
+        fileRepository.deleteByCommentId(commentId);
+        commentRepository.deleteById(commentId);
     }
 
 

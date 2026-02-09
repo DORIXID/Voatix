@@ -19,9 +19,14 @@ public class UserEntity {
     private String nickname;
 
     @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "avatar_id", nullable = true)
+    @JoinColumn(name = "avatar_id", insertable = false, updatable = false)
     private FileEntity avatar;
+
+    @Column(name = "avatar_id")
+    private Long avatarId;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "user")
     private CredentialsEntity credentials;
+
+
 }

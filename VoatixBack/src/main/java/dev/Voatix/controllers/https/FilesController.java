@@ -1,4 +1,4 @@
-package dev.Voatix.controllers;
+package dev.Voatix.controllers.https;
 
 
 import dev.Voatix.dto.FileResponseDTO;

@@ -14,9 +14,9 @@ public interface FileMapper {
     @Mapping(target = "name", source = "dto.name")
     @Mapping(target = "key", source = "dto.key")
     @Mapping(target = "bucket", source = "dto.bucket")
-    @Mapping(target = "uploader", source = "uploader")
+    @Mapping(target = "uploaderId", source = "uploaderId")
     @Mapping(target = "contentType", source = "dto.contentType")
-    FileEntity toEntity(FileRequestDTO dto, UserEntity uploader);
+    FileEntity toEntity(FileRequestDTO dto, Long uploaderId);
 
     @Mapping(target = "url", expression = "java(\"/api/files/\" + fileEntity.getKey() + \"/view\")")
     FileResponseDTO toDTO(FileEntity fileEntity);

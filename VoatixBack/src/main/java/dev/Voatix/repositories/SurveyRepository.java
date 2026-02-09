@@ -1,10 +1,7 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.VotingEstimatesDTO;
 import dev.Voatix.dto.projection.VotingEstimatesProjection;
-import dev.Voatix.entity.IdeaEntity;
 import dev.Voatix.entity.SurveyEntity;
-import dev.Voatix.entity.enums.IdeaStatusEnum;
 import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +53,6 @@ public interface SurveyRepository extends JpaRepository<SurveyEntity, Long> {
 
     Optional<SurveyEntity> findSurveyById(@Param("surveyId") Long surveyId);
 
-
-
+    @Query("select s.id from SurveyEntity s where s.id = :surveyId")
+    Optional<Long> findIdById(Long surveyId);
 }

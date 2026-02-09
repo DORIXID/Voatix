@@ -10,6 +10,14 @@ import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import dev.Voatix.mapper.PointEstimateMapper;
 import dev.Voatix.mapper.SurveyMapper;
 import dev.Voatix.repositories.*;
+import dev.Voatix.utils.exceptions.commonException.UnknownStatusException;
+import dev.Voatix.utils.exceptions.commonException.UserUnauthorizedException;
+import dev.Voatix.utils.exceptions.moderatorException.ModeratorAccessDeniedException;
+import dev.Voatix.utils.exceptions.projectException.ProjectNotFoundException;
+import dev.Voatix.utils.exceptions.surveyException.SurveyAccessDeniedException;
+import dev.Voatix.utils.exceptions.surveyException.SurveyNotFoundException;
+import dev.Voatix.utils.exceptions.surveyException.SurveyVotingTimeIsUpException;
+import dev.Voatix.utils.exceptions.surveyException.VotingPointNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +48,15 @@ public class SurveyService {
     private final VotingPointRepository votingPointRepository;
 
     public Page<SurveyResponseDTO> getSurveys(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal){
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         TypeOfSurveyEnum status = null;
         if (!filterBy.isBlank() && !filterBy.equals("ALL")) {
             try {
                 log.info("\"" + filterBy + "\"");
                 status = TypeOfSurveyEnum.valueOf(filterBy);
             } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown status: " + filterBy);
+                throw new UnknownStatusException(filterBy);
             }
         }
         Pageable pageable = PageRequest.of(page, limit);
@@ -57,47 +65,46 @@ public class SurveyService {
 
         List<Long> ids = surveys.getContent().stream().map(SurveyEntity::getId).toList();
 
-        List<VotingEstimatesProjection> votingEstimatesProj = surveyRepository.findAllPointsWithVotes(ids, user.getId());
+        List<VotingEstimatesProjection> votingEstimatesProj = surveyRepository.findAllPointsWithVotes(ids, userId);
         return surveyMapper.toPageDto(surveys, votingEstimatesProj);
     }
 
     public void createSurvey(SurveyCreateDTO dto, Principal principal){
-        UserEntity userEntity = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
-        ProjectEntity projectEntity = projectRepository.findByName(dto.getProjectName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project " + dto.getProjectName() + " not found"));
-        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userEntity.getId(), projectEntity.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access"));
-        surveyRepository.save(surveyMapper.toEntity(dto, userEntity, projectEntity));
+        Long userId = userRepository.getIdByNickname(principal.getName())
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+        Long projectId = projectRepository.findIdByTitle(dto.getProjectName())
+                .orElseThrow(() -> new ProjectNotFoundException(dto.getProjectName()));
+        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, projectId)
+                .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
+        surveyRepository.save(surveyMapper.toEntity(dto, userId, projectId));
     }
 
     public void deleteSurvey(Long surveyId, Principal principal){
         UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         SurveyEntity survey = surveyRepository.findSurveyById(surveyId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Survey " + surveyId + " not found"));
+                .orElseThrow(() -> new SurveyNotFoundException(surveyId));
         ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(user.getId(), survey.getProject().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access"));
+                .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
         boolean isAuthor = user.getId().equals(survey.getUser().getId());
         boolean isProjectOwner = moderator.getRole().equals(RoleOfProjectManager.OWNER);
         if (!isAuthor && !isProjectOwner && !user.getCredentials().getRole().equals(RoleOfUserEnum.ADMIN)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User \"" + principal.getName() + "\" does not have access to delete this survey");
+            throw new SurveyAccessDeniedException(principal.getName());
         }
         surveyRepository.delete(survey);
     }
 
     public void doVote(Long votingPointId, Principal principal){
         UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User \"" + principal.getName() + "\" not found"));
+                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         VotingPointEntity votingPoint = votingPointRepository.findById(votingPointId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voting point " + votingPointId + " not found"));
+                .orElseThrow(() -> new VotingPointNotFoundException(votingPointId));
         PointEstimateEntity pointEstimate = pointEstimateRepository.findByUserIdAndVotingPointId(user.getId(), votingPointId)
                 .orElse(null);
-        SurveyEntity survey = surveyRepository.findSurveyById(votingPoint.getSurvey().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Survey " + votingPoint.getSurvey().getId() + " not found"));
+        SurveyEntity survey = votingPoint.getSurvey();
 
         if (survey.getEndDate().isBefore(LocalDateTime.now())){
-            throw new ResponseStatusException(HttpStatus.GONE, "Voting time is up");
+            throw new SurveyVotingTimeIsUpException();
         }
 
         if (survey.getType().equals(TypeOfSurveyEnum.RADIO_BUTTON) && pointEstimate == null) {

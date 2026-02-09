@@ -22,13 +22,22 @@ public class MessageEntity {
     @Column(nullable = false)
     private LocalDateTime date;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_user_id", nullable = false)
-    private UserEntity sender;
+    @Column(nullable = false, name = "is_read")
+    private Boolean isRead = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reciver_user_id", nullable = false)
-    private UserEntity reciver;
+    @JoinColumn(name = "sender_user_id", nullable = false, insertable = false, updatable = false)
+    private UserEntity sender;
+
+    @Column(name = "sender_user_id")
+    private Long senderId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_user_id", nullable = false, insertable = false, updatable = false)
+    private UserEntity receiver;
+
+    @Column(name = "receiver_user_id")
+    private Long receiverId;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "message_id")

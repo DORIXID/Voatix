@@ -20,7 +20,8 @@ public class IdeaDTO {
     private LocalDateTime dateTime;
     private Long projectId;
     private Long userId;
-    private String userAvatarUrl;
+    private String avatarKey;
     private IdeaStatusEnum status;
+    @Size(min = 0, max = 6)
     private List<String> fileKeys;
 }
