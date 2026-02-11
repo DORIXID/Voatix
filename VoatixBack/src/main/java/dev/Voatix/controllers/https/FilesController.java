@@ -21,16 +21,21 @@ public class FilesController {
     private FileService fileService;
 
     @PostMapping("upload")
-    public ResponseEntity<FileResponseDTO> upload(
+    public FileResponseDTO upload(
             @RequestPart("file") MultipartFile file,
             Principal principal)
     {
-        return ResponseEntity.ok(fileService.upload(file, principal));
+        return fileService.upload(file, principal);
     }
 
     @GetMapping("/{key}/view")
     public ResponseEntity<Resource> getFile(@PathVariable String key) {
         log.info("\n\n"+ key +"\n\n");
         return fileService.download(key);
+    }
+
+    @DeleteMapping("/{key}")
+    public void deleteFile(@PathVariable String key) {
+        fileService.delete(key);
     }
 }

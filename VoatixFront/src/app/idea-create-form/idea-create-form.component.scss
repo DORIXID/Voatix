@@ -1,0 +1,131 @@
+/* Voatix-styled create idea form — updated to match project typography */
+
+.card-container {
+  width: 1170px;
+  height: 742px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.headlineDiv h1 { font-family: 'Inter'; font-size: 36px; margin: 0 0 6px -10px; font-weight: 500; }
+.headlineDiv .subtitle { font-size: 14px; color: #666; margin: 0 0 6px -10px; }
+
+.btn-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  font-size: 15px;
+  margin-left: -10px;
+}
+.btn-back:hover { color: #222; }
+.btn-back .back-icon { width: 24px; height: 24px; transform: rotate(90deg); }
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-group label {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.input-field {
+  box-sizing: border-box;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e7c4ff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 18px;
+  color: #222;
+}
+.input-field::placeholder { color: #999; font-style: italic; }
+
+.header-input { height: 50px; }
+
+.content-area { min-height: 210px; resize: none; font-size: 16px; }
+
+.file-upload { display:flex; flex-direction: column; gap:8px; min-height: 100px;}
+.file-control { display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.file-control input[type="file"] { display:none; }
+.file-hint { background:#f3e6ff; border:1px dashed #cf78ef; border-radius:10px; padding:16px 12px; color:#555; font-size:14px; cursor:pointer; text-align:center; flex:1; min-width:200px;}
+.file-hint:hover { background:#efddff; }
+.file-control.dragover .file-hint { background: #e6f7ff; border-color: #7bb8ff; box-shadow: 0 4px 18px rgba(30,130,255,0.08); }
+.file-list { margin-top:6px; display:flex; flex-direction:column; gap:6px; min-height: 100px; max-height:100px; overflow-y:auto; scrollbar-width:none; }
+.file-list::-webkit-scrollbar { display:none; }
+.file-item { background:#faf5ff; padding:8px 10px; border-radius:10px; border:1px solid #efe0ff; font-size:14px; display:flex; align-items:center; justify-content:space-between; }
+.file-item-remove { background:none; border:none; color:#cf78ef; font-size:20px; cursor:pointer; padding:0; line-height:1; }
+.file-item-remove:hover { color:#e25e5c; }
+
+/* file info and status */
+.file-info { display:flex; align-items:center; gap:8px; }
+.file-name { font-weight:500; color:#332; max-width:560px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-status { font-size:13px; padding-left:6px; }
+.status-done { color: #198754; } /* green */
+.status-error { color: #d9534f; } /* red */
+.status-uploading { color: #0d6efd; } /* blue */
+
+/* progress bar base */
+.progress { flex:1; margin: 6px 12px; height:8px; background: #efe6ff; border-radius:8px; overflow:hidden; }
+.progress-bar { height:100%; width:0%; background: linear-gradient(90deg, #7b61ff, #cf78ef); transition: width 0.2s ease; }
+
+/* color variations based on item state */
+.file-item.uploading .progress-bar { background: linear-gradient(90deg, #4fa3ff, #7bb8ff); }
+.file-item.done .progress-bar { background: linear-gradient(90deg, #28a745, #7bd389); }
+.file-item.error .progress-bar { background: linear-gradient(90deg, #ff6b6b, #ff9a9a); }
+
+.file-item.uploading { border-color: #cfe8ff; background: #f3fbff; }
+.file-item.done { border-color: #d6f5e0; background: #f2fff6; }
+.file-item.error { border-color: #ffd6d6; background: #fff6f6; }
+
+/* Voatix toast styles */
+.voatix-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(20,20,50,0.12);
+  color: #fff;
+  font-weight: 600;
+  z-index: 1200;
+  transform: translateY(0);
+  animation: toast-in 220ms ease-out;
+}
+.voatix-toast .toast-icon { font-size: 18px; }
+.voatix-toast.success { background: linear-gradient(90deg, #6a5aff, #cf78ef); }
+.voatix-toast.error { background: linear-gradient(90deg, #ff6b6b, #ff9a9a); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.button-row { display:flex; justify-content:space-between; gap:16px; margin-top:auto; align-items:center; }
+
+/* ensure cancel button stays visually left-aligned */
+.button-row .btn-cancel { margin-left: 0; }
+
+.btn { height:44px; border-radius:12px; font-size:16px; cursor:pointer; padding:0 18px; transition:transform 0.12s ease}
+.btn-cancel { background:#ffffff; color:#333; border:1px solid #e6d8f7; width: 200px;}
+.btn-submit { background:#cf78ef; color:#fff; border:1px solid #cf78ef; min-width:1000px; }
+.btn:hover { transform: translateY(-1px); }
+
+@media (max-width: 1280px) { .card-container { width:100%; padding:20px; } }

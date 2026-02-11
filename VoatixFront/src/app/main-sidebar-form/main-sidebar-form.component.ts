@@ -55,7 +55,7 @@ export class MainSidebarFormComponent implements OnInit {
   
 
   loadProjects() {
-    this.http.get<Project[]>('http://localhost:8080/api/base/projects', { withCredentials: true })
+    this.http.get<Project[]>('http://localhost:8080/api/projects', { withCredentials: true })
       .subscribe({
         next: (data) => {
           this.projects = data;

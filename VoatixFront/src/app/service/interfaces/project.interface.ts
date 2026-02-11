@@ -5,4 +5,5 @@ export interface Project {
   title: string;
   active: boolean;
   roleOfUser: UserRole;
+  key: string;
 }

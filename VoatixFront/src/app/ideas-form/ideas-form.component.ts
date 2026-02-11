@@ -10,6 +10,9 @@ import { IdeaStatus, IdeaStatusRu } from '../service/enums/idea-status.enum';
 import { OnInit } from '@angular/core';
 import { IdeaService } from '../service/idea.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import localeRu from '@angular/common/locales/ru';
 import { registerLocaleData } from '@angular/common';
 import { Project } from '../service/interfaces/project.interface';
@@ -50,6 +53,10 @@ export class IdeasFormComponent implements OnInit {
   totalElements = 0;
   searchedValue: string = '';
 
+  // модальное окно
+  selectedImageUrl: SafeUrl | null = null;
+  isImageModalOpen = false;
+
   // для шаблона
   IdeaStatusRu = IdeaStatusRu;
 
@@ -58,7 +65,10 @@ export class IdeasFormComponent implements OnInit {
   constructor(
     private projectService: ProjectService,
     private ideaService: IdeaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private http: HttpClient,
+    private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit() {
@@ -85,17 +95,58 @@ export class IdeasFormComponent implements OnInit {
               ? 1
               : i.vote === -1
                 ? -1
-                : 0
+                : 0,
+            imageUrls: {} as Record<string, SafeUrl>
           }));
+
+          // Load images for each idea
+          this.ideas.forEach(idea => {
+            if (idea.idea.fileKeys && idea.idea.fileKeys.length > 0) {
+              idea.idea.fileKeys.slice(0, 5).forEach(fileKey => {
+                this.loadImageAsBlob(fileKey).then(blobUrl => {
+                  if (!idea.imageUrls) idea.imageUrls = {};
+                  idea.imageUrls[fileKey] = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+                  console.log(`✓ Image URL установлена для ${fileKey}:`, idea.imageUrls[fileKey]);
+                  this.cdr.detectChanges();
+                }).catch(err => {
+                  console.error(`✗ Failed to load image ${fileKey}:`, err);
+                });
+              });
+            }
+          });
 
           this.totalPages = data.totalPages;
           this.totalElements = data.totalElements;
 
           this.cdr.detectChanges();
-          this.ideasList.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+          
+          // Скролл после отрисовки элементов
+          setTimeout(() => {
+            this.ideasList.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 0);
         },
         error: (err) => console.error('Ошибка загрузки идей:', err)
       });
+  }
+
+  private loadImageAsBlob(fileKey: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.http.get(`http://localhost:8080/api/files/${fileKey}/view`, {
+        responseType: 'blob',
+        withCredentials: true
+      }).subscribe({
+        next: (blob) => {
+          console.log(`✓ Изображение загружено: ${fileKey}, размер:`, blob.size);
+          const blobUrl = URL.createObjectURL(blob);
+          console.log(`✓ BlobUrl создан:`, blobUrl);
+          resolve(blobUrl);
+        },
+        error: (err) => {
+          console.error(`✗ Ошибка загрузки изображения ${fileKey}:`, err);
+          reject(err);
+        }
+      });
+    });
   }
 
 
@@ -179,6 +230,25 @@ export class IdeasFormComponent implements OnInit {
       this.page--;
       this.loadIdeas(this.selectedProject!);
     }
+  }
+
+  openImageModal(imageUrl: SafeUrl | null | undefined) {
+    if (!imageUrl) return;
+    this.selectedImageUrl = imageUrl;
+    this.isImageModalOpen = true;
+  }
+
+  closeImageModal() {
+    this.selectedImageUrl = null;
+    this.isImageModalOpen = false;
+  }
+
+  createIdea() {
+    this.router.navigate(['/main/ideas/create']);
+  }
+
+  viewIdea(ideaId: number) {
+    this.router.navigate(['/main/ideas/view', ideaId]);
   }
 
   //Затычка

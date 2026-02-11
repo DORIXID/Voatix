@@ -3,6 +3,7 @@ package dev.Voatix.service.minio;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,19 @@ public class MinioService {
             );
         } catch (Exception e) {
             throw new RuntimeException("MinIO read error", e);
+        }
+    }
+
+    public void removeObject(String bucket, String key) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(key)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Error removing object from Minio", e);
         }
     }
 }

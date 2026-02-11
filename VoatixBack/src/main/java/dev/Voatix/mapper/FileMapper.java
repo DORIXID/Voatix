@@ -18,6 +18,5 @@ public interface FileMapper {
     @Mapping(target = "contentType", source = "dto.contentType")
     FileEntity toEntity(FileRequestDTO dto, Long uploaderId);
 
-    @Mapping(target = "url", expression = "java(\"/api/files/\" + fileEntity.getKey() + \"/view\")")
     FileResponseDTO toDTO(FileEntity fileEntity);
 }

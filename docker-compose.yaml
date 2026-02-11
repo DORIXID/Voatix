@@ -34,12 +34,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set VoatixMinioDB http://minio:9000 minioadmin minioadmin) do echo 'Waiting for MinIO...' && sleep 1; done;
-      /usr/bin/mc mb --ignore-existing VoatixMinioDB/images;
-      /usr/bin/mc policy set public VoatixMinioDB/images;
-      exit 0;
-      "
+      /bin/sh -c " until (/usr/bin/mc alias set VoatixMinioDB http://minio:9000 minioadmin minioadmin) do echo 'Waiting for MinIO...' && sleep 1; done; /usr/bin/mc mb --ignore-existing VoatixMinioDB/images; /usr/bin/mc policy set public VoatixMinioDB/images; exit 0; "
 
   backend:
     build:
@@ -60,21 +55,21 @@ services:
     ports:
       - "8080:8080"
 
-  # frontend:
-  #   build:
-  #     context: ./VoatixFront
-  #   container_name: voatix_frontend
-  #   restart: always
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "4200:4200"
-  #   volumes:
-  #     - ./VoatixFront:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - CHOKIDAR_USEPOLLING=true
 
+  frontend:
+    build:
+      context: ./VoatixFront
+    container_name: voatix_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./VoatixFront:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
 volumes:
   postgres_data:
   minio_data:

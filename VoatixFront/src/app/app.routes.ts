@@ -6,6 +6,8 @@ import { IdeasFormComponent } from './ideas-form/ideas-form.component';
 import { SurveysSidebarFormComponent } from './surveys-form/surveys-form.component';
 import path from 'path';
 import { MessagesSidebarFormComponent } from './messages-form/messages-form.component';
+import { IdeaCreateFormComponent } from './idea-create-form/idea-create-form.component';
+import { IdeaViewComponent } from './idea-view/idea-view.component';
 
 export const routes: Routes = [
      { path: '', redirectTo: 'login', pathMatch: 'full'},
@@ -14,6 +16,8 @@ export const routes: Routes = [
      { path: 'main', component: MainSidebarFormComponent,
           children: [
                { path: 'ideas', component: IdeasFormComponent},
+               { path: 'ideas/create', component: IdeaCreateFormComponent },
+               { path: 'ideas/view/:id', component: IdeaViewComponent },
                { path: 'surveys', component: SurveysSidebarFormComponent},
                { path: 'messages', component: MessagesSidebarFormComponent}
           ]

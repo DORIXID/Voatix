@@ -1,0 +1,55 @@
+<div class="card-container">
+  <div class="headlineDiv" style="width:100%;">
+    <h1>Ваша идея</h1>
+    <p class="subtitle">Изложите вашу мысль, что бы другие пользователи поняли суть</p>
+  </div>
+
+  <button class="btn-back" type="button" (click)="back()">
+    <img src="/assets/icons/dislikeArrow.png" alt="back" class="back-icon">
+    <span>Назад</span>
+  </button>
+
+  <div class="input-group">
+    <label>Название</label>
+    <input type="text" name="title" [(ngModel)]="title" class="input-field header-input" placeholder="Введите название...">
+  </div>
+
+  <div class="input-group">
+    <label>Суть идеи</label>
+    <textarea name="description" [(ngModel)]="description" class="input-field content-area" placeholder="Опишите вашу идею..."></textarea>
+  </div>
+
+  <div class="file-upload">
+    <div class="file-control" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [class.dragover]="isDragOver">
+      <input type="file" id="files" multiple (change)="onFilesSelected($event)" [disabled]="selectedFiles.length >= maxFiles" />
+      <label for="files" class="file-hint">Перетащите файлы сюда или нажмите для выбора (максимум {{maxFiles}})</label>
+    </div>
+    <div class="file-list" *ngIf="selectedFiles.length">
+      <div class="file-item" *ngFor="let f of selectedFiles; let i = index" [class.uploading]="f.status==='uploading'" [class.done]="f.status==='done'" [class.error]="f.status==='error'">
+        <div class="file-info">
+          <span class="file-name">{{ f.name }}</span>
+          <span class="file-status status-done" *ngIf="f.status === 'done'">✔</span>
+          <span class="file-status status-error" *ngIf="f.status === 'error'">⚠</span>
+          <span class="file-status status-uploading" *ngIf="f.status === 'uploading'">{{ f.progress }}%</span>
+        </div>
+
+        <div class="progress" *ngIf="f.status !== 'done'">
+          <div class="progress-bar" [style.width.%]="f.progress"></div>
+        </div>
+
+        <button type="button" class="file-item-remove" (click)="removeFile(i)">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voatix toast -->
+  <div class="voatix-toast" *ngIf="toastVisible" [class.success]="toastType==='success'" [class.error]="toastType==='error'">
+    <div class="toast-icon">{{ toastType === 'success' ? '✔' : '⚠' }}</div>
+    <div class="toast-body">{{ toastMessage }}</div>
+  </div>
+
+  <div class="button-row">
+    <button class="btn btn-cancel" type="button" (click)="back()">Отмена</button>
+    <button class="btn btn-submit" type="button" [disabled]="submitting || hasUploadingFiles()" (click)="submitIdea()">{{ submitting ? 'Отправка...' : (hasUploadingFiles() ? 'Загружаются файлы...' : 'Отправить') }}</button>
+  </div>
+</div>

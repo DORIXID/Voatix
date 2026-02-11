@@ -12,7 +12,18 @@ export class AuthInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    // получаем заголовок
+    // Не добавляем заголовок на эндпоинт логина
+    if (req.url.includes('/api/login/new')) {
+      return next.handle(req);
+    }
+
+    // Если сервер выставляет cookie с токеном, не добавляем дублирующий Authorization
+    const cookieToken = this.auth.getTokenFromCookie();
+    if (cookieToken) {
+      return next.handle(req);
+    }
+
+    // получаем заголовок из localStorage (если есть)
     const authHeader = this.auth.getAuthHeader();
     
     // делаем новый запрос на основе старого, добавляя заголовок с baseAuth

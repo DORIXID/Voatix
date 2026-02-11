@@ -6,5 +6,9 @@ export interface Idea {
   description: string;
   dateTime: Date;
   status: IdeaStatus;
+  fileKeys?: string[];
+  projectId?: number;
+  nickname?: string;
+  avatarKey?: string;
 }
 

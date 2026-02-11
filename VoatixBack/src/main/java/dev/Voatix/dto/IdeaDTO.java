@@ -19,7 +19,7 @@ public class IdeaDTO {
     private String description;
     private LocalDateTime dateTime;
     private Long projectId;
-    private Long userId;
+    private String nickname;
     private String avatarKey;
     private IdeaStatusEnum status;
     @Size(min = 0, max = 6)

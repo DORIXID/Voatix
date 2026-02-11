@@ -1,0 +1,51 @@
+<div class="idea-container" *ngIf="idea">
+  <h1 class="idea-title">{{ idea.title }}</h1>
+
+  <div class="meta-row">
+    <div class="author">
+      <img [src]="getAvatarUrl(idea.avatarKey)" alt="avatar" class="avatar">
+      <div class="nick">{{ idea.nickname }}</div>
+    </div>
+    <div class="idea-date">{{ idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</div>
+  </div>
+
+  <div class="description">
+    {{ idea.description }}
+  </div>
+
+  <div class="photos" *ngIf="idea.fileKeys?.length">
+    <div class="photo" *ngFor="let k of idea.fileKeys">
+      <img [src]="getImageUrl(k)" alt="photo" (click)="openImageModal(getImageUrl(k))">
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <div class="voting">
+      <img class="vote-icon" [class.active]="userVote == 1"
+           src="/assets/icons/likeArrow.png" 
+           (click)="toggleLike()"
+           alt="like">
+      <div class="likes-count" [class.positive]="likes>0">{{ likes }}</div>
+      
+      <div class="total-score" [ngClass]="scoreClass()">{{ totalScore() }}</div>
+      
+      <div class="dislikes-count" [class.negative]="disLikes>0">{{ disLikes }}</div>
+      <img class="vote-icon" [class.active]="userVote == -1"
+           src="/assets/icons/dislikeArrow.png" 
+           (click)="toggleDislike()"
+           alt="dislike">
+    </div>
+    <div style="width: 1190px; gap: 5px;">
+    <button class="btn btn-cancel" type="button" (click)="back()">Назад</button>
+    <button class="btn btn-comments" type="button" (click)="goToComments()">Комментарии ({{ commentsCount }})</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для просмотра изображения -->
+<div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
+    <div class="image-modal-content" (click)="$event.stopPropagation()">
+        <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
+        <button class="modal-close" (click)="closeImageModal()">×</button>
+    </div>
+</div>

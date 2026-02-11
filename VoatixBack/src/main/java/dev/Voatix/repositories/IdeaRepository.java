@@ -45,7 +45,7 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
                or i.title ilike CONCAT('%', :search, '%'))
               and (:status is null or i.status = :status)
               and p.title like :project
-            order by i.id
+            order by i.dateTime DESC
         """)
     Page<IdeaEntity> findIdeas(
             @Param("project") String project,

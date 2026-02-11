@@ -48,6 +48,7 @@ public class FileService {
         try (InputStream inputStream = file.getInputStream()) {
             minioService.putObject("images", storageKey, inputStream, file.getContentType());
 
+            //todo: Мб через маппер это все дело собирать
             FileRequestDTO requestDto = new FileRequestDTO();
             requestDto.setName(file.getOriginalFilename());
             requestDto.setKey(storageKey);
@@ -81,6 +82,19 @@ public class FileService {
     private void validateFileType(MultipartFile file) {
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
             throw new InvalidFileTypeException(file.getContentType());
+        }
+    }
+
+    public void delete(String key) {
+        FileEntity file = fileRepository.findByKey(key)
+                .orElseThrow(() -> new FileNotFoundException(key));
+
+        fileRepository.delete(file);
+
+        try {
+            minioService.removeObject(file.getBucket(), file.getKey());
+        } catch (Exception e) {
+            throw new FileProcessingException(file.getName());
         }
     }
 }

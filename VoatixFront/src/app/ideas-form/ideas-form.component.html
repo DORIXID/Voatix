@@ -19,7 +19,7 @@
     </div>
 
     <div class="headlineDiv" style="height: 580px; margin-top: 20px;">
-        <div class="newIdeaDiv" (click)="doNothing()"
+        <div class="newIdeaDiv" (click)="createIdea()"
             style="margin-top: 15px; flex-direction: row; display: flex; align-items: center; justify-content: center;">
             <mat-icon style="margin-right: 15px;">edit</mat-icon>
             <span>Предложить свою идею</span>
@@ -27,7 +27,7 @@
 
         <div #ideasList class="idea-list">
             <div class="idea-card" *ngFor="let ideaWithStats of ideas">
-                <div class="idea-header">
+                <div class="idea-header idea-clickable" (click)="viewIdea(ideaWithStats.idea.id)">
                     <h3>{{ ideaWithStats.idea.title }}</h3>
 
                     <span class="idea-status" [ngClass]="getStatusClass(ideaWithStats.idea.status)">
@@ -35,8 +35,16 @@
                     </span>
                 </div>
 
-                <div style="display: flex; justify-content: flex-start; align-items: flex-start; height: 90px;">
+                <div style="display: flex; justify-content: flex-start; align-items: flex-start; height: 50px; overflow: hidden; cursor: pointer;" (click)="viewIdea(ideaWithStats.idea.id)">
                     <p class="idea-description">{{ ideaWithStats.idea.description }}</p>
+                </div>
+
+                <div class="idea-images" *ngIf="ideaWithStats.idea.fileKeys && ideaWithStats.idea.fileKeys.length > 0">
+                    <img *ngFor="let fileKey of ideaWithStats.idea.fileKeys.slice(0, 5)" 
+                         [src]="ideaWithStats.imageUrls?.[fileKey]"
+                         alt="idea image"
+                         class="idea-image"
+                         (click)="openImageModal(ideaWithStats.imageUrls?.[fileKey])">
                 </div>
 
                 <div class="idea-footer" style="position: relative;">
@@ -74,5 +82,13 @@
                 <button class="paginator-button" (click)="nextPage()" [disabled]="page >= totalPages - 1">›</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра изображения -->
+<div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
+    <div class="image-modal-content" (click)="$event.stopPropagation()">
+        <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
+        <button class="modal-close" (click)="closeImageModal()">×</button>
     </div>
 </div>

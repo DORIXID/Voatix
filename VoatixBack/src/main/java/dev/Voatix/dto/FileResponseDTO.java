@@ -12,5 +12,4 @@ public class FileResponseDTO{
     private String contentType;
     private String bucket;
     private String key;
-    private String url;
 }

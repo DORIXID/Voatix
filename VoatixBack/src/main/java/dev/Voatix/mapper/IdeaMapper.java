@@ -28,7 +28,7 @@ public interface IdeaMapper {
     }
 
     @Mapping(target = "projectId", source = "idea.project.id")
-    @Mapping(target = "userId", source = "idea.user.id")
+    @Mapping(target = "nickname", source = "idea.user.nickname")
     @Mapping(target = "fileKeys", source = "idea.files")
     @Mapping(target = "avatarKey",
             expression = "java(idea.getUser().getAvatar() != null ? idea.getUser().getAvatar().getKey() : null)")

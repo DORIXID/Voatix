@@ -1,4 +1,5 @@
 import { Idea } from "./idea.interface";
+import { SafeUrl } from "@angular/platform-browser";
 
 export interface IdeaWithStats {
   idea: Idea;
@@ -6,4 +7,5 @@ export interface IdeaWithStats {
   disLikes: number;
   userVote: number;
   commentsCount: number;
+  imageUrls?: Record<string, SafeUrl>;
 }

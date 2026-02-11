@@ -56,5 +56,11 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
                     """, nativeQuery = true)
     void deleteByIdeaIdFromComments(Long ideaId);
 
+    @Query(value = """
+        SELECT f.id FROM files f
+        WHERE f.key = :key
+        """, nativeQuery = true)
+    Optional<Long> findIdByKey(String key);
+
 
 }
