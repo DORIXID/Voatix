@@ -32,3 +32,26 @@
     height: 0px;
     border: 1px solid #BEBEBE;
 }
+
+::ng-deep .mat-mdc-form-field {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 300 !important;
+    font-style: normal !important;
+}
+
+::ng-deep .mat-mdc-form-field-label {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 300 !important;
+    font-style: normal !important;
+}
+
+::ng-deep .mat-mdc-text-field-wrapper input {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 300 !important;
+    font-style: normal !important;
+}
+
+::ng-deep .mdc-text-field--filled .mdc-text-field__input {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 300 !important;
+}

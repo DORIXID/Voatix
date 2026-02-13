@@ -2,21 +2,28 @@
     <img src="assets/VoatixMiniCutted.png" alt="Voatix logo" style="width: 80px;">
     <span class="logo-text">oatix</span>
 </div>
-<div class="vertical-div-wrapper" style="width: 500px; height: 600px;">
+<div class="vertical-div-wrapper" style="width: 500px; height: 700px;">
     <h1>Регистрация</h1>
     <mat-form-field style="width: 350px;">
-        <input matInput placeholder="Почта">
+        <input matInput placeholder="Логин" [(ngModel)]="username">
     </mat-form-field>
     <mat-form-field style="width: 350px;">
-        <input matInput placeholder="Логин">
+        <input matInput placeholder="Email" [(ngModel)]="email" type="email">
     </mat-form-field>
     <mat-form-field style="width: 350px;">
-        <input matInput placeholder="Пароль" [type]="hide ? 'password' : 'text'">
+        <input matInput placeholder="Пароль" [type]="hide ? 'password' : 'text'" [(ngModel)]="password">
         <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
     </mat-form-field>
-    <button class="button" (click)="registrationBtnClick()" style="width: 370px; height: 45px;">
-        <span>Зарегистрироваться</span>
+    <mat-form-field style="width: 350px;">
+        <input matInput placeholder="Повтор пароля" [type]="hide ? 'password' : 'text'" [(ngModel)]="passwordConfirm">
+        <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+    </mat-form-field>
+    <button class="button" (click)="registrationBtnClick()" style="width: 370px; height: 45px;" [disabled]="isLoading">
+        <span>{{ isLoading ? 'Загрузка...' : 'Зарегистрироваться' }}</span>
     </button>
+    <div *ngIf="errorMessage" class="error-message" style="color: red; margin-top: 10px; text-align: center;">
+        {{ errorMessage }}
+    </div>
     <div class="horizontal-div-wrapper">
         <div class="line"></div>
         <span class="or-text">ИЛИ</span>

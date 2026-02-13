@@ -60,24 +60,23 @@ public class IdeaService {
             }
         }
         Pageable pageParam = PageRequest.of(page, limit);
-        UserEntity user = userRepository.findByNickname(principal.getName())
+        Long userId = userRepository.getIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Page<IdeaEntity> ideas = ideaRepository.findIdeas(project, status, searchedValue, pageParam);
 
         List<Long> ids = ideas.getContent().stream().map(IdeaEntity::getId).toList();
 
-        List<VoteStatsProjection> voteStatsProj = ideaRepository.getVoteStats(ids, user.getId());
+        List<VoteStatsProjection> voteStatsProj = ideaRepository.getVoteStats(ids, userId);
         List<CommentCountProjection> commentsProj = ideaRepository.getCommentCounts(ids);
         return ideaMapper.toPageDto(ideas, voteStatsProj, commentsProj);
     }
 
     public IdeaWithStatsDTO getIdea(Long ideaId, Principal principal) {
-        UserEntity user = userRepository.findByNickname(principal.getName())
+        Long userId = userRepository.getIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-
         IdeaEntity ideaProjection = ideaRepository.findIdeaById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
-        VoteStatsProjection voteStatsProjection = ideaRepository.getVoteStatsIdeaById(ideaId, user.getId())
+        VoteStatsProjection voteStatsProjection = ideaRepository.getVoteStatsIdeaById(ideaId, userId)
                 .orElseThrow(() -> new VoteStatsNotFoundException(ideaId));
         CommentCountProjection commentCountProjection = ideaRepository.getCommentCountByIdeaId(ideaId)
                 .orElseThrow(() -> new CommentCountNotFoundException(ideaId));

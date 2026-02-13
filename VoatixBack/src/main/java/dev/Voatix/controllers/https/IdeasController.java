@@ -37,7 +37,6 @@ public class IdeasController {
                 principal);
     }
 
-    //http://localhost:8080/api/base/idea/1/likes?like=1
     @PutMapping("{ideaId}/likes")
     public void upsertLike(
             @PathVariable("ideaId") Long ideaId,
@@ -47,7 +46,6 @@ public class IdeasController {
         ideaService.upsertLike(ideaId, like, principal);
     }
 
-    //http://localhost:8080/api/base/idea/1
     @GetMapping("{ideaId}")
     public IdeaWithStatsDTO getIdea(
             @PathVariable() Long ideaId,
@@ -63,7 +61,6 @@ public class IdeasController {
         ideaService.createIdea(dto, principal);
     }
 
-    //todo: по возвращаемому значению разобраться что лучше
     @PatchMapping("{ideaId}")
     public void updateIdea(
             @RequestBody() IdeaUpdateDTO ideaDTO,

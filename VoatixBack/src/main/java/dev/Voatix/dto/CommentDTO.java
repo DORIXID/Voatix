@@ -1,5 +1,6 @@
 package dev.Voatix.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,8 +15,10 @@ import java.util.List;
 public class CommentDTO {
     private Long id;
     private String text;
-    private Long userId;
+    private String username;
+    private String avatarKey;
     private Long ideaId;
     private LocalDateTime dateTime;
+    @Size(max = 5)
     private List<String> fileKeys = new ArrayList<>();
 }

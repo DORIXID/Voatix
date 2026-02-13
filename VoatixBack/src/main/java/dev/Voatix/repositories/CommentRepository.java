@@ -15,11 +15,10 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
-    @EntityGraph(attributePaths = {"files"})
+    @EntityGraph(attributePaths = {"files", "user", "user.avatar", "user.credentials"})
     @Query(value = """
             SELECT c
                    FROM CommentEntity c
-                   LEFT JOIN c.files
                    WHERE c.idea.id = :ideaId
                    ORDER BY c.dateTime DESC
             """)

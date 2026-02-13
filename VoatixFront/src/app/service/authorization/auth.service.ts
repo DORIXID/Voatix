@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private username = '';
   private password = '';
   private authorized = false;
+  private apiUrl = 'http://localhost:8080/api';
 
-  constructor() {
+  constructor(private http: HttpClient) {
     // Очищаем старый HS256 токен при инициализации
     localStorage.removeItem('jwt');
   }
@@ -49,5 +51,14 @@ export class AuthService {
       }
     }
     return null;
+  }
+
+  register(nickname: string, password: string, eMail: string) {
+    const registrationData = {
+      nickname: nickname,
+      password: password,
+      eMail: eMail
+    };
+    return this.http.post(`${this.apiUrl}/users/new`, registrationData);
   }
 }

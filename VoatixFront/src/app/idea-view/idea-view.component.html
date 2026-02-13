@@ -1,51 +1,119 @@
 <div class="idea-container" *ngIf="idea">
-  <h1 class="idea-title">{{ idea.title }}</h1>
+  <div class="idea-content">
+    <h1 class="idea-title">{{ idea.title }}</h1>
 
-  <div class="meta-row">
-    <div class="author">
-      <img [src]="getAvatarUrl(idea.avatarKey)" alt="avatar" class="avatar">
-      <div class="nick">{{ idea.nickname }}</div>
+    <div class="meta-row">
+      <div class="author">
+        <img [src]="getAvatarUrl(idea.avatarKey)" alt="avatar" class="avatar">
+        <div class="nick">{{ idea.nickname }}</div>
+      </div>
+      <div class="idea-date">{{ idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</div>
     </div>
-    <div class="idea-date">{{ idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</div>
+
+    <div class="description">
+      {{ idea.description }}
+    </div>
+
+    <div class="photos" *ngIf="idea.fileKeys?.length">
+      <div class="photo" *ngFor="let k of idea.fileKeys">
+        <img [src]="getImageUrl(k)" alt="photo" (click)="openImageModal(getImageUrl(k))">
+      </div>
+    </div>
+
+
+    <div class="actions-row">
+      <button class="btn btn-cancel" type="button" (click)="back()">Назад</button>
+      <div style="flex-direction: row; display: flex; align-items: center; justify-content: center;">
+        <img class="vote-icon" [class.active]="userVote == 1" src="/assets/icons/likeArrow.png" (click)="toggleLike()"
+          alt="like">
+        <div class="likes-count" [class.positive]="likes>0">{{ likes }}</div>
+
+        <div class="total-score" [ngClass]="scoreClass()">{{ totalScore() }}</div>
+
+        <div class="dislikes-count" [class.negative]="disLikes>0">{{ disLikes }}</div>
+        <img class="vote-icon" [class.active]="userVote == -1" src="/assets/icons/dislikeArrow.png"
+          (click)="toggleDislike()" alt="dislike">
+      </div>
+    </div>
+
+        <!-- Comment creation form -->
+    <div class="comment-create-section">
+      <h2 class="comments-title">Оставить комментарий</h2>
+      <div class="comment-form">
+        <textarea
+          style="width: 1130px;"
+          class="comment-textarea" 
+          [(ngModel)]="commentText"
+          placeholder="Напишите ваш комментарий..."
+          [disabled]="submittingComment"
+        ></textarea>
+        <div class="comment-form-buttons">
+          <button class="btn btn-cancel" type="button" (click)="clearCommentForm()" [disabled]="submittingComment">Отмена</button>
+          <button class="btn btn-submit" type="button" (click)="submitComment()" [disabled]="submittingComment || !commentText.trim()">
+            {{ submittingComment ? 'Отправка...' : 'Отправить' }}
+          </button>
+        </div>
+      </div>
+
+    <!-- Comments section -->
+    <div class="comments-section" #commentsSection *ngIf="comments.length > 0">
+      <h2 class="comments-title">Комментарии ({{ comments.length }})</h2>
+
+      <div class="comments-container">
+        <div class="comment-card" *ngFor="let item of comments; let i = index">
+          <div class="comment-meta">
+            <img [src]="getCommentAvatarUrl(item.comment.avatarKey)" alt="avatar" class="comment-avatar">
+            <div class="comment-author">{{ item.comment.username }}</div>
+            <div class="comment-date">{{ formatCommentDate(item.comment.dateTime) }}</div>
+          </div>
+
+          <div class="comment-text">
+            {{ item.comment.text }}
+          </div>
+
+          <div class="comment-voting">
+            <img class="vote-icon" [class.active]="commentVotes[item.comment.id] == 1" src="/assets/icons/likeArrow.png"
+              (click)="toggleCommentLike(item.comment.id, i)" alt="like">
+            <div class="likes-count">{{ item.likes }}</div>
+
+            <div class="total-score"
+              [ngClass]="item.likes - item.disLikes > 0 ? 'score-positive' : (item.likes - item.disLikes < 0 ? 'score-negative' : 'score-neutral')">
+              {{ item.likes - item.disLikes }}
+            </div>
+
+            <div class="dislikes-count">{{ item.disLikes }}</div>
+            <img class="vote-icon" [class.active]="commentVotes[item.comment.id] == -1"
+              src="/assets/icons/dislikeArrow.png" (click)="toggleCommentDislike(item.comment.id, i)" alt="dislike">
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-comments" *ngIf="comments.length === 0">
+        <p>Пока нет комментариев</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div style="margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+      <button class="paginator-button" (click)="prevPage()" [disabled]="page === 0">‹</button>
+      {{ page * limit + 1 }} –
+      {{ (page + 1) * limit > totalElements ? totalElements : (page + 1) * limit }}
+      из {{ totalElements }} (страница {{ page + 1 }} из {{ totalPages }})
+      <button class="paginator-button" (click)="nextPage()" [disabled]="page >= totalPages - 1">›</button>
+    </div>
+
+      <!-- Voatix toast -->
+      <div class="voatix-toast" *ngIf="commentToastVisible" [class.success]="commentToastType==='success'" [class.error]="commentToastType==='error'">
+        <div class="toast-icon">{{ commentToastType === 'success' ? '✔' : '⚠' }}</div>
+        <div class="toast-body">{{ commentToastMessage }}</div>
+      </div>
+    </div>
   </div>
 
-  <div class="description">
-    {{ idea.description }}
-  </div>
-
-  <div class="photos" *ngIf="idea.fileKeys?.length">
-    <div class="photo" *ngFor="let k of idea.fileKeys">
-      <img [src]="getImageUrl(k)" alt="photo" (click)="openImageModal(getImageUrl(k))">
-    </div>
-  </div>
-
-  <div class="actions-row">
-    <div class="voting">
-      <img class="vote-icon" [class.active]="userVote == 1"
-           src="/assets/icons/likeArrow.png" 
-           (click)="toggleLike()"
-           alt="like">
-      <div class="likes-count" [class.positive]="likes>0">{{ likes }}</div>
-      
-      <div class="total-score" [ngClass]="scoreClass()">{{ totalScore() }}</div>
-      
-      <div class="dislikes-count" [class.negative]="disLikes>0">{{ disLikes }}</div>
-      <img class="vote-icon" [class.active]="userVote == -1"
-           src="/assets/icons/dislikeArrow.png" 
-           (click)="toggleDislike()"
-           alt="dislike">
-    </div>
-    <div style="width: 1190px; gap: 5px;">
-    <button class="btn btn-cancel" type="button" (click)="back()">Назад</button>
-    <button class="btn btn-comments" type="button" (click)="goToComments()">Комментарии ({{ commentsCount }})</button>
-    </div>
-  </div>
-</div>
-
-<!-- Модальное окно для просмотра изображения -->
-<div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
+  <!-- Модальное окно для просмотра изображения -->
+  <div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
     <div class="image-modal-content" (click)="$event.stopPropagation()">
-        <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
-        <button class="modal-close" (click)="closeImageModal()">×</button>
+      <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
+      <button class="modal-close" (click)="closeImageModal()">×</button>
     </div>
-</div>
+  </div>

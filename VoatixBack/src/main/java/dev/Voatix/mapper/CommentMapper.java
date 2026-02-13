@@ -40,7 +40,8 @@ public interface CommentMapper {
             CommentStatsProjection stats
     );
 
-    @Mapping(target = "userId", source = "comment.user.id")
+    @Mapping(target = "username", source = "comment.user.nickname")
+    @Mapping(target = "avatarKey", source = "comment.user.avatar.key")
     @Mapping(target = "ideaId", source = "comment.idea.id")
     @Mapping(target = "fileKeys", source = "comment.files")
     CommentDTO toCommentDto(CommentEntity comment);

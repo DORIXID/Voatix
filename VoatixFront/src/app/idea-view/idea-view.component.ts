@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { IdeaService } from '../service/idea.service';
 import { ChangeDetectorRef } from '@angular/core';
@@ -9,11 +10,13 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 @Component({
   selector: 'idea-view-component',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './idea-view.component.html',
   styleUrls: ['./idea-view.component.scss']
 })
 export class IdeaViewComponent implements OnInit {
+  @ViewChild('commentsSection') commentsSection: ElementRef | undefined;
+
   idea: any = null;
   likes = 0;
   disLikes = 0;
@@ -26,6 +29,20 @@ export class IdeaViewComponent implements OnInit {
   selectedImageUrl: SafeUrl | null = null;
   isImageModalOpen = false;
 
+  // Comments
+  comments: any[] = [];
+  page = 0;
+  limit = 10;
+  totalPages = 0;
+  totalElements = 0;
+  commentVotes: Record<number, number> = {};
+  commentAvatarUrls: Record<string, SafeUrl> = {};
+  // Comment creation form
+  commentText: string = '';
+  submittingComment: boolean = false;
+  commentToastVisible: boolean = false;
+  commentToastMessage: string = '';
+  commentToastType: 'success' | 'error' = 'success';
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -40,6 +57,7 @@ export class IdeaViewComponent implements OnInit {
     const id = idParam ? Number(idParam) : null;
     if (id) {
       this.loadIdea(id);
+      this.loadComments(id);
     }
   }
 
@@ -163,6 +181,184 @@ export class IdeaViewComponent implements OnInit {
   goToComments() {
     // placeholder — route for comments will be added later
     this.router.navigate(['/main/ideas']);
+  }
+
+  loadComments(ideaId: number, pageNum: number = 0, shouldScroll: boolean = false) {
+    const url = `http://localhost:8080/api/comments?ideaId=${ideaId}&page=${pageNum}&limit=${this.limit}`;
+    this.http.get<any>(url, { withCredentials: true }).subscribe({
+      next: (res) => {
+        this.comments = res.content || [];
+        this.page = res.number;
+        this.totalPages = res.totalPages;
+        this.totalElements = res.totalElements;
+        // Initialize comment votes and load avatars
+        res.content?.forEach((item: any) => {
+          if (item.comment?.id) {
+            this.commentVotes[item.comment.id] = item.vote ?? 0;
+          }
+          // Load comment avatar if not already loaded
+          if (item.comment?.avatarKey && !this.commentAvatarUrls[item.comment.avatarKey]) {
+            this.loadCommentAvatar(item.comment.avatarKey);
+          }
+        });
+        this.cdr.detectChanges();
+        // Scroll to comments section when explicitly requested
+        if (shouldScroll) {
+          this.scrollToComments();
+        }
+      },
+      error: (err) => {
+        console.error('Ошибка загрузки комментариев', err);
+      }
+    });
+  }
+
+  scrollToComments() {
+    setTimeout(() => {
+      if (this.commentsSection?.nativeElement) {
+        this.commentsSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // Fallback: scroll to top if section not found
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 150);
+  }
+
+  prevPage() {
+    if (this.idea && this.page > 0) {
+      this.loadComments(this.idea.id, this.page - 1, true);
+    }
+  }
+
+  nextPage() {
+    if (this.idea && this.page < this.totalPages - 1) {
+      this.loadComments(this.idea.id, this.page + 1, true);
+    }
+  }
+
+  toggleCommentLike(commentId: number, index: number) {
+    const currentVote = this.commentVotes[commentId] ?? 0;
+    const comment = this.comments[index];
+    
+    if (currentVote === 1) {
+      // Отменяем лайк
+      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=0`, {}, { withCredentials: true }).subscribe(() => {
+        comment.likes = Math.max(0, comment.likes - 1);
+        this.commentVotes[commentId] = 0;
+        this.cdr.detectChanges();
+      });
+    } else {
+      // Ставим лайк (и убираем дизлайк если он был)
+      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=1`, {}, { withCredentials: true }).subscribe(() => {
+        if (currentVote === -1) {
+          comment.disLikes = Math.max(0, comment.disLikes - 1);
+          comment.likes = comment.likes + 1;
+        } else {
+          comment.likes = comment.likes + 1;
+        }
+        this.commentVotes[commentId] = 1;
+        this.cdr.detectChanges();
+      });
+    }
+  }
+
+  toggleCommentDislike(commentId: number, index: number) {
+    const currentVote = this.commentVotes[commentId] ?? 0;
+    const comment = this.comments[index];
+    
+    if (currentVote === -1) {
+      // Отменяем дизлайк
+      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=0`, {}, { withCredentials: true }).subscribe(() => {
+        comment.disLikes = Math.max(0, comment.disLikes - 1);
+        this.commentVotes[commentId] = 0;
+        this.cdr.detectChanges();
+      });
+    } else {
+      // Ставим дизлайк (и убираем лайк если он был)
+      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=-1`, {}, { withCredentials: true }).subscribe(() => {
+        if (currentVote === 1) {
+          comment.likes = Math.max(0, comment.likes - 1);
+          comment.disLikes = comment.disLikes + 1;
+        } else {
+          comment.disLikes = comment.disLikes + 1;
+        }
+        this.commentVotes[commentId] = -1;
+        this.cdr.detectChanges();
+      });
+    }
+  }
+
+  getCommentAvatarUrl(key?: string) {
+    if (!key) return '/assets/icons/default-avatar.png';
+    return this.commentAvatarUrls[key] || '/assets/icons/default-avatar.png';
+  }
+
+  loadCommentAvatar(key: string) {
+    const url = this.ideaService.getFileViewUrl(key);
+    this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
+      next: (blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+        this.commentAvatarUrls[key] = safeUrl;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Ошибка загрузки аватара комментария', key, err);
+      }
+    });
+  }
+
+  getCommentAuthorAvatar(userId: number) {
+    return '/assets/icons/default-avatar.png';
+  }
+
+  formatCommentDate(date: string) {
+    return new Date(date).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  submitComment() {
+    if (!this.idea || !this.commentText.trim()) return;
+
+    this.submittingComment = true;
+    const payload = {
+      text: this.commentText.trim(),
+      ideaId: this.idea.id
+    };
+
+    this.http.post<any>('http://localhost:8080/api/comments/new', payload, { withCredentials: true }).subscribe({
+      next: (res) => {
+        this.showCommentToast('Комментарий успешно создан!', 'success');
+        this.commentText = '';
+        this.submittingComment = false;
+        // Reload comments from first page
+        this.loadComments(this.idea.id, 0);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Ошибка создания комментария', err);
+        this.showCommentToast('Ошибка при создании комментария', 'error');
+        this.submittingComment = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  clearCommentForm() {
+    this.commentText = '';
+  }
+
+  showCommentToast(message: string, type: 'success' | 'error') {
+    this.commentToastMessage = message;
+    this.commentToastType = type;
+    this.commentToastVisible = true;
+    setTimeout(() => {
+      this.commentToastVisible = false;
+      this.cdr.detectChanges();
+    }, 2500);
   }
 
   openImageModal(imageUrl: SafeUrl) {
