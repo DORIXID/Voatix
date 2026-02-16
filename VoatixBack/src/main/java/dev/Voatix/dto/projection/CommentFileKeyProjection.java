@@ -1,6 +1,6 @@
 package dev.Voatix.dto.projection;
 
-public interface FileKeyProjection {
-    Long getId();
+public interface CommentFileKeyProjection {
+    Long getCommentId();
     String getKey();
 }

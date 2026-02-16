@@ -2,6 +2,8 @@ package dev.Voatix.service;
 
 import dev.Voatix.dto.*;
 import dev.Voatix.dto.projection.CommentCountProjection;
+import dev.Voatix.dto.projection.CommentFileKeyProjection;
+import dev.Voatix.dto.projection.IdeaFileKeyProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.*;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
@@ -68,7 +70,8 @@ public class IdeaService {
 
         List<VoteStatsProjection> voteStatsProj = ideaRepository.getVoteStats(ids, userId);
         List<CommentCountProjection> commentsProj = ideaRepository.getCommentCounts(ids);
-        return ideaMapper.toPageDto(ideas, voteStatsProj, commentsProj);
+        List<IdeaFileKeyProjection> filesProj = ideaRepository.findFilesByIdeaIds(ids);
+        return ideaMapper.toPageDto(ideas, voteStatsProj, commentsProj, filesProj);
     }
 
     public IdeaWithStatsDTO getIdea(Long ideaId, Principal principal) {
@@ -80,7 +83,8 @@ public class IdeaService {
                 .orElseThrow(() -> new VoteStatsNotFoundException(ideaId));
         CommentCountProjection commentCountProjection = ideaRepository.getCommentCountByIdeaId(ideaId)
                 .orElseThrow(() -> new CommentCountNotFoundException(ideaId));
-        return ideaMapper.toStatsDto(ideaProjection, voteStatsProjection, commentCountProjection);
+        List<String> files = ideaRepository.findFileByIdeaId(ideaId);
+        return ideaMapper.toStatsDto(ideaProjection, voteStatsProjection, commentCountProjection, files);
     }
 
     public void upsertLike(Long ideaId, Long like, Principal principal) {

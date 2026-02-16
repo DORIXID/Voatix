@@ -5,6 +5,7 @@ import dev.Voatix.entity.SurveyEntity;
 import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,11 +16,11 @@ import java.util.Optional;
 public interface SurveyRepository extends JpaRepository<SurveyEntity, Long> {
 
 
+    @EntityGraph(attributePaths = {"project"})
     @Query(value = """
             select s
                 from SurveyEntity s
-                join fetch s.votingPoints
-                join fetch s.project p
+                join s.project p
                     where (s.title ilike CONCAT('%', :search, '%')
                     or s.description ilike CONCAT('%', :search, '%'))
                     and p.title like :project

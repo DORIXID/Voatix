@@ -5,9 +5,10 @@ import { MainSidebarFormComponent } from './main-sidebar-form/main-sidebar-form.
 import { IdeasFormComponent } from './ideas-form/ideas-form.component';
 import { SurveysSidebarFormComponent } from './surveys-form/surveys-form.component';
 import path from 'path';
-import { MessagesSidebarFormComponent } from './messages-form/messages-form.component';
+import { MessagesFormComponent } from './messages-form/messages-form.component';
 import { IdeaCreateFormComponent } from './idea-create-form/idea-create-form.component';
 import { IdeaViewComponent } from './idea-view/idea-view.component';
+import { SurveyCreateFormComponent } from './survey-create-form/survey-create-form.component';
 
 export const routes: Routes = [
      { path: '', redirectTo: 'login', pathMatch: 'full'},
@@ -19,7 +20,8 @@ export const routes: Routes = [
                { path: 'ideas/create', component: IdeaCreateFormComponent },
                { path: 'ideas/view/:id', component: IdeaViewComponent },
                { path: 'surveys', component: SurveysSidebarFormComponent},
-               { path: 'messages', component: MessagesSidebarFormComponent}
+               { path: 'surveys/create', component: SurveyCreateFormComponent },
+               { path: 'messages', component: MessagesFormComponent}
           ]
      }
 ];

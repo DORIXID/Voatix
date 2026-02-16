@@ -84,8 +84,6 @@
 .idea-list {
     padding-right: 5px;
     padding-top: 5px;
-    /* display: flex; ← УБРАТЬ */
-    /* flex-direction: column; ← УБРАТЬ */
     gap: 16px;
     margin-top: 20px;
     width: 1190px;
@@ -221,11 +219,34 @@
         font-weight: 600;
     }
 
+    .survey-dates {
+        color: #666;
+        font-size: 13px;
+        font-weight: 400;
+    }
+
     .survey-options {
         margin-top: -20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        max-height: 450px;
+        overflow-y: auto;
+        padding-right: 10px;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: transparent;
+        }
+
+        scrollbar-width: none;
 
         .option {
             display: flex;
@@ -234,23 +255,67 @@
 
             .option-header {
                 display: flex;
-                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
                 font-size: 13px;
+
+                .option-control {
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                }
+
+                .control-shape {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid #999;
+                    display: inline-block;
+                    transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+                }
+
+                .control-shape.radio {
+                    border-radius: 50%;
+                }
+
+                .control-shape.checkbox {
+                    border-radius: 4px;
+                }
+
+                .control-shape.checked {
+                    background-color: #cf78ef;
+                    border-color: #cf78ef;
+                }
 
                 .option-label {
                     color: #000000;
                     font-family: 'Inter';
                     font-style: normal;
                     font-weight: 400;
-                    font-size: 25px;
+                    font-size: 20px;
                     line-height: 46px;
+                }
+
+                .option-meta {
+                    margin-left: auto;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .option-votes {
+                    color: #888;
+                    font-size: 14px;
+                    padding-right: 4px;
                 }
 
                 .option-percent {
                     font-family: 'Inter';
                     font-style: normal;
-                    font-weight: 400;
-                    font-size: 25px;
+                    font-weight: 600;
+                    font-size: 18px;
                     line-height: 46px;
                     color: #000000;
                 }
@@ -274,10 +339,114 @@
     }
 
     .survey-description {
+        background-color: #4caf50;
+        width: 60%;
+        height: 60px;
         font-size: 20px;
         color: #000000;
         font-weight: 300;
         line-height: 1.4;
-        margin-bottom: 100px;
+    }
+
+    .survey-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        height: 80px;
+        padding: 10px;
+        width: 1130px;
+    }
+
+    .survey-footer .survey-description {
+        background-color: transparent;
+        color: #000000;
+        width: auto;
+        height: auto;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+
+    .survey-pager {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #666;
+        padding: 6px 10px;
+        border-radius: 6px;
+        min-width: 60px;
+        justify-content: center;
+    }
+
+    .survey-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .voatix-btn {
+        width: 44px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        background-color: transparent;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 20px 20px;
+        cursor: pointer;
+        padding: 6px;
+        transition: transform 0.18s ease;
+    }
+
+    .voatix-btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    .voatix-btn-prev {
+        background-image: url('/assets/icons/dislikeArrow.png');
+        transform: rotate(90deg);
+    }
+
+    .voatix-btn-next {
+        background-image: url('/assets/icons/likeArrow.png');
+        transform: rotate(90deg);
+    }
+
+    .voatix-btn:hover:not(:disabled) {
+        background-color: rgba(0, 0, 0, 0.06);
+    }
+}
+
+.btn-create-survey {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #cf78ef;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 28px;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(207, 120, 239, 0.2);
+
+    &:hover {
+        background: #a956c9;
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(207, 120, 239, 0.35);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+
+    span {
+        line-height: 1;
     }
 }

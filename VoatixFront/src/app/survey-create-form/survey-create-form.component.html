@@ -1,0 +1,66 @@
+<div class="card-container">
+  <div class="headlineDiv" style="width:100%;">
+    <h1>Создание голосования</h1>
+    <p class="subtitle">Создайте голосование для вашего проекта</p>
+  </div>
+
+  <button class="btn-back" type="button" (click)="back()">
+    <img src="/assets/icons/dislikeArrow.png" alt="back" class="back-icon" style="transform: rotate(90deg);">
+    <span>Назад</span>
+  </button>
+
+  <div class="input-group">
+    <label>Название голосования</label>
+    <input type="text" name="title" [(ngModel)]="title" class="input-field header-input" placeholder="Введите название...">
+    <div class="char-count">{{ title.length }}/100</div>
+  </div>
+
+  <div class="input-group">
+    <label>Описание</label>
+    <textarea name="description" [(ngModel)]="description" class="input-field content-area" placeholder="Опишите голосование..."></textarea>
+    <div class="char-count">{{ description.length }}/500</div>
+  </div>
+
+  <div class="row-inputs">
+    <div class="input-group">
+      <label>Тип голосования</label>
+      <select [(ngModel)]="type" class="input-field">
+        <option value="RADIO_BUTTON">Один выбор</option>
+        <option value="CHECKBOX">Несколько выборов</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Начало голосования (опционально)</label>
+      <input type="datetime-local" name="startDate" [(ngModel)]="startDateStr" class="input-field">
+      <div class="char-count" *ngIf="!startDateStr">Если не выбрано, то будет установлено текущее время + 2-3 минуты</div>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label>Конец голосования</label>
+    <input type="datetime-local" name="endDate" [(ngModel)]="endDateStr" class="input-field">
+  </div>
+
+  <div class="input-group">
+    <label>Варианты голосования (минимум 2)</label>
+    <div class="voting-options">
+      <div class="voting-option" *ngFor="let option of votingPoints; let i = index">
+        <input type="text" [(ngModel)]="option.title" class="input-field option-input" placeholder="Введите вариант...">
+        <button type="button" class="btn-remove" (click)="removeOption(i)" *ngIf="votingPoints.length > 2">×</button>
+      </div>
+    </div>
+    <button type="button" class="btn-add-option" (click)="addOption()">+ Добавить вариант</button>
+  </div>
+
+  <!-- Voatix toast -->
+  <div class="voatix-toast" *ngIf="toastVisible" [class.success]="toastType==='success'" [class.error]="toastType==='error'">
+    <div class="toast-icon">{{ toastType === 'success' ? '✔' : '⚠' }}</div>
+    <div class="toast-body">{{ toastMessage }}</div>
+  </div>
+
+  <div class="button-row">
+    <button class="btn btn-cancel" type="button" (click)="back()">Отмена</button>
+    <button class="btn btn-submit" type="button" [disabled]="submitting" (click)="submitSurvey()">{{ submitting ? 'Отправка...' : 'Создать голосование' }}</button>
+  </div>
+</div>

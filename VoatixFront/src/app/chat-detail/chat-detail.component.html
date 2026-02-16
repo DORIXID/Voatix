@@ -1,0 +1,48 @@
+<div class="chat-detail-wrapper">
+  <!-- Messages Container -->
+  <div class="messages-container" (click)="markMessagesAsRead()">
+    <div *ngIf="loading && messages.length === 0" class="loading-state">
+      <p>Загрузка сообщений...</p>
+    </div>
+
+    <div *ngIf="!loading && messages.length === 0" class="empty-state">
+      <p>Нет сообщений</p>
+      <span class="empty-hint">Начните беседу первым сообщением</span>
+    </div>
+
+    <div *ngFor="let message of messages" [ngClass]="getMessageClass(message)" class="message-wrapper">
+      <div class="message-bubble">
+        <p class="message-text">{{ message.text }}</p>
+        <span class="message-date">{{ formatDate(message.date) }}</span>
+        <mat-icon *ngIf="message.sender === currentUsername && message.isRead" class="read-icon">done_all</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Section -->
+  <div class="input-section">
+    <div class="input-wrapper">
+      <textarea
+        [(ngModel)]="messageText"
+        (keypress)="onKeyPress($event)"
+        (input)="onMessageInput()"
+        placeholder="Введите сообщение..."
+        class="message-input"
+        rows="3"
+      ></textarea>
+      <div class="input-actions">
+        <button class="attach-btn" title="Прикрепить файл">
+          <mat-icon>attach_file</mat-icon>
+        </button>
+        <button
+          class="send-btn"
+          (click)="sendMessage()"
+          [disabled]="!messageText.trim()"
+          title="Отправить"
+        >
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -56,20 +56,20 @@ services:
       - "8080:8080"
 
 
-  frontend:
-    build:
-      context: ./VoatixFront
-    container_name: voatix_frontend
-    restart: always
-    depends_on:
-      - backend
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./VoatixFront:/app
-      - /app/node_modules
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+  # frontend:
+  #   build:
+  #     context: ./VoatixFront
+  #   container_name: voatix_frontend
+  #   restart: always
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "4200:4200"
+  #   volumes:
+  #     - ./VoatixFront:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - CHOKIDAR_USEPOLLING=true
 volumes:
   postgres_data:
   minio_data:

@@ -1,13 +1,20 @@
 <div class="rightSideDiv">
     <div class="headlineDiv" style="height: 90px;">
-
-        <h1 style="margin-top: 20px;">Голосования и опросы</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h1 style="margin-top: 20px;">Голосования и опросы</h1>
+            <button class="btn-create-survey" style="margin-right: 20px;" (click)="goToCreate()" title="Создать голосование">
+                <span>+</span>
+            </button>
+        </div>
     </div>
     <div class="headlineDiv" style="height: 690px; margin-top: 20px; width: 1210px;">
         <div class="idea-list">
 
             <div class="voatix-survey-panel" style="justify-content: space-around; height: 600px;" *ngIf="survey">
-                <div class="survey-title">{{ survey.title }}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; width:1150px;">
+                    <div class="survey-title" style="font-size:20px; font-weight:600;">{{ survey.title }}</div>
+                    <div class="survey-dates">{{ survey.startDate | date:'dd.MM.yy HH:mm' }} — {{ survey.endDate | date:'dd.MM.yy HH:mm' }}</div>
+                </div>
 
                 <div style="height: 1px; width: 1150px; background-color: #a7a7a7;"><span style="color: White;">a</span>
                 </div>
@@ -16,10 +23,18 @@
                     <div style="height: 450px; display: flex; flex-direction: column; justify-content: space-around;">
                         <div class="option" *ngFor="let p of survey.points">
                             <div class="option-header">
+                                <div class="option-control" role="button" (click)="onToggleOption(p)" [class.selected]="p.selectedByCurrentUser" [attr.aria-pressed]="p.selectedByCurrentUser">
+                                    <div class="control-shape" [ngClass]="{ 'radio': survey.type === 'RADIO_BUTTON', 'checkbox': survey.type === 'CHECKBOX', 'checked': p.selectedByCurrentUser }"></div>
+                                </div>
+
                                 <span class="option-label" [class.selected]="p.selectedByCurrentUser">
                                     {{ p.title }}
                                 </span>
-                                <span class="option-percent">{{ p.percent }}%</span>
+
+                                <div class="option-meta">
+                                    <span class="option-votes">{{ p.votes }}</span>
+                                    <span class="option-percent">{{ p.percent }}%</span>
+                                </div>
                             </div>
 
                             <div class="option-bar">
@@ -28,12 +43,26 @@
                         </div>
                     </div>
                 </div>
-                <div style="height: 1px; width: 1150px; background-color: #a7a7a7;"><span style="color: White;">a</span>
+                <div style="height: 1px; width: 1150px; justify-content: flex-start; background-color: #a7a7a7;"><span
+                        style="color: White;">a</span>
                 </div>
-                <div class="survey-description">
-                    {{ survey.description }}
+                <div class="survey-footer">
+                    <div class="survey-description">
+                        {{ survey.description }}
+                    </div>
+                    <div style="flex-direction: row; display: flex; gap: 12px;">
+                        <div class="survey-pager">{{ page + 1 }} / {{ totalPages || 1 }}</div>
+                        <div class="survey-actions">
+                            <button class="voatix-btn voatix-btn-prev" (click)="prev()" [disabled]="page <= 0"
+                                aria-label="Пред"></button>
+                            <button class="voatix-btn voatix-btn-next" (click)="next()"
+                                [disabled]="page >= totalPages - 1" aria-label="След"></button>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
         </div>
+        <div *ngIf="!survey && !loading" style="padding:16px; color:#666;">Нет голосований для проекта.</div>
+        <div *ngIf="loading" style="padding:16px; color:#666;">Загрузка...</div>

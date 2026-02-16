@@ -1,6 +1,7 @@
 package dev.Voatix.repositories;
 
 import dev.Voatix.dto.projection.CommentStatsProjection;
+import dev.Voatix.dto.projection.CommentFileKeyProjection;
 import dev.Voatix.entity.CommentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
-    @EntityGraph(attributePaths = {"files", "user", "user.avatar", "user.credentials"})
+    @EntityGraph(attributePaths = {"user", "user.avatar", "user.credentials"})
     @Query(value = """
             SELECT c
                    FROM CommentEntity c
@@ -26,6 +27,12 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             @Param("ideaId") Long ideaId,
             Pageable pageable);
 
+    @Query(value = """
+            SELECT f.comment_id AS commentId, f.key
+            FROM files f
+            WHERE comment_id IN :commentIds
+            """, nativeQuery = true)
+    List<CommentFileKeyProjection> findFilesByCommentIds(@Param("commentIds") List<Long> commentIds);
 
     @Query(value = """ 
             SELECT c.comment_id as commentId,

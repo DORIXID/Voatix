@@ -1,6 +1,8 @@
 package dev.Voatix.repositories;
 
 import dev.Voatix.dto.projection.CommentCountProjection;
+import dev.Voatix.dto.projection.CommentFileKeyProjection;
+import dev.Voatix.dto.projection.IdeaFileKeyProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
 
@@ -33,7 +35,7 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     @Query("select i.userId from IdeaEntity i where i.id = :id")
     Optional<Long> findUserIdById(Long id);
 
-    @EntityGraph(attributePaths = {"project", "user", "user.avatar", "user.credentials", "files"})
+    @EntityGraph(attributePaths = {"project", "user", "user.avatar", "user.credentials"})
     @Query(value = """
         select i
             from IdeaEntity i
@@ -68,6 +70,14 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
             @Param("ideaIds") List<Long> ideaIds,
             @Param("userId") Long userId
     );
+
+    @Query(value = """
+            SELECT f.idea_id, f.key
+            FROM files f
+            JOIN ideas i ON f.idea_id = i.id
+            WHERE idea_id IN :ideaIds
+            """, nativeQuery = true)
+    List<IdeaFileKeyProjection> findFilesByIdeaIds(@Param("ideaIds") List<Long> ideaIds);
 
 
     @Query(value = """ 
@@ -121,4 +131,13 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     Optional<CommentCountProjection> getCommentCountByIdeaId(
             @Param("id") Long id
     );
+
+    @Query(value = """
+            SELECT f.key
+            FROM files f
+            JOIN ideas i ON f.idea_id = i.id
+            WHERE idea_id = :ideaId
+            """, nativeQuery = true)
+    List<String> findFileByIdeaId(@Param("ideaId") Long ideaId);
+
 }

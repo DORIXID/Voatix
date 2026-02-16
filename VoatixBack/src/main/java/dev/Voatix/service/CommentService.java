@@ -4,6 +4,7 @@ import dev.Voatix.dto.CommentDTO;
 import dev.Voatix.dto.CommentUpdateDTO;
 import dev.Voatix.dto.CommentWithStatsDTO;
 import dev.Voatix.dto.projection.CommentStatsProjection;
+import dev.Voatix.dto.projection.CommentFileKeyProjection;
 import dev.Voatix.entity.*;
 import dev.Voatix.entity.enums.RoleOfUserEnum;
 import dev.Voatix.mapper.CommentMapper;
@@ -57,8 +58,9 @@ public class CommentService {
 
         List<Long> ids = comment.getContent().stream().map(CommentEntity::getId).toList();
 
-        List<CommentStatsProjection> commStatsProj = commentRepository.getCommentsRaitingsStats(ids, userId);
-        return commentMapper.toPageDto(comment, commStatsProj);
+        List<CommentFileKeyProjection> fileKeyProjs = commentRepository.findFilesByCommentIds(ids);
+        List<CommentStatsProjection> commStatsProjs = commentRepository.getCommentsRaitingsStats(ids, userId);
+        return commentMapper.toPageDto(comment, commStatsProjs, fileKeyProjs);
     }
 
     public void createComment(CommentDTO dto, Principal principal) {

@@ -4,15 +4,16 @@ package dev.Voatix.mapper;
 
 import dev.Voatix.dto.*;
 import dev.Voatix.dto.projection.CommentCountProjection;
-import dev.Voatix.dto.projection.IdeaProjection;
+import dev.Voatix.dto.projection.CommentFileKeyProjection;
+import dev.Voatix.dto.projection.IdeaFileKeyProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.FileEntity;
 import dev.Voatix.entity.IdeaEntity;
-import dev.Voatix.entity.ProjectEntity;
-import dev.Voatix.entity.UserEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,13 +28,6 @@ public interface IdeaMapper {
         return file.getKey();
     }
 
-    @Mapping(target = "projectId", source = "idea.project.id")
-    @Mapping(target = "nickname", source = "idea.user.nickname")
-    @Mapping(target = "fileKeys", source = "idea.files")
-    @Mapping(target = "avatarKey",
-            expression = "java(idea.getUser().getAvatar() != null ? idea.getUser().getAvatar().getKey() : null)")
-    IdeaDTO toDto(IdeaEntity idea);
-
     @Mapping(target = "idea", source = "idea")
     @Mapping(target = "likes", expression = "java(stats != null ? stats.getLikes() : 0L)")
     @Mapping(target = "disLikes", expression = "java(stats != null ? stats.getDislikes() : 0L)")
@@ -42,24 +36,48 @@ public interface IdeaMapper {
     IdeaWithStatsDTO toStatsDto(
             IdeaEntity idea,
             VoteStatsProjection stats,
-            CommentCountProjection commentCountProj
+            CommentCountProjection commentCountProj,
+            @Context List<String> fileKeys
     );
+
+    @Mapping(target = "projectId", source = "idea.project.id")
+    @Mapping(target = "nickname", source = "idea.user.nickname")
+    @Mapping(target = "fileKeys", ignore = true)
+    @Mapping(target = "avatarKey",
+            expression = "java(idea.getUser().getAvatar() != null ? idea.getUser().getAvatar().getKey() : null)")
+    IdeaDTO toDto(IdeaEntity idea);
+
+    @AfterMapping
+    default void linkFileKeys(@MappingTarget IdeaWithStatsDTO dto, @Context List<String> fileKeys) {
+        if (dto.getIdea() != null && fileKeys != null) {
+            dto.getIdea().setFileKeys(fileKeys);
+        }
+    }
 
     default Page<IdeaWithStatsDTO> toPageDto(
             Page<IdeaEntity> ideaPage,
             List<VoteStatsProjection> votes,
-            List<CommentCountProjection> comments) {
+            List<CommentCountProjection> comments,
+            List<IdeaFileKeyProjection> files) {
 
-        Map<Long, VoteStatsProjection> voteMap = votes.stream()
+        Map<Long, VoteStatsProjection> votesMap = votes.stream()
                 .collect(Collectors.toMap(VoteStatsProjection::getIdeaId, v -> v));
 
-        Map<Long, CommentCountProjection> commentMap = comments.stream()
+        Map<Long, CommentCountProjection> commentsMap = comments.stream()
                 .collect(Collectors.toMap(CommentCountProjection::getIdeaId, c -> c));
+
+        Map<Long, List<String>> filesMap = files.stream()
+                .filter(f -> f.getIdeaId() != null)
+                .collect(Collectors.groupingBy(
+                        IdeaFileKeyProjection::getIdeaId,
+                        Collectors.mapping(IdeaFileKeyProjection::getKey, Collectors.toList())
+                ));
 
         return ideaPage.map(idea -> toStatsDto(
                 idea,
-                voteMap.get(idea.getId()),
-                commentMap.get(idea.getId())
+                votesMap.get(idea.getId()),
+                commentsMap.get(idea.getId()),
+                filesMap.getOrDefault(idea.getId(), Collections.emptyList())
         ));
     }
 

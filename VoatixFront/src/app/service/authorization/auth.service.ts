@@ -9,8 +9,6 @@ export class AuthService {
   private apiUrl = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient) {
-    // Очищаем старый HS256 токен при инициализации
-    localStorage.removeItem('jwt');
   }
 
   setCredentials(username: string, password: string) {

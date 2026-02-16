@@ -48,7 +48,6 @@ public class FileService {
         try (InputStream inputStream = file.getInputStream()) {
             minioService.putObject("images", storageKey, inputStream, file.getContentType());
 
-            //todo: Мб через маппер это все дело собирать
             FileRequestDTO requestDto = new FileRequestDTO();
             requestDto.setName(file.getOriginalFilename());
             requestDto.setKey(storageKey);
