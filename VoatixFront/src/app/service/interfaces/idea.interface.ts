@@ -7,7 +7,7 @@ export interface Idea {
   dateTime: Date;
   status: IdeaStatus;
   fileKeys?: string[];
-  projectId?: number;
+  // projectId removed in favor of project title identifier
   nickname?: string;
   avatarKey?: string;
 }

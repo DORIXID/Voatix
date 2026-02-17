@@ -27,7 +27,11 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return this.authorized;
+    if (this.authorized) return true;
+    // Also consider stored token or cookie as logged-in state
+    if (this.getAuthHeader()) return true;
+    if (this.getTokenFromCookie()) return true;
+    return false;
   }
 
   getUsername() {

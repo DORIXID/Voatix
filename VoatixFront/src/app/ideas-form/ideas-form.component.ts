@@ -10,7 +10,7 @@ import { IdeaStatus, IdeaStatusRu } from '../service/enums/idea-status.enum';
 import { OnInit } from '@angular/core';
 import { IdeaService } from '../service/idea.service';
 import { ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import localeRu from '@angular/common/locales/ru';
@@ -18,6 +18,8 @@ import { registerLocaleData } from '@angular/common';
 import { Project } from '../service/interfaces/project.interface';
 import { ProjectService } from '../service/project.service';
 import { IdeaWithStats } from '../service/interfaces/idea-with-stats.interface';
+import { QrCodeService } from '../service/qr-code.service';
+import { UserRole } from '../service/enums/user-role.enum';
 
 registerLocaleData(localeRu);
 
@@ -57,6 +59,16 @@ export class IdeasFormComponent implements OnInit {
   selectedImageUrl: SafeUrl | null = null;
   isImageModalOpen = false;
 
+  // QR код модальное окно
+  isQrModalOpen = false;
+  qrCodeUrl: string = '';
+  shareUrl: string = '';
+
+  // Удаление идеи
+  showDeleteConfirm = false;
+  deleteIdeaId: number | null = null;
+  isDeleting = false;
+
   // для шаблона
   IdeaStatusRu = IdeaStatusRu;
 
@@ -67,16 +79,26 @@ export class IdeasFormComponent implements OnInit {
     private ideaService: IdeaService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private route: ActivatedRoute,
     private http: HttpClient,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private qrCodeService: QrCodeService
   ) { }
 
   ngOnInit() {
+    // read page from query params (if present)
+    this.route.queryParamMap.subscribe(params => {
+      const p = params.get('page');
+      if (p !== null) {
+        const pn = Number(p);
+        this.page = isNaN(pn) ? 0 : pn;
+      }
+    });
+
     this.projectService.selectedProject$.subscribe(project => {
       this.selectedProject = project;
 
       if (project) {
-        this.page = 0;
         this.loadIdeas(project);
       }
     });
@@ -179,6 +201,7 @@ export class IdeasFormComponent implements OnInit {
     event.target.classList.add('active');
 
     this.page = 0;
+    this.updateQueryPage();
     this.loadIdeas(this.selectedProject!);
   }
 
@@ -221,6 +244,7 @@ export class IdeasFormComponent implements OnInit {
   nextPage() {
     if (this.page < this.totalPages - 1) {
       this.page++;
+      this.updateQueryPage();
       this.loadIdeas(this.selectedProject!);
     }
   }
@@ -228,6 +252,7 @@ export class IdeasFormComponent implements OnInit {
   prevPage() {
     if (this.page > 0) {
       this.page--;
+      this.updateQueryPage();
       this.loadIdeas(this.selectedProject!);
     }
   }
@@ -243,12 +268,80 @@ export class IdeasFormComponent implements OnInit {
     this.isImageModalOpen = false;
   }
 
+  openQrModal() {
+    if (!this.selectedProject) return;
+    this.shareUrl = `${window.location.origin}/main/ideas/${this.selectedProject.title}`;
+    this.qrCodeUrl = this.qrCodeService.generateQrCodeUrl(this.shareUrl, 350);
+    this.isQrModalOpen = true;
+  }
+
+  closeQrModal() {
+    this.isQrModalOpen = false;
+  }
+
+  copyShareLink() {
+    this.qrCodeService.copyToClipboard(this.shareUrl).then(() => {
+      // Можно добавить уведомление о копировании
+      console.log('Link copied to clipboard');
+    });
+  }
+
   createIdea() {
     this.router.navigate(['/main/ideas/create']);
   }
 
   viewIdea(ideaId: number) {
-    this.router.navigate(['/main/ideas/view', ideaId]);
+    this.router.navigate(['/main/ideas/view', ideaId], { queryParams: { page: this.page } });
+  }
+
+  private updateQueryPage() {
+    // update the URL query param without reloading the route
+    this.router.navigate([], { relativeTo: this.route, queryParams: { page: this.page }, queryParamsHandling: 'merge' });
+  }
+
+  canDeleteIdea(): boolean {
+    return this.selectedProject?.roleOfUser === UserRole.OWNER || this.selectedProject?.roleOfUser === UserRole.MANAGER;
+  }
+
+  openDeleteConfirm(ideaId: number, event: Event) {
+    event.stopPropagation();
+    this.deleteIdeaId = ideaId;
+    this.showDeleteConfirm = true;
+  }
+
+  closeDeleteConfirm() {
+    this.showDeleteConfirm = false;
+    this.deleteIdeaId = null;
+  }
+
+  confirmDeleteIdea() {
+    if (!this.deleteIdeaId) return;
+
+    this.isDeleting = true;
+    const ideaIdToDelete = this.deleteIdeaId;
+
+    this.ideaService.deleteIdea(ideaIdToDelete).subscribe({
+      next: () => {
+        // Удаляем идею из списка
+        this.ideas = this.ideas.filter(idea => idea.idea.id !== ideaIdToDelete);
+        this.totalElements--;
+        
+        // Если на странице нет больше идей, переходим на предыдущую
+        if (this.ideas.length === 0 && this.page > 0) {
+          this.page--;
+          this.updateQueryPage();
+        }
+
+        this.closeDeleteConfirm();
+        this.isDeleting = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Ошибка при удалении идеи:', err);
+        this.isDeleting = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   //Затычка

@@ -3,7 +3,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../service/authorization/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { JwtResponse } from '../service/authorization/jwt-response.model';
@@ -30,7 +30,7 @@ export class LoginFormComponent {
   error = '';
 
   public hide = true;
-  constructor(private router: Router, private auth: AuthService, private http: HttpClient, private cdr: ChangeDetectorRef){}
+  constructor(private router: Router, private auth: AuthService, private http: HttpClient, private cdr: ChangeDetectorRef, private route: ActivatedRoute){}
 
   loginBtnClick(){
     this.http
@@ -43,7 +43,8 @@ export class LoginFormComponent {
           localStorage.setItem('jwt', response.token); // сохраняем токен
           this.auth.setAuthorized(true);
           this.error = '';
-          this.router.navigate(['/main/ideas']);
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/main/ideas';
+          this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {
           console.error('Login error:', err);

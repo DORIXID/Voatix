@@ -1,9 +1,9 @@
 import { UserRole } from "../enums/user-role.enum";
 
 export interface Project {
-  projectId: number;
+  // projectId removed — use `title` as identifier for deep links
   title: string;
   active: boolean;
   roleOfUser: UserRole;
-  key: string;
+  key: string; //это ключ для URL аватарки проекта. Например: http://localhost:8080/api/files/КЛЮЧ/view
 }

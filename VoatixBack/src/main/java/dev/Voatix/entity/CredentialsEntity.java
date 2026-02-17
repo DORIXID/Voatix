@@ -12,7 +12,6 @@ import lombok.*;
 public class CredentialsEntity {
 
     @Id
-    @Column()
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

@@ -21,4 +21,7 @@ public interface ProjectMapper {
 
     List<ProjectOfUserDTO> toDto(List<ProjectOfUserProjection> projection);
 
+    @Mapping(target = "key", source = "avatar.key")
+    ProjectOfUserDTO toDto(ProjectEntity project);
+
 }

@@ -34,6 +34,9 @@
         <img class="vote-icon" [class.active]="userVote == -1" src="/assets/icons/dislikeArrow.png"
           (click)="toggleDislike()" alt="dislike">
       </div>
+      <button *ngIf="canDeleteIdea()" class="btn btn-delete" type="button" (click)="openDeleteConfirm()">
+        Удалить
+      </button>
     </div>
 
         <!-- Comment creation form -->
@@ -84,6 +87,10 @@
             <div class="dislikes-count">{{ item.disLikes }}</div>
             <img class="vote-icon" [class.active]="commentVotes[item.comment.id] == -1"
               src="/assets/icons/dislikeArrow.png" (click)="toggleCommentDislike(item.comment.id, i)" alt="dislike">
+            
+            <button *ngIf="canDeleteIdea()" class="btn-delete-comment" (click)="openDeleteCommentConfirm(item.comment.id)" title="Удалить комментарий">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -114,6 +121,34 @@
   <div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
     <div class="image-modal-content" (click)="$event.stopPropagation()">
       <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
-      <button class="modal-close" (click)="closeImageModal()">×</button>
+      <button class="modal-close" (click)="closeImageModal()">&times;</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно подтверждения удаления -->
+  <div class="delete-modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="delete-modal-content" (click)="$event.stopPropagation()">
+      <h3>Вы уверены?</h3>
+      <p>Это действие невозможно отменить. Идея будет удалена безвозвратно.</p>
+      <div class="delete-modal-actions">
+        <button class="btn btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeleting">Отмена</button>
+        <button class="btn btn-delete" (click)="deleteIdea()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Удаление...' : 'Удалить' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно подтверждения удаления комментария -->
+  <div class="delete-modal-overlay" *ngIf="showDeleteCommentConfirm" (click)="closeDeleteCommentConfirm()">
+    <div class="delete-modal-content" (click)="$event.stopPropagation()">
+      <h3>Удалить комментарий?</h3>
+      <p>Это действие невозможно отменить.</p>
+      <div class="delete-modal-actions">
+        <button class="btn btn-cancel" (click)="closeDeleteCommentConfirm()" [disabled]="isDeletingComment">Отмена</button>
+        <button class="btn btn-delete" (click)="deleteComment()" [disabled]="isDeletingComment">
+          {{ isDeletingComment ? 'Удаление...' : 'Удалить' }}
+        </button>
+      </div>
     </div>
   </div>

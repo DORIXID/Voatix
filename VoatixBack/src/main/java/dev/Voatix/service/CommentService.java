@@ -50,7 +50,7 @@ public class CommentService {
 
     public Page<CommentWithStatsDTO> getComments(Long ideaId, Integer page, Integer limit, Principal principal) {
         Pageable pageParam = PageRequest.of(page, limit);
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long findIdeaId = ideaRepository.findIdById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
@@ -64,7 +64,7 @@ public class CommentService {
     }
 
     public void createComment(CommentDTO dto, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long ideaId = ideaRepository.findIdById(dto.getIdeaId())
                 .orElseThrow(() -> new IdeaNotFoundException(dto.getIdeaId()));
@@ -76,7 +76,7 @@ public class CommentService {
     }
 
     public void updateComment(CommentUpdateDTO dto, Long commentId, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
@@ -107,7 +107,7 @@ public class CommentService {
     }
 
     public void deleteComment(Long commentId, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long findCommentId = commentRepository.findIdById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));

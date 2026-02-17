@@ -8,13 +8,30 @@
         </div>
 
         <div class="simpleSelect">
-            <div class="selected" (click)="toggle()">
-                {{ selectedProject?.title || '' }}
+            <div class="selected" (click)="toggle()"
+                style="display: flex; align-items: center; gap: 8px;">
+                <img *ngIf="selectedProject?.key && (getProjectAvatarUrl(selectedProject) | async) as avatarUrl"
+                    [src]="avatarUrl"
+                    alt="project avatar"
+                    style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                <img *ngIf="!selectedProject?.key || !(getProjectAvatarUrl(selectedProject) | async)" 
+                    src="assets/icons/default-project.png" alt="default project"
+                    style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                <span style="flex: 1;">{{ selectedProject?.title || '' }}</span>
+                <div *ngIf="selectedProject?.roleOfUser !== 'VIEWER'" class="role-dot"></div>
             </div>
 
             <div class="options" *ngIf="isOpen">
-                <div class="option" *ngFor="let p of projects" (click)="selectProject(p); $event.stopPropagation()">
-                    {{ p.title }}
+                <div class="option" *ngFor="let p of projects" (click)="selectProject(p); $event.stopPropagation()"
+                    style="display: flex; align-items: center; gap: 8px;">
+                    <img *ngIf="p.key && (getProjectAvatarUrl(p) | async) as avatarUrl" 
+                        [src]="avatarUrl" alt="project avatar"
+                        style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover">
+                    <img *ngIf="!p.key || !(getProjectAvatarUrl(p) | async)" 
+                        src="assets/icons/default-project.png" alt="default project"
+                        style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                    <span style="flex: 1;">{{ p.title }}</span>
+                    <div *ngIf="p.roleOfUser !== 'VIEWER'" class="role-dot"></div>
                 </div>
             </div>
         </div>
@@ -44,12 +61,12 @@
 
         <div
             style="height: 455px; width: 200px; margin-top: 20px; display: flex; flex-direction: column; justify-content: flex-end;">
-            <div class="section" style="margin-bottom: 10px;">
-                <img src="/assets/icons/user.png" style="width: 40px; margin-right: 18px;" alt="rectangle">
+            <div class="section" style="margin-bottom: 10px;" (click)="clickOnProfile()">
+                <img src="/assets/icons/user.png" style="width: 40px; margin-right: 18px;" alt="profile">
                 <span class="sectionText" style="font-size: 25;">Профиль</span>
             </div>
             <div class="section" style="margin-bottom: 10px;">
-                <img src="/assets/icons/faq.png" style="width: 40px; margin-right: 19px;" alt="rectangle">
+                <img src="/assets/icons/faq.png" style="width: 40px; margin-right: 19px;" alt="faq">
                 <span class="sectionText" style="font-size: 25;">Справка</span>
             </div>
             <div class="section" style="margin-bottom: 20px;" (click)="clickOnExit()">

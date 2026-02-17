@@ -2,7 +2,6 @@ package dev.Voatix.service;
 
 import dev.Voatix.dto.*;
 import dev.Voatix.dto.projection.CommentCountProjection;
-import dev.Voatix.dto.projection.CommentFileKeyProjection;
 import dev.Voatix.dto.projection.IdeaFileKeyProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.*;
@@ -62,7 +61,7 @@ public class IdeaService {
             }
         }
         Pageable pageParam = PageRequest.of(page, limit);
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Page<IdeaEntity> ideas = ideaRepository.findIdeas(project, status, searchedValue, pageParam);
 
@@ -75,7 +74,7 @@ public class IdeaService {
     }
 
     public IdeaWithStatsDTO getIdea(Long ideaId, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         IdeaEntity ideaProjection = ideaRepository.findIdeaById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
@@ -106,7 +105,7 @@ public class IdeaService {
     }
 
     public void createIdea(IdeaCreateDTO ideaDTO, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long projectId = projectRepository.findIdByTitle(ideaDTO.getProjectName())
                 .orElseThrow(() -> new ProjectNotFoundException(ideaDTO.getProjectName()));
@@ -122,7 +121,7 @@ public class IdeaService {
     }
 
     public void updateIdea(IdeaUpdateDTO ideaUpdateDTO, Long ideaId, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         IdeaEntity idea = ideaRepository.findEntityById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
@@ -134,7 +133,7 @@ public class IdeaService {
     }
 
     public void deleteIdea(Long ideaId, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long findIdeaId = ideaRepository.findIdById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
@@ -165,7 +164,7 @@ public class IdeaService {
     }
 
     public void updateStatus(Long ideaId, IdeaStatusDTO dto, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         IdeaEntity idea = ideaRepository.findEntityById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));

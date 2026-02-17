@@ -18,6 +18,25 @@
     box-shadow: 0 0 0 1px #cf78ef;
 }
 
+// Headline header layout
+.headline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.headline-title {
+    display: flex;
+    align-items: center;
+
+    h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 400;
+    }
+}
+
 .search-input {
     flex: 1;
     border: none;
@@ -448,5 +467,369 @@
 
     span {
         line-height: 1;
+    }
+}
+
+.voatix-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+
+  &.success {
+    background: #4caf50;
+    color: white;
+  }
+
+  &.error {
+    background: #f44336;
+    color: white;
+  }
+
+  .toast-icon {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .toast-body {
+    flex: 1;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &::before {
+      content: '✕';
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// QR Code Share Button
+.qr-share-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #cf78ef;
+
+  &:hover {
+    background-color: #f3e6ff;
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// QR Modal Overlay
+.qr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.qr-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+.qr-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  z-index: 1002;
+
+  &:hover {
+    color: #333;
+    background-color: #f0f0f0;
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.qr-modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+  }
+}
+
+.qr-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+}
+
+.qr-code-image {
+  max-width: 350px;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.share-link-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background-color: #f9f9f9;
+  outline: none;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #cf78ef;
+    box-shadow: 0 0 0 2px rgba(207, 120, 239, 0.1);
+  }
+}
+
+.copy-button {
+  padding: 10px 16px;
+  background-color: #cf78ef;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+
+  &:hover {
+    background-color: #b85ed6;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.btn-delete-survey {
+    background: rgba(255, 77, 79, 0.1);
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff7875;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+
+    mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+
+    &:hover {
+        background: rgba(255, 77, 79, 0.2);
+        color: #ff4d4f;
+        box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: scale(0.92);
+    }
+}
+
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.delete-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+
+    h3 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0 0 20px 0;
+        font-size: 14px;
+        color: #666;
+    }
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+
+            &:hover:not(:disabled) {
+                background: #e0e0e0;
+            }
+
+            &:disabled {
+                background: #f0f0f0;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+        }
+
+        &.btn-delete {
+            background: #ff4d4f;
+            color: white;
+
+            &:hover:not(:disabled) {
+                background: #ff7875;
+                box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+            }
+
+            &:disabled {
+                background: #ffb3b3;
+                cursor: not-allowed;
+            }
+        }
     }
 }

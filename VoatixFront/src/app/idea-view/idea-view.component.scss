@@ -215,6 +215,28 @@
     background: #f5f5f5;
 }
 
+.btn-delete {
+    background: #ff4d4f;
+    color: #fff;
+    padding: 12px 24px;
+    margin: 0;
+
+    &:hover:not(:disabled) {
+        background: #ff7875;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 77, 79, 0.4);
+    }
+
+    &:active {
+        transform: translateY(-1px) scale(0.98);
+    }
+
+    &:disabled {
+        background: #ffb3b3;
+        cursor: not-allowed;
+    }
+}
+
 .btn-comments {
     background: #cf78ef;
     color: #fff;
@@ -501,4 +523,96 @@
     background: #e0c3fd;
     color: #fff;
     cursor: not-allowed;
+}
+
+// Delete confirmation modal
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+
+.delete-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+
+    h3 {
+        margin: 0 0 16px 0;
+        font-size: 22px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0 0 24px 0;
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.btn-delete-comment {
+    background: rgba(255, 77, 79, 0.1);
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff7875;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    margin-left: 8px;
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        background: rgba(255, 77, 79, 0.2);
+        color: #ff4d4f;
+        box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: scale(0.92);
+    }
 }

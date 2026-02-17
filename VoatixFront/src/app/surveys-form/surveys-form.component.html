@@ -1,10 +1,17 @@
 <div class="rightSideDiv">
     <div class="headlineDiv" style="height: 90px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <h1 style="margin-top: 20px;">Голосования и опросы</h1>
-            <button class="btn-create-survey" style="margin-right: 20px;" (click)="goToCreate()" title="Создать голосование">
-                <span>+</span>
-            </button>
+        <div class="headline-header" style="width: 100%;">
+            <div class="headline-title">
+                <h1>Голосования и опросы</h1>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center; margin-right: 20px;">
+                <button class="qr-share-button" (click)="openQrModal()" title="Поделиться ссылкой">
+                    <mat-icon>share</mat-icon>
+                </button>
+                <button class="btn-create-survey" (click)="goToCreate()" title="Создать голосование">
+                    <span>+</span>
+                </button>
+            </div>
         </div>
     </div>
     <div class="headlineDiv" style="height: 690px; margin-top: 20px; width: 1210px;">
@@ -13,7 +20,12 @@
             <div class="voatix-survey-panel" style="justify-content: space-around; height: 600px;" *ngIf="survey">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:1150px;">
                     <div class="survey-title" style="font-size:20px; font-weight:600;">{{ survey.title }}</div>
-                    <div class="survey-dates">{{ survey.startDate | date:'dd.MM.yy HH:mm' }} — {{ survey.endDate | date:'dd.MM.yy HH:mm' }}</div>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div class="survey-dates">{{ survey.startDate | date:'dd.MM.yy HH:mm' }} — {{ survey.endDate | date:'dd.MM.yy HH:mm' }}</div>
+                        <button *ngIf="showDeleteBtn" class="btn-delete-survey" type="button" (click)="openDeleteConfirm()">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
                 </div>
 
                 <div style="height: 1px; width: 1150px; background-color: #a7a7a7;"><span style="color: White;">a</span>
@@ -66,3 +78,48 @@
         </div>
         <div *ngIf="!survey && !loading" style="padding:16px; color:#666;">Нет голосований для проекта.</div>
         <div *ngIf="loading" style="padding:16px; color:#666;">Загрузка...</div>
+    </div>
+</div>
+
+<div class="voatix-toast" *ngIf="toastVisible" [class.success]="toastType==='success'" [class.error]="toastType==='error'">
+  <div class="toast-body">{{ toastMessage }}</div>
+  <button class="toast-close" (click)="closeToast()" aria-label="Закрыть"></button>
+</div>
+
+<!-- Модальное окно для QR кода и ссылки -->
+<div class="qr-modal-overlay" *ngIf="isQrModalOpen" (click)="closeQrModal()">
+    <div class="qr-modal-content" (click)="$event.stopPropagation()">
+        <button class="qr-modal-close" (click)="closeQrModal()" aria-label="Закрыть">×</button>
+        
+        <div class="qr-modal-header">
+            <h2>Поделиться секцией</h2>
+        </div>
+        
+        <div class="qr-modal-body">
+            <div class="qr-code-container">
+                <img [src]="qrCodeUrl" alt="QR Code" class="qr-code-image">
+            </div>
+            
+            <div class="share-link-container">
+                <input type="text" class="share-link-input" [value]="shareUrl" readonly>
+                <button class="copy-button" (click)="copyShareLink()" title="Скопировать ссылку">
+                    <mat-icon>content_copy</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления голосования -->
+<div class="delete-modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="delete-modal-content" (click)="$event.stopPropagation()">
+        <h3>Удалить голосование?</h3>
+        <p>Это действие невозможно отменить.</p>
+        <div class="delete-modal-actions">
+            <button class="btn btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeletingSurvey">Отмена</button>
+            <button class="btn btn-delete" (click)="deleteSurvey()" [disabled]="isDeletingSurvey">
+                {{ isDeletingSurvey ? 'Удаление...' : 'Удалить' }}
+            </button>
+        </div>
+    </div>
+</div>

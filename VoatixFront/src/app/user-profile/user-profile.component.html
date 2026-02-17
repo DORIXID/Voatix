@@ -1,0 +1,201 @@
+<div class="card-container">
+  <button class="btn-back" (click)="goBack()">
+    <span>← Назад</span>
+  </button>
+
+  <div class="headlineDiv">
+    <h1>Мой профиль</h1>
+  </div>
+
+  <!-- Avatar Section -->
+  <div class="profile-section avatar-section">
+    <div class="avatar-container">
+      <img *ngIf="avatarUrl" [src]="avatarUrl" alt="User avatar" class="avatar-image">
+      <div *ngIf="!avatarUrl" class="avatar-placeholder">
+        <mat-icon>person</mat-icon>
+      </div>
+    </div>
+    <button class="btn-secondary" (click)="openAvatarModal()" title="Изменить аватар">
+      Изменить аватар
+    </button>
+  </div>
+
+  <!-- Nickname Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <label>Никнейм</label>
+      <button class="btn-edit" (click)="openNicknameModal()">Изменить</button>
+    </div>
+    <div class="section-value">{{ nickname }}</div>
+  </div>
+
+  <!-- Email Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <label>Почта</label>
+      <button class="btn-edit" (click)="openEmailModal()">Изменить</button>
+    </div>
+    <div class="section-value">{{ email }}</div>
+  </div>
+
+  <!-- Password Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <label>Пароль</label>
+      <button class="btn-edit" (click)="openPasswordModal()">Изменить</button>
+    </div>
+    <div class="section-value">••••••••</div>
+  </div>
+</div>
+
+<!-- Nickname Modal -->
+<div class="modal-overlay" *ngIf="showNicknameModal" (click)="closeNicknameModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeNicknameModal()" aria-label="Закрыть">×</button>
+    <h2>Изменить никнейм</h2>
+    
+    <div class="input-group">
+      <label>Новый никнейм (6-30 символов)</label>
+      <input 
+        type="text" 
+        class="input-field" 
+        [(ngModel)]="editNickname"
+        placeholder="Введите новый никнейм">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeNicknameModal()" [disabled]="isSubmitting">Отмена</button>
+      <button class="btn btn-submit" (click)="saveNickname()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Сохранение...' : 'Сохранить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal-overlay" *ngIf="showEmailModal" (click)="closeEmailModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeEmailModal()" aria-label="Закрыть">×</button>
+    <h2>Изменить почту</h2>
+    
+    <div class="input-group">
+      <label>Новая почта</label>
+      <input 
+        type="email" 
+        class="input-field" 
+        [(ngModel)]="editEmail"
+        placeholder="Введите новую почту">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeEmailModal()" [disabled]="isSubmitting">Отмена</button>
+      <button class="btn btn-submit" (click)="saveEmail()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Сохранение...' : 'Сохранить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closePasswordModal()" aria-label="Закрыть">×</button>
+    <h2>Изменить пароль</h2>
+    
+    <div class="input-group">
+      <label>Новый пароль (6-30 символов)</label>
+      <input 
+        type="password" 
+        class="input-field" 
+        [(ngModel)]="editPassword"
+        placeholder="Введите новый пароль">
+    </div>
+
+    <div class="input-group">
+      <label>Повторите пароль</label>
+      <input 
+        type="password" 
+        class="input-field" 
+        [(ngModel)]="editPasswordConfirm"
+        placeholder="Повторите пароль">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closePasswordModal()" [disabled]="isSubmitting">Отмена</button>
+      <button class="btn btn-submit" (click)="savePassword()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Сохранение...' : 'Сохранить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Modal -->
+<div class="modal-overlay" *ngIf="showAvatarModal" (click)="closeAvatarModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeAvatarModal()" aria-label="Закрыть">×</button>
+    <h2>Изменить аватар</h2>
+    
+    <input 
+      id="avatarFileInput"
+      type="file" 
+      accept="image/*" 
+      (change)="onAvatarFileSelected($event)"
+      style="display: none;">
+    
+    <!-- Crop Editor -->
+    <div *ngIf="showCropEditor" class="crop-editor-wrapper">
+      <div class="crop-editor-container">
+        <canvas 
+          id="cropperCanvas" 
+          class="cropper-canvas"
+          [width]="canvasWidth"
+          [height]="canvasHeight">
+        </canvas>
+        <div class="crop-hint">Перемещайте мышью, тяните угол для изменения размера</div>
+      </div>
+      <div class="crop-actions">
+        <button class="btn btn-cancel" (click)="cancelCrop()" [disabled]="isSubmitting">Отмена</button>
+        <button class="btn btn-submit" (click)="confirmCrop()" [disabled]="isSubmitting">
+          Применить обрезку
+        </button>
+      </div>
+    </div>
+
+    <!-- Upload Zone -->
+    <div *ngIf="!showCropEditor" class="avatar-upload-wrapper">
+      <div 
+        class="avatar-upload-section"
+        [class.drag-over]="isDragOverDropZone"
+        (dragover)="onDragOverDropZone($event)"
+        (dragleave)="onDragLeaveDropZone($event)"
+        (drop)="onDropFile($event)">
+        
+        <div *ngIf="uploadedAvatarPreview" class="preview-container">
+          <img [src]="uploadedAvatarPreview" alt="Preview" class="preview-image">
+        </div>
+        <div *ngIf="!uploadedAvatarPreview" class="upload-placeholder">
+          <mat-icon>cloud-upload</mat-icon>
+          <p>Перетащите фото сюда или нажмите кнопку</p>
+          <small>JPEG, PNG (любой размер)</small>
+        </div>
+        
+        <button class="btn-upload" (click)="triggerFileInput()" [disabled]="isSubmitting">
+          Выбрать файл
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-cancel" (click)="closeAvatarModal()" [disabled]="isSubmitting">Отмена</button>
+        <button class="btn btn-submit" (click)="saveAvatar()" [disabled]="isSubmitting || !uploadedAvatarPreview">
+          {{ isSubmitting ? 'Загрузка...' : 'Сохранить' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="voatix-toast" *ngIf="toastVisible" [class.success]="toastType==='success'" [class.error]="toastType==='error'">
+  <div class="toast-body">{{ toastMessage }}</div>
+  <button class="toast-close" (click)="closeToast()" aria-label="Закрыть"></button>
+</div>

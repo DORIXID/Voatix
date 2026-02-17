@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectOfUserDTO {
-    private Long projectId;
     @Size(min = 3, max = 30)
     private String title;
     private String key;

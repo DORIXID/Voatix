@@ -14,6 +14,13 @@ public interface CredentialsRepository extends JpaRepository<CredentialsEntity, 
     Optional<CredentialsEntity> findById(Long userId);
 
     @Query("""
+        select c
+        from CredentialsEntity c
+        where c.user.nickname = :username
+        """)
+    Optional<CredentialsEntity> findByUsername(String username);
+
+    @Query("""
             SELECT c.role
             FROM CredentialsEntity c
             JOIN c.user u

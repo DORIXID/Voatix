@@ -46,4 +46,12 @@ export class IdeaService {
     return this.http.get<any>(`http://localhost:8080/api/ideas/${id}`, { withCredentials: true });
   }
 
+  deleteIdea(id: number) {
+    return this.http.delete<any>(`http://localhost:8080/api/ideas/${id}`, { withCredentials: true });
+  }
+
+  deleteComment(ideaId: number, commentId: number) {
+    return this.http.delete<any>(`http://localhost:8080/api/comments/${commentId}`, { withCredentials: true });
+  }
+
 }

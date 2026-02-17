@@ -54,7 +54,7 @@ public class FileService {
             requestDto.setContentType(file.getContentType());
             requestDto.setBucket("images");
 
-            Long uploaderId = userRepository.getIdByNickname(principal.getName())
+            Long uploaderId = userRepository.findIdByNickname(principal.getName())
                     .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
             FileEntity fileEntity = fileMapper.toEntity(requestDto, uploaderId);
             FileEntity savedFile = fileRepository.save(fileEntity);

@@ -24,9 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -48,7 +46,7 @@ public class SurveyService {
     private final VotingPointRepository votingPointRepository;
 
     public Page<SurveyResponseDTO> getSurveys(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal){
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         TypeOfSurveyEnum status = null;
         if (!filterBy.isBlank() && !filterBy.equals("ALL")) {
@@ -70,7 +68,7 @@ public class SurveyService {
     }
 
     public void createSurvey(SurveyCreateDTO dto, Principal principal){
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long projectId = projectRepository.findIdByTitle(dto.getProjectName())
                 .orElseThrow(() -> new ProjectNotFoundException(dto.getProjectName()));

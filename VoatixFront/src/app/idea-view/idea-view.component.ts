@@ -6,11 +6,14 @@ import { IdeaService } from '../service/idea.service';
 import { ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { ProjectService } from '../service/project.service';
+import { UserRole } from '../service/enums/user-role.enum';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'idea-view-component',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './idea-view.component.html',
   styleUrls: ['./idea-view.component.scss']
 })
@@ -43,18 +46,47 @@ export class IdeaViewComponent implements OnInit {
   commentToastVisible: boolean = false;
   commentToastMessage: string = '';
   commentToastType: 'success' | 'error' = 'success';
+  previousPage: number = 0;
+  projectTitle: string = '';
+
+  // Delete idea
+  showDeleteConfirm = false;
+  userRole: UserRole = UserRole.VIEWER;
+  isDeleting = false;
+
+  // Delete comment
+  showDeleteCommentConfirm = false;
+  deleteCommentId: number | null = null;
+  isDeletingComment = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private ideaService: IdeaService,
     private cdr: ChangeDetectorRef,
     private http: HttpClient,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private projectService: ProjectService
   ) {}
 
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam ? Number(idParam) : null;
+    
+    // read page from query params
+    const pageParam = this.route.snapshot.queryParamMap.get('page');
+    this.previousPage = pageParam ? Number(pageParam) : 0;
+
+    // get project title from parent route
+    const parentRoute = this.route.parent?.snapshot;
+    this.projectTitle = parentRoute?.paramMap.get('projectTitle') || '';
+
+    // get user role from project service
+    const selectedProject = this.projectService.getSelectedProject();
+    if (selectedProject) {
+      this.userRole = selectedProject.roleOfUser;
+    }
+
     if (id) {
       this.loadIdea(id);
       this.loadComments(id);
@@ -107,7 +139,7 @@ export class IdeaViewComponent implements OnInit {
   }
 
   back() {
-    this.router.navigate(['/main/ideas']);
+    this.router.navigate(['/main/ideas', this.projectTitle], { queryParams: { page: this.previousPage } });
   }
 
   getAvatarUrl(key?: string) {
@@ -180,7 +212,7 @@ export class IdeaViewComponent implements OnInit {
 
   goToComments() {
     // placeholder — route for comments will be added later
-    this.router.navigate(['/main/ideas']);
+    this.router.navigate(['/main/ideas', this.projectTitle], { queryParams: { page: this.previousPage } });
   }
 
   loadComments(ideaId: number, pageNum: number = 0, shouldScroll: boolean = false) {
@@ -369,5 +401,79 @@ export class IdeaViewComponent implements OnInit {
   closeImageModal() {
     this.isImageModalOpen = false;
     this.selectedImageUrl = null;
+  }
+
+  canDeleteIdea(): boolean {
+    return this.userRole === UserRole.OWNER || this.userRole === UserRole.MANAGER;
+  }
+
+  openDeleteConfirm() {
+    this.showDeleteConfirm = true;
+  }
+
+  closeDeleteConfirm() {
+    this.showDeleteConfirm = false;
+  }
+
+  deleteIdea() {
+    if (!this.idea) return;
+    
+    this.isDeleting = true;
+    this.ideaService.deleteIdea(this.idea.id).subscribe({
+      next: () => {
+        this.showCommentToast('Идея удалена', 'success');
+        setTimeout(() => {
+          this.router.navigate(['/main/ideas', this.projectTitle], { queryParams: { page: this.previousPage } });
+        }, 500);
+      },
+      error: (err) => {
+        console.error('Ошибка при удалении идеи', err);
+        this.showCommentToast('Ошибка при удалении идеи', 'error');
+        this.isDeleting = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  openDeleteCommentConfirm(commentId: number) {
+    this.deleteCommentId = commentId;
+    this.showDeleteCommentConfirm = true;
+  }
+
+  closeDeleteCommentConfirm() {
+    this.showDeleteCommentConfirm = false;
+    this.deleteCommentId = null;
+  }
+
+  deleteComment() {
+    if (!this.idea || !this.deleteCommentId) return;
+
+    this.isDeletingComment = true;
+    const commentIdToDelete = this.deleteCommentId;
+
+    this.ideaService.deleteComment(this.idea.id, commentIdToDelete).subscribe({
+      next: () => {
+        // Удаляем комментарий из списка
+        this.comments = this.comments.filter(item => item.comment.id !== commentIdToDelete);
+        this.totalElements--;
+        
+        // Если на странице нет больше комментариев, переходим на предыдущую
+        if (this.comments.length === 0 && this.page > 0) {
+          this.page--;
+          this.loadComments(this.idea.id, this.page, true);
+        }
+
+        this.showCommentToast('Комментарий удален', 'success');
+        this.closeDeleteCommentConfirm();
+        this.isDeletingComment = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Ошибка при удалении комментария', err);
+        this.showCommentToast('Ошибка при удалении комментария', 'error');
+        this.isDeletingComment = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

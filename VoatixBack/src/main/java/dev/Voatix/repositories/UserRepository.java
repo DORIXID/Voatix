@@ -1,8 +1,10 @@
 package dev.Voatix.repositories;
 
+import dev.Voatix.dto.projection.ResponseUserProjection;
 import dev.Voatix.entity.UserEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,5 +27,23 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             @Param("userIds") List<Long> userIds);
 
     @Query("select u.id from UserEntity u where u.nickname = :nickname")
-    Optional<Long> getIdByNickname(String nickname);
+    Optional<Long> findIdByNickname(String nickname);
+
+    @Query(value = """
+            SELECT
+                u.nickname as nickname,
+                u.credentials.eMail as email,
+                u.avatar.key as key
+            FROM UserEntity u
+            WHERE u.nickname = :nickname
+            """)
+    Optional<ResponseUserProjection> findUserInfoByNickname(String nickname);
+
+    @Modifying
+    @Query(value = """
+            UPDATE UserEntity u
+            SET u.avatarId = :fileId
+            WHERE u.id = :userId
+        """)
+    void setAvatar(Long userId, Long fileId);
 }

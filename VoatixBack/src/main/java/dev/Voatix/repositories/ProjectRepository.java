@@ -2,6 +2,7 @@ package dev.Voatix.repositories;
 
 import dev.Voatix.dto.projection.ProjectOfUserProjection;
 import dev.Voatix.entity.ProjectEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,4 +41,12 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
         where p.title = :title
         """)
     Optional<Long> findIdByTitle(String title);
+
+    @EntityGraph(attributePaths = {"avatar"})
+    @Query("""
+        SELECT p
+        from ProjectEntity p
+        where p.title = :title
+        """)
+    Optional<ProjectEntity> findByTitle(String title);
 }

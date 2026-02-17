@@ -19,9 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -38,7 +36,7 @@ public class MessageService {
     private final FileRepository fileRepository;
 
     public Page<MessageChatDTO> getChats(Integer page, Integer limit, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Pageable pageParam = PageRequest.of(page, limit);
         Page<MessageUserOfChatProjection> userOfChatProjections = messageRepository.findChatsByUserId(userId, pageParam);
@@ -52,9 +50,9 @@ public class MessageService {
     }
 
     public List<MessageDTO> getChat(String companionNickname, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.getIdByNickname(companionNickname)
+        Long companionId = userRepository.findIdByNickname(companionNickname)
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         //Помечаем сообщения от собеседника как прочитанные
         messageRepository.markMessagesAsRead(userId, companionId);
@@ -63,17 +61,17 @@ public class MessageService {
     }
 
     public void markMessagesAsRead(String companionNickname, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.getIdByNickname(companionNickname)
+        Long companionId = userRepository.findIdByNickname(companionNickname)
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         messageRepository.markMessagesAsRead(userId, companionId);
     }
 
     public MessageDTO saveMessage(SendMessageDTO dto, Principal principal) {
-        Long userId = userRepository.getIdByNickname(principal.getName())
+        Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.getIdByNickname(dto.getReceiver())
+        Long companionId = userRepository.findIdByNickname(dto.getReceiver())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         List<FileEntity> files = fileRepository.findByFileKeys(dto.getFiles());
         MessageEntity message = messageMapper.toMessageEntity(dto, userId, companionId, files);

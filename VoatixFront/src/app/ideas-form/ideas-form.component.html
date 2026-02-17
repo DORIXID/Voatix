@@ -1,7 +1,14 @@
 <div class="rightSideDiv">
     <div class="headlineDiv" style="height: 200px;">
 
-        <h1 style="margin-top: 20px;">Идеи и предложения</h1>
+        <div class="headline-header">
+            <div class="headline-title">
+                <h1>Идеи и предложения</h1>
+            </div>
+            <button class="qr-share-button" (click)="openQrModal()" title="Поделиться ссылкой">
+                <mat-icon>share</mat-icon>
+            </button>
+        </div>
 
         <div class="search-wrapper">
             <input type="text" class="search-input" placeholder="Поиск по ключевому слову" [(ngModel)]="searchedValue">
@@ -35,41 +42,47 @@
                     </span>
                 </div>
 
-                <div style="display: flex; justify-content: flex-start; align-items: flex-start; height: 50px; overflow: hidden; cursor: pointer;" (click)="viewIdea(ideaWithStats.idea.id)">
+                <div style="display: flex; justify-content: flex-start; align-items: flex-start; height: 50px; overflow: hidden; cursor: pointer;"
+                    (click)="viewIdea(ideaWithStats.idea.id)">
                     <p class="idea-description">{{ ideaWithStats.idea.description }}</p>
                 </div>
 
                 <div class="idea-images" *ngIf="ideaWithStats.idea.fileKeys && ideaWithStats.idea.fileKeys.length > 0">
-                    <img *ngFor="let fileKey of ideaWithStats.idea.fileKeys.slice(0, 5)" 
-                         [src]="ideaWithStats.imageUrls?.[fileKey]"
-                         alt="idea image"
-                         class="idea-image"
-                         (click)="openImageModal(ideaWithStats.imageUrls?.[fileKey])">
+                    <img *ngFor="let fileKey of ideaWithStats.idea.fileKeys.slice(0, 5)"
+                        [src]="ideaWithStats.imageUrls?.[fileKey]" alt="idea image" class="idea-image"
+                        (click)="openImageModal(ideaWithStats.imageUrls?.[fileKey])">
                 </div>
 
                 <div class="idea-footer" style="position: relative;">
                     <div style="display: flex; align-items: center;">
 
-                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == -1"
-                            src="/assets/icons/dislikeArrow.png" style="width: 25px;"
-                            (click)="toggleDislike(ideaWithStats)">
+                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == 1"
+                            src="/assets/icons/likeArrow.png" style="width: 25px;" (click)="toggleLike(ideaWithStats)">
                         <div style="width: 30px; text-align: center;">
                             <span class="idea-votes" style="margin-right: 5px; margin-left: 3px;">{{ideaWithStats.likes
                                 -
                                 ideaWithStats.disLikes}}</span>
                         </div>
-                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == 1"
-                            src="/assets/icons/likeArrow.png" style="width: 25px;" (click)="toggleLike(ideaWithStats)">
+
+                        <img class="buttonEffect" [class.active]="ideaWithStats.userVote == -1"
+                            src="/assets/icons/dislikeArrow.png" style="width: 25px;"
+                            (click)="toggleDislike(ideaWithStats)">
 
                     </div>
 
                     <div style="margin-left: 100px; position: absolute;">
                         <span>
-                        Комментариев: {{ ideaWithStats.commentsCount }}
+                            Комментариев: {{ ideaWithStats.commentsCount }}
                         </span>
                     </div>
 
-                    <span class="idea-date">{{ ideaWithStats.idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</span>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                        <button *ngIf="canDeleteIdea()" class="btn-delete-mini"
+                            (click)="openDeleteConfirm(ideaWithStats.idea.id, $event)" title="Удалить идею">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                        <span class="idea-date">{{ ideaWithStats.idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</span>
+                    </div>
                 </div>
             </div>
             <!-- Пагинация -->
@@ -90,5 +103,43 @@
     <div class="image-modal-content" (click)="$event.stopPropagation()">
         <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
         <button class="modal-close" (click)="closeImageModal()">×</button>
+    </div>
+</div>
+
+<!-- Модальное окно для QR кода и ссылки -->
+<div class="qr-modal-overlay" *ngIf="isQrModalOpen" (click)="closeQrModal()">
+    <div class="qr-modal-content" (click)="$event.stopPropagation()">
+        <button class="qr-modal-close" (click)="closeQrModal()" aria-label="Закрыть">×</button>
+
+        <div class="qr-modal-header">
+            <h2>Поделиться секцией</h2>
+        </div>
+
+        <div class="qr-modal-body">
+            <div class="qr-code-container">
+                <img [src]="qrCodeUrl" alt="QR Code" class="qr-code-image">
+            </div>
+
+            <div class="share-link-container">
+                <input type="text" class="share-link-input" [value]="shareUrl" readonly>
+                <button class="copy-button" (click)="copyShareLink()" title="Скопировать ссылку">
+                    <mat-icon>content_copy</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления идеи -->
+<div class="delete-modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="delete-modal-content" (click)="$event.stopPropagation()">
+        <h3>Удалить идею?</h3>
+        <p>Это действие невозможно отменить.</p>
+        <div class="delete-modal-actions">
+            <button class="btn btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeleting">Отмена</button>
+            <button class="btn btn-delete" (click)="confirmDeleteIdea()" [disabled]="isDeleting">
+                {{ isDeleting ? 'Удаление...' : 'Удалить' }}
+            </button>
+        </div>
     </div>
 </div>
