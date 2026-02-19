@@ -1,0 +1,238 @@
+<div class="card-container">
+  <button class="btn-back" (click)="goBack()">
+    <span>← Назад</span>
+  </button>
+
+  <div class="headlineDiv">
+    <h1>Настройки проекта</h1>
+  </div>
+
+  <!-- Avatar Section -->
+  <div class="profile-section avatar-section">
+    <div class="avatar-container">
+      <img *ngIf="projectAvatarUrl" [src]="projectAvatarUrl" alt="Project avatar" class="avatar-image">
+      <div *ngIf="!projectAvatarUrl" class="avatar-placeholder">
+        <mat-icon>image</mat-icon>
+      </div>
+    </div>
+    <button class="btn-secondary" (click)="openAvatarModal()" title="Изменить аватар проекта">
+      Изменить аватар
+    </button>
+  </div>
+
+  <!-- Project Title Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <label>Название проекта</label>
+    </div>
+    <div class="section-value">{{ projectTitle }}</div>
+  </div>
+
+  <!-- Moderators Section -->
+  <div class="profile-section">
+    <div class="section-header">
+      <label>Менеджеры проекта</label>
+      <button class="btn-edit" (click)="openAddModeratorModal()" title="Добавить модератора">Добавить</button>
+    </div>
+    <div class="moderators-list">
+      <div *ngIf="moderators.length === 0" class="no-moderators">
+        Менеджеров нет
+      </div>
+      <div *ngFor="let moderator of moderators" class="moderator-item">
+        <div class="moderator-avatar">
+          <img *ngIf="moderator.avatarUrl" [src]="moderator.avatarUrl" alt="Moderator avatar" class="avatar-image">
+          <div *ngIf="!moderator.avatarUrl" class="avatar-placeholder">
+            <mat-icon>person</mat-icon>
+          </div>
+        </div>
+        <div class="moderator-info">
+          <span class="moderator-nickname">{{ moderator.nickname }}</span>
+        </div>
+        <button class="btn-delete-mini" (click)="openDeleteConfirm(moderator.nickname)" title="Удалить модератора">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Project Section -->
+  <div class="profile-section danger-section">
+    <div class="section-header">
+      <label>Удалить проект</label>
+    </div>
+    <p class="section-description">Это действие невозможно отменить. Проект и все его данные будут удалены.</p>
+    <button class="btn-danger" (click)="openDeleteProjectConfirm()" title="Удалить проект">
+      <mat-icon>delete</mat-icon>
+      Удалить проект
+    </button>
+  </div>
+</div>
+
+<!-- Avatar Modal -->
+<div class="modal-overlay" *ngIf="showAvatarModal" (click)="closeAvatarModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeAvatarModal()" aria-label="Закрыть">×</button>
+    <h2>Изменить аватар проекта</h2>
+    
+    <input 
+      id="projectAvatarFileInput"
+      type="file" 
+      accept="image/*" 
+      (change)="onAvatarFileSelected($event)"
+      style="display: none;">
+    
+    <!-- Crop Editor -->
+    <div *ngIf="showCropEditor" class="crop-editor-wrapper">
+      <div class="crop-editor-container">
+        <canvas 
+          id="projectCropperCanvas" 
+          class="cropper-canvas"
+          [width]="canvasWidth"
+          [height]="canvasHeight">
+        </canvas>
+        <div class="crop-hint">Перемещайте мышью, тяните угол для изменения размера</div>
+      </div>
+      <div class="crop-actions">
+        <button class="btn btn-cancel" (click)="cancelCrop()" [disabled]="isSubmitting">Отмена</button>
+        <button class="btn btn-submit" (click)="confirmCrop()" [disabled]="isSubmitting">
+          Применить обрезку
+        </button>
+      </div>
+    </div>
+
+    <!-- Upload Zone -->
+    <div *ngIf="!showCropEditor" class="avatar-upload-wrapper">
+      <div 
+        class="avatar-upload-section"
+        [class.drag-over]="isDragOverDropZone"
+        (dragover)="onDragOverDropZone($event)"
+        (dragleave)="onDragLeaveDropZone($event)"
+        (drop)="onDropFile($event)">
+        
+        <div *ngIf="uploadedAvatarPreview" class="preview-container">
+          <img [src]="uploadedAvatarPreview" alt="Preview" class="preview-image">
+        </div>
+        <div *ngIf="!uploadedAvatarPreview" class="upload-placeholder">
+          <mat-icon>cloud-upload</mat-icon>
+          <p>Перетащите фото сюда или нажмите кнопку</p>
+          <small>JPEG, PNG (любой размер)</small>
+        </div>
+        
+        <button class="btn-upload" (click)="triggerFileInput()" [disabled]="isSubmitting">
+          Выбрать файл
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-cancel" (click)="closeAvatarModal()" [disabled]="isSubmitting">Отмена</button>
+        <button class="btn btn-submit" (click)="saveAvatar()" [disabled]="isSubmitting || !uploadedAvatarPreview">
+          {{ isSubmitting ? 'Загрузка...' : 'Сохранить' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Moderator Modal -->
+<div class="modal-overlay" *ngIf="showAddModeratorModal && !showAddModeratorConfirm" (click)="closeAddModeratorModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeAddModeratorModal()" aria-label="Закрыть">×</button>
+    <h2>Добавить модератора</h2>
+    
+    <div class="input-group">
+      <label>Никнейм пользователя</label>
+      <input 
+        type="text" 
+        class="input-field" 
+        [(ngModel)]="newModeratorNickname"
+        placeholder="Введите никнейм"
+        [disabled]="isAdding">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeAddModeratorModal()" [disabled]="isAdding">Отмена</button>
+      <button class="btn btn-submit" (click)="openAddModeratorConfirm()" [disabled]="isAdding || !newModeratorNickname">
+        Далее
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Add Moderator Modal -->
+<div class="modal-overlay" *ngIf="showAddModeratorModal && showAddModeratorConfirm" (click)="closeAddModeratorConfirm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeAddModeratorConfirm()" aria-label="Закрыть">×</button>
+    <h2>Подтверждение</h2>
+    
+    <p style="margin: 16px 0; color: #666;">
+      Вы уверены, что хотите добавить модератора с никнеймом <strong>{{ newModeratorNickname }}</strong>?
+    </p>
+
+    <div class="input-group">
+      <label>Повторите никнейм для подтверждения</label>
+      <input 
+        type="text" 
+        class="input-field" 
+        [(ngModel)]="confirmModeratorNickname"
+        placeholder="Введите никнейм еще раз"
+        [disabled]="isAdding">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeAddModeratorConfirm()" [disabled]="isAdding">Отмена</button>
+      <button class="btn btn-submit" (click)="confirmAddModerator()" [disabled]="isAdding || !confirmModeratorNickname">
+        {{ isAdding ? 'Добавление...' : 'Добавить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Moderator Confirmation -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeDeleteConfirm()" aria-label="Закрыть">×</button>
+    <h2>Удалить модератора?</h2>
+    
+    <p style="margin: 16px 0; color: #666;">
+      Вы уверены, что хотите удалить модератора <strong>{{ moderatorToDelete }}</strong> из проекта?
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeDeleteConfirm()" [disabled]="isDeleting">Отмена</button>
+      <button class="btn btn-submit" style="background: #f44336;" (click)="confirmDeleteModerator()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Удаление...' : 'Удалить' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Project Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteProjectConfirm" (click)="closeDeleteProjectConfirm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeDeleteProjectConfirm()" aria-label="Закрыть">×</button>
+    <h2>Подтверждение удаления</h2>
+    
+    <p style="color: #333; font-size: 14px; line-height: 1.6; margin: 16px 0;">
+      Вы действительно хотите удалить проект <strong>{{ projectTitle }}</strong>?<br>
+      <span style="color: #f44336; font-weight: 500;">Это действие невозможно отменить!</span>
+    </p>
+
+    <div class="timer-section" *ngIf="deleteTimer > 0" style="text-align: center; margin: 16px 0; padding: 12px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #ffebee;">
+      <p style="color: #f44336; font-weight: 500; margin: 0;">Подтверждение через <strong>{{ deleteTimer }}</strong> сек...</p>
+      <p style="color: #999; font-size: 12px; margin: 4px 0 0 0;">Кнопка удаления будет доступна после отсчета</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeDeleteProjectConfirm()" [disabled]="isDeleteProjectLoading">Отмена</button>
+      <button class="btn btn-delete" (click)="deleteProject()" [disabled]="isDeleteProjectLoading || deleteTimer > 0">
+        {{ isDeleteProjectLoading ? 'Удаление...' : (deleteTimer > 0 ? `Удалить (${deleteTimer}с)` : 'Удалить проект') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="voatix-toast" *ngIf="toastVisible" [class.success]="toastType==='success'" [class.error]="toastType==='error'">
+  <div class="toast-body">{{ toastMessage }}</div>
+  <button class="toast-close" (click)="closeToast()" aria-label="Закрыть"></button>
+</div>

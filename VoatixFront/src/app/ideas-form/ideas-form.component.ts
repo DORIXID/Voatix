@@ -46,6 +46,7 @@ export class IdeasFormComponent implements OnInit {
   selected = 'Все';
 
   selectedProject: Project | null = null;
+  projectAvatarUrl: SafeUrl | null = null;
 
   // данные
   ideas: IdeaWithStats[] = [];
@@ -58,6 +59,12 @@ export class IdeasFormComponent implements OnInit {
   // модальное окно
   selectedImageUrl: SafeUrl | null = null;
   isImageModalOpen = false;
+
+  // Avatar upload
+  isAvatarModalOpen = false;
+  selectedAvatarFile: File | null = null;
+  cropperCanvas: HTMLCanvasElement | null = null;
+  isUploadingAvatar = false;
 
   // QR код модальное окно
   isQrModalOpen = false;
@@ -100,6 +107,7 @@ export class IdeasFormComponent implements OnInit {
 
       if (project) {
         this.loadIdeas(project);
+        this.loadProjectAvatar(project);
       }
     });
   }
@@ -303,6 +311,16 @@ export class IdeasFormComponent implements OnInit {
     return this.selectedProject?.roleOfUser === UserRole.OWNER || this.selectedProject?.roleOfUser === UserRole.MANAGER;
   }
 
+  isProjectOwner(): boolean {
+    return this.selectedProject?.roleOfUser === UserRole.OWNER;
+  }
+
+  openProjectSettings() {
+    if (this.selectedProject) {
+      this.router.navigate(['/main/project-settings', this.selectedProject.title]);
+    }
+  }
+
   openDeleteConfirm(ideaId: number, event: Event) {
     event.stopPropagation();
     this.deleteIdeaId = ideaId;
@@ -346,4 +364,106 @@ export class IdeasFormComponent implements OnInit {
 
   //Затычка
   doNothing() { }
+
+  openChat(nickname: string, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/main/messages'], { queryParams: { chat: nickname } });
+  }
+
+  // Avatar upload
+  loadProjectAvatar(project: Project) {
+    if (!project.avatarKey) {
+      this.projectAvatarUrl = null;
+      return;
+    }
+
+    this.http.get(`http://localhost:8080/api/files/${project.avatarKey}/view`, {
+      responseType: 'blob',
+      withCredentials: true
+    }).subscribe({
+      next: (blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        this.projectAvatarUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+      },
+      error: (err) => {
+        console.error('Error loading project avatar:', err);
+        this.projectAvatarUrl = null;
+      }
+    });
+  }
+
+  openAvatarModal() {
+    if (!this.isProjectOwner()) return;
+    this.isAvatarModalOpen = true;
+  }
+
+  closeAvatarModal() {
+    this.isAvatarModalOpen = false;
+    this.selectedAvatarFile = null;
+    this.cropperCanvas = null;
+  }
+
+  onAvatarFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.selectedAvatarFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          const img = new Image();
+          img.onload = () => {
+            this.initializeCropper(img);
+          };
+          img.src = e.target.result as string;
+        }
+      };
+      reader.readAsDataURL(this.selectedAvatarFile);
+    }
+  }
+
+  initializeCropper(img: HTMLImageElement) {
+    const canvas = document.getElementById('avatarCropper') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d')!;
+    const size = Math.min(img.width, img.height);
+    
+    canvas.width = 400;
+    canvas.height = 400;
+
+    const x = (img.width - size) / 2;
+    const y = (img.height - size) / 2;
+
+    ctx.drawImage(img, x, y, size, size, 0, 0, 400, 400);
+    this.cropperCanvas = canvas;
+  }
+
+  saveProjectAvatar() {
+    if (!this.selectedAvatarFile || !this.cropperCanvas || !this.selectedProject) return;
+
+    this.isUploadingAvatar = true;
+    this.cropperCanvas.toBlob((blob) => {
+      if (!blob) return;
+
+      const formData = new FormData();
+      formData.append('file', new File([blob], 'avatar.png', { type: 'image/png' }));
+
+      this.http.post(`http://localhost:8080/api/projects/${this.selectedProject!.id}/avatar`, formData, {
+        withCredentials: true
+      }).subscribe({
+        next: (response: any) => {
+          this.selectedProject!.avatarKey = response.avatarKey;
+          this.loadProjectAvatar(this.selectedProject!);
+          this.closeAvatarModal();
+          this.isUploadingAvatar = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error saving avatar:', err);
+          this.isUploadingAvatar = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }, 'image/png');
+  }
 }

@@ -72,8 +72,9 @@ public class SurveyService {
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         Long projectId = projectRepository.findIdByTitle(dto.getProjectName())
                 .orElseThrow(() -> new ProjectNotFoundException(dto.getProjectName()));
-        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, projectId)
-                .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
+        if(!moderatorRepository.existsByUserIdAndProjectId(userId, projectId)){
+            throw new ModeratorAccessDeniedException(principal.getName());
+        }
         surveyRepository.save(surveyMapper.toEntity(dto, userId, projectId));
     }
 

@@ -1,6 +1,6 @@
 package dev.Voatix.dto.projection;
 
-public interface ResponseUserProjection {
+public interface ResponseUserProfileProjection {
     String getNickname();
     String getEmail();
     String getKey();

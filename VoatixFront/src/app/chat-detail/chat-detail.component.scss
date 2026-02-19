@@ -335,6 +335,272 @@
     }
 }
 
+// File list styles
+.file-list {
+    padding: 8px 12px;
+    background: #f9f7ff;
+    border-top: 1px solid #eee;
+    max-height: 150px;
+    overflow-y: auto;
+
+    .file-item {
+        padding: 8px;
+        margin-bottom: 6px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        position: relative;
+
+        &.uploading {
+            border-color: #7e57c2;
+            background: #f3e6ff;
+        }
+
+        &.done {
+            border-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        &.error {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+
+            .file-name {
+                font-size: 12px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+                color: #333;
+            }
+
+            .file-status {
+                flex-shrink: 0;
+                font-size: 11px;
+                font-weight: 600;
+                padding: 2px 6px;
+                border-radius: 3px;
+
+                &.status-done {
+                    color: #4caf50;
+                }
+
+                &.status-error {
+                    color: #f44336;
+                }
+
+                &.status-uploading {
+                    color: #7e57c2;
+                }
+            }
+        }
+
+        .progress {
+            width: 100%;
+            height: 3px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+            flex-basis: 100%;
+
+            .progress-bar {
+                height: 100%;
+                background: linear-gradient(90deg, #7e57c2, #cf78ef);
+                transition: width 0.3s ease;
+            }
+        }
+
+        .file-item-remove {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(0, 0, 0, 0.1);
+                color: #f44336;
+            }
+        }
+    }
+}
+
+// Message files styling
+.message-files {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+
+    .file-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        background: #f3e6ff;
+        border: 1px solid #dcc8ff;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #7e57c2;
+        font-size: 12px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #ebd2ff;
+            border-color: #cf78ef;
+            color: #6a3aa0;
+        }
+
+        mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+// Message images styling
+.message-images {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+
+    .image-container {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .message-image {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid #ddd;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+    }
+
+    .file-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        background: #f3e6ff;
+        border: 1px solid #dcc8ff;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #7e57c2;
+        font-size: 12px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #ebd2ff;
+            border-color: #cf78ef;
+            color: #6a3aa0;
+        }
+
+        mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+// Modal для просмотра изображения
+.image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.image-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.modal-image {
+    max-width: 90vw;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0);
+    border: none;
+    color: #bbbbbb;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    border-radius: 50%;
+    z-index: 1001;
+
+    &:hover {
+        transform: scale(1.2);
+        color: #ffffff;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 @media (max-width: 768px) {
     .chat-detail-wrapper {
         height: 100%;
@@ -349,5 +615,39 @@
 
     .message-bubble {
         max-width: 80%;
+    }
+
+    .file-list {
+        max-height: 120px;
+        padding: 6px 8px;
+
+        .file-item {
+            margin-bottom: 4px;
+            padding: 6px;
+        }
+    }
+
+    .message-images {
+        .message-image {
+            max-width: 150px;
+            max-height: 150px;
+        }
+    }
+
+    .modal-close {
+        top: 10px;
+        right: 10px;
+        font-size: 30px;
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .message-images {
+        .message-image {
+            max-width: 120px;
+            max-height: 120px;
+        }
     }
 }

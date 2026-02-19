@@ -476,4 +476,9 @@ export class IdeaViewComponent implements OnInit {
       }
     });
   }
+
+  openChat(nickname: string, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/main/messages'], { queryParams: { chat: nickname } });
+  }
 }

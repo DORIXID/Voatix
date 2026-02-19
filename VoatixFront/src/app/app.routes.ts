@@ -11,6 +11,8 @@ import { IdeaCreateFormComponent } from './idea-create-form/idea-create-form.com
 import { IdeaViewComponent } from './idea-view/idea-view.component';
 import { SurveyCreateFormComponent } from './survey-create-form/survey-create-form.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
+import { FAQComponent } from './faq/faq.component';
+import { ProjectSettingsComponent } from './project-settings/project-settings.component';
 
 export const routes: Routes = [
      { path: '', redirectTo: 'login', pathMatch: 'full'},
@@ -18,15 +20,17 @@ export const routes: Routes = [
      { path: 'registration', component: RegistrationFormComponent},
      { path: 'main', component: MainSidebarFormComponent, canActivate: [AuthGuard], canActivateChild: [AuthGuard],
           children: [
-               { path: 'ideas', component: IdeasFormComponent},
-               { path: 'ideas/:projectTitle', component: IdeasFormComponent },
                { path: 'ideas/create', component: IdeaCreateFormComponent },
                { path: 'ideas/view/:id', component: IdeaViewComponent },
+               { path: 'ideas', component: IdeasFormComponent},
+               { path: 'ideas/:projectTitle', component: IdeasFormComponent },
                { path: 'surveys/create', component: SurveyCreateFormComponent },
                { path: 'surveys', component: SurveysSidebarFormComponent},
                { path: 'surveys/:projectTitle', component: SurveysSidebarFormComponent },
                { path: 'messages', component: MessagesFormComponent},
-               { path: 'profile', component: UserProfileComponent }
+               { path: 'profile', component: UserProfileComponent },
+               { path: 'faq', component: FAQComponent },
+               { path: 'project-settings/:projectTitle', component: ProjectSettingsComponent }
           ]
      }
 ];

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../service/authorization/auth.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -37,6 +37,22 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   messageText: string = '';
   loading: boolean = false;
   avatarUrl: SafeUrl | string = '/assets/icons/default-avatar.png';
+  
+  // File upload
+  selectedFiles: Array<{
+    file: File;
+    name: string;
+    key: string;
+    progress: number;
+    status: 'pending' | 'uploading' | 'done' | 'error';
+  }> = [];
+  maxFiles = 5;
+
+  // Image modal
+  selectedImageUrl: SafeUrl | null = null;
+  isImageModalOpen = false;
+  imageUrls: Record<string, string> = {}; // Store blob URLs as strings
+  
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -44,7 +60,7 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
     private sanitizer: DomSanitizer,
-    private ideaService: IdeaService
+    public ideaService: IdeaService
   ) {}
 
   ngOnInit(): void {
@@ -82,15 +98,18 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
     
     this.http.get<Message[]>(url, { withCredentials: true }).subscribe({
       next: (res) => {
-        console.log('Messages loaded:', res);
         // Reverse to show newest at bottom
         this.messages = (res || []).reverse();
+        // Load all images from messages
+        this.messages.forEach((message, index) => {
+          this.loadMessageImages(message);
+        });
         this.loading = false;
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
       error: (err) => {
-        console.error('Failed to load messages', err);
+        console.error('❌ Failed to load messages', err);
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -108,68 +127,64 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (newMessage: Message) => {
-          console.log('📩 Message received in chat-detail:', newMessage);
-          console.log('📋 Current chat nickname:', this.chatNickname);
-          console.log('📋 Current username:', this.currentUsername);
-          console.log('📋 Message sender:', newMessage.sender);
-          console.log('📋 Message receiver:', newMessage.receiver);
-          console.log('📋 Sender name from chat list:', this.senderName);
           
           // Try to determine if message belongs to this chat
           let belongsToThisChat = false;
           
-          // Method 1: Direct comparison with sender/receiver
+          // Method 1: Direct comparison - message FROM this chat user TO current user
           if (newMessage.sender && newMessage.receiver) {
-            belongsToThisChat = 
-              newMessage.sender === this.chatNickname || 
-              newMessage.receiver === this.chatNickname;
-            console.log('✅ Method 1 (direct sender/receiver comparison):', belongsToThisChat);
+            // For receiving: sender is the chat user, receiver is current user (us)
+            belongsToThisChat = newMessage.sender === this.chatNickname;
           }
           
-          // Method 2: If sender/receiver are null, use senderName from chat list
-          if (!belongsToThisChat && !newMessage.sender && !newMessage.receiver && this.senderName) {
-            belongsToThisChat = this.senderName === this.chatNickname;
-            console.log('✅ Method 2 (using senderName from chat list):', belongsToThisChat);
-          }
-          
-          // Method 3: Fallback - accept all messages if we're in a chat (but log warning)
+          // Method 2: If sender/receiver are null, assume message is from the current chat
+          // This happens when backend sends messages without explicit sender/receiver fields
           if (!belongsToThisChat && !newMessage.sender && !newMessage.receiver) {
-            console.warn('⚠️ Cannot determine message ownership, but accepting it (fallback mode)');
-            belongsToThisChat = true; // Accept it anyway
+            // Accept message from the current chat since there's no other way to identify it
+            belongsToThisChat = true;
           }
           
           if (belongsToThisChat) {
-            console.log('✅ Adding message to this chat');
             this.messages.push(newMessage);
+            
+            // Load images from new message
+            this.loadMessageImages(newMessage);
             
             // Mark as read on server
             if (this.wsService) {
-              console.log('📭 Marking as read on server');
               this.wsService.markAsRead(this.chatNickname);
               // Notify parent that message was received in open chat
               this.wsService.notifyMessageReceivedInChat(this.chatNickname);
             }
             
+            // Force UI update - call multiple times to ensure update
             this.cdr.detectChanges();
+            
+            // Schedule another update after a short delay
+            setTimeout(() => {
+              this.cdr.detectChanges();
+            }, 100);
+            
             this.scrollToBottom();
-          } else {
-            console.log('❌ Message does not belong to this chat, ignoring');
           }
         },
         (error) => console.error('Error receiving messages:', error)
       );
-
-    console.log('✅ Subscribed to messages for chat:', this.chatNickname);
   }
 
   sendMessage(): void {
-    if (!this.messageText.trim() || !this.wsService || !this.wsService.isConnected()) {
-      console.warn('Cannot send message: text empty or WebSocket not connected');
+    if ((!this.messageText.trim() && this.selectedFiles.length === 0) || !this.wsService || !this.wsService?.isConnected()) {
+      console.warn('Cannot send message: empty message and no files, or WebSocket not connected');
       return;
     }
 
+    // Prepare file keys for sending
+    const fileKeys = this.selectedFiles
+      .filter(f => f.status === 'done' && f.key)
+      .map(f => f.key);
+
     // Send via WebSocket
-    this.wsService.sendMessage(this.chatNickname, this.messageText);
+    this.wsService?.sendMessage(this.chatNickname, this.messageText.trim(), fileKeys);
 
     // Add to local messages immediately for better UX
     const newMessage: Message = {
@@ -178,10 +193,14 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       receiver: this.chatNickname,
       isRead: false,
       date: new Date().toISOString(),
-      files: []
+      files: fileKeys
     };
     this.messages.push(newMessage);
+    
+    // Load images for sent message
+    this.loadMessageImages(newMessage);
     this.messageText = '';
+    this.selectedFiles = [];
     this.cdr.detectChanges();
     this.scrollToBottom();
   }
@@ -253,5 +272,167 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       event.preventDefault();
       this.sendMessage();
     }
+  }
+
+  // File upload methods
+  triggerFileInput(): void {
+    const fileInput = document.getElementById('chatFileInput') as HTMLInputElement;
+    fileInput?.click();
+  }
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    const filesArr = Array.from(input.files);
+    const remaining = this.maxFiles - this.selectedFiles.length;
+    if (remaining <= 0) {
+      alert(`Можно загрузить не более ${this.maxFiles} файлов`);
+      input.value = '';
+      return;
+    }
+    const files = filesArr.slice(0, remaining);
+    this.handleFiles(files);
+    if (filesArr.length > files.length) {
+      alert(`Добавлено ${files.length} файла(ов). Можно загрузить максимум ${this.maxFiles}.`);
+    }
+    input.value = '';
+  }
+
+  handleFiles(files: File[]): void {
+    const remaining = this.maxFiles - this.selectedFiles.length;
+    if (remaining <= 0) {
+      alert(`Можно загрузить не более ${this.maxFiles} файлов`);
+      return;
+    }
+    const toAdd = files.slice(0, remaining);
+    toAdd.forEach((file) => {
+      const item = { file, name: file.name, key: '', progress: 0, status: 'uploading' as const };
+      this.selectedFiles.push(item);
+      const idx = this.selectedFiles.length - 1;
+
+      this.ideaService.uploadFile(file).subscribe({
+        next: (event: any) => {
+          if (event.type === HttpEventType.Response) {
+            const res = event.body;
+            const key = res?.key ?? res?.name ?? file.name;
+            this.selectedFiles[idx].key = key;
+            this.selectedFiles[idx].status = 'done';
+            this.selectedFiles[idx].progress = 100;
+          } else if (event.type === HttpEventType.UploadProgress) {
+            const loaded = event.loaded ?? 0;
+            const total = event.total ?? loaded;
+            const percent = Math.round((loaded / total) * 100);
+            this.selectedFiles[idx].progress = percent;
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Ошибка загрузки файла', file.name, err);
+          this.selectedFiles[idx].status = 'error';
+          this.cdr.detectChanges();
+        }
+      });
+    });
+  }
+
+  removeFile(index: number): void {
+    const item = this.selectedFiles[index];
+    if (!item) return;
+
+    if (item.status === 'uploading') {
+      alert('Файл ещё загружается — дождитесь завершения или попробуйте позже.');
+      return;
+    }
+
+    const key = item.key;
+    if (key) {
+      this.ideaService.deleteFile(key).subscribe({
+        next: () => {
+          this.selectedFiles.splice(index, 1);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Ошибка удаления файла', key, err);
+          this.selectedFiles.splice(index, 1);
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.selectedFiles.splice(index, 1);
+      this.cdr.detectChanges();
+    }
+  }
+
+  hasUploadingFiles(): boolean {
+    return this.selectedFiles.some(f => f.status === 'uploading');
+  }
+
+  canSendMessage(): boolean {
+    const hasText = this.messageText.trim().length > 0;
+    const hasFiles = this.selectedFiles.some(f => f.status === 'done');
+    const isUploading = this.hasUploadingFiles();
+    return (hasText || hasFiles) && !isUploading;
+  }
+
+  // Image display methods
+  isImageFile(fileKey: string): boolean {
+    if (!fileKey) {
+      return false;
+    }
+    
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+    const lowerKey = fileKey.toLowerCase();
+    
+    // Check if any image extension is in the key
+    const isImage = imageExtensions.some(ext => lowerKey.includes(ext));
+    
+    return isImage;
+  }
+
+  loadMessageImages(message: Message): void {
+    if (!message.files || message.files.length === 0) {
+      return;
+    }
+    
+    message.files.forEach(fileKey => {
+      
+      if (this.isImageFile(fileKey)) {
+        if (this.imageUrls[fileKey]) {
+          this.cdr.detectChanges();
+          return;
+        }
+        
+        const url = this.ideaService.getFileViewUrl(fileKey);
+        
+        this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
+          next: (blob) => {
+            const blobUrl = URL.createObjectURL(blob);
+            this.imageUrls[fileKey] = blobUrl;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('❌ Error loading image', fileKey, err);
+            // Still try to display via API URL - will be loaded by fallback in template
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    });
+  }
+
+  openImageModal(imageUrl: string | null | undefined): void {
+    if (!imageUrl) return;
+    this.selectedImageUrl = this.sanitizer.bypassSecurityTrustUrl(imageUrl);
+    this.isImageModalOpen = true;
+  }
+
+  closeImageModal(): void {
+    this.selectedImageUrl = null;
+    this.isImageModalOpen = false;
+  }
+
+  getMessageImageUrl(fileKey: string): string | null {
+    const url = this.imageUrls[fileKey];
+    return url || null;
   }
 }

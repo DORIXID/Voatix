@@ -2,9 +2,8 @@ package dev.Voatix.service;
 
 import dev.Voatix.dto.UpdateUserCredentialsPasswordDTO;
 import dev.Voatix.dto.UserCredentialsPasswordDTO;
-import dev.Voatix.dto.projection.ResponseUserProjection;
+import dev.Voatix.dto.projection.ResponseUserProfileProjection;
 import dev.Voatix.entity.CredentialsEntity;
-import dev.Voatix.entity.UserEntity;
 import dev.Voatix.mapper.CredentialsMapper;
 import dev.Voatix.repositories.CredentialsRepository;
 import dev.Voatix.repositories.FileRepository;
@@ -46,7 +45,7 @@ public class UserService {
         credentialsMapper.updateCredentialsEntity(dto, credentials);
     }
 
-    public ResponseUserProjection getMyProfile(Principal principal) {
+    public ResponseUserProfileProjection getMyProfile(Principal principal) {
         return userRepository.findUserInfoByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
     }

@@ -12,7 +12,23 @@
 
     <div *ngFor="let message of messages" [ngClass]="getMessageClass(message)" class="message-wrapper">
       <div class="message-bubble">
-        <p class="message-text">{{ message.text }}</p>
+        <p class="message-text" *ngIf="message.text">{{ message.text }}</p>
+        <div class="message-images" *ngIf="message.files && message.files.length > 0">
+          <div class="image-container" *ngFor="let fileKey of message.files">
+            <img *ngIf="isImageFile(fileKey)" 
+              [src]="getMessageImageUrl(fileKey) || ideaService.getFileViewUrl(fileKey)" 
+              alt="image" 
+              class="message-image"
+              (click)="openImageModal(getMessageImageUrl(fileKey) || ideaService.getFileViewUrl(fileKey))">
+            <a *ngIf="!isImageFile(fileKey)" 
+              [href]="ideaService.getFileViewUrl(fileKey)" 
+              target="_blank" 
+              class="file-link">
+              <mat-icon>attach_file</mat-icon>
+              <span>Файл</span>
+            </a>
+          </div>
+        </div>
         <span class="message-date">{{ formatDate(message.date) }}</span>
         <mat-icon *ngIf="message.sender === currentUsername && message.isRead" class="read-icon">done_all</mat-icon>
       </div>
@@ -21,6 +37,22 @@
 
   <!-- Input Section -->
   <div class="input-section">
+    <!-- File list -->
+    <div class="file-list" *ngIf="selectedFiles.length > 0">
+      <div class="file-item" *ngFor="let f of selectedFiles; let i = index" [class.uploading]="f.status==='uploading'" [class.done]="f.status==='done'" [class.error]="f.status==='error'">
+        <div class="file-info">
+          <span class="file-name">{{ f.name }}</span>
+          <span class="file-status status-done" *ngIf="f.status === 'done'">✔</span>
+          <span class="file-status status-error" *ngIf="f.status === 'error'">⚠</span>
+          <span class="file-status status-uploading" *ngIf="f.status === 'uploading'">{{ f.progress }}%</span>
+        </div>
+        <div class="progress" *ngIf="f.status !== 'done'">
+          <div class="progress-bar" [style.width.%]="f.progress"></div>
+        </div>
+        <button type="button" class="file-item-remove" (click)="removeFile(i)">×</button>
+      </div>
+    </div>
+
     <div class="input-wrapper">
       <textarea
         [(ngModel)]="messageText"
@@ -31,18 +63,29 @@
         rows="3"
       ></textarea>
       <div class="input-actions">
-        <button class="attach-btn" title="Прикрепить файл">
+        <button class="attach-btn" title="Прикрепить файл" (click)="triggerFileInput()" [disabled]="selectedFiles.length >= maxFiles">
           <mat-icon>attach_file</mat-icon>
         </button>
         <button
           class="send-btn"
           (click)="sendMessage()"
-          [disabled]="!messageText.trim()"
+          [disabled]="!canSendMessage()"
           title="Отправить"
         >
           <mat-icon>send</mat-icon>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="chatFileInput" multiple (change)="onFilesSelected($event)" style="display: none;" [disabled]="selectedFiles.length >= maxFiles" />
+
+  <!-- Image modal -->
+  <div class="image-modal-overlay" *ngIf="isImageModalOpen" (click)="closeImageModal()">
+    <div class="image-modal-content" (click)="$event.stopPropagation()">
+      <img [src]="selectedImageUrl" alt="Full size image" class="modal-image">
+      <button class="modal-close" (click)="closeImageModal()">×</button>
     </div>
   </div>
 </div>

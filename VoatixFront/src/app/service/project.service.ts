@@ -14,4 +14,8 @@ export class ProjectService {
   getSelectedProject(): Project | null {
     return this.selectedProjectSubject.value;
   }
+
+  clearProject() {
+    this.selectedProjectSubject.next(null);
+  }
 }

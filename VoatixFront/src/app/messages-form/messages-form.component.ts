@@ -3,7 +3,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../service/authorization/auth.service';
@@ -46,7 +46,8 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private sanitizer: DomSanitizer,
     private ideaService: IdeaService,
-    private wsService: WebSocketService
+    private wsService: WebSocketService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
@@ -55,6 +56,15 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
     this.connectWebSocket();
     this.subscribeToChatsUpdates();
     this.subscribeToMessageReceivedInChat();
+    
+    // Handle chat parameter from query params
+    this.route.queryParamMap.subscribe(params => {
+      const chatNickname = params.get('chat');
+      if (chatNickname) {
+        // Try to find and select chat, if not in list yet, it will be selected when loaded
+        this.selectChatByNickname(chatNickname);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -71,7 +81,6 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
 
     this.http.get<any>('http://localhost:8080/api/messages/chats', { params, withCredentials: true }).subscribe({
       next: res => {
-        console.log('chats response', res);
         this.chats = res.content || [];
         this.totalPages = res.totalPages || 0;
         // Load avatars for all chats
@@ -111,7 +120,6 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (update) => {
-          console.log('🔄 Chat list update received:', update);
           this.loadChats(); // Перезагрузить список чатов
         },
         (error) => console.error('Error in chats updates:', error)
@@ -127,11 +135,9 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
       .subscribe(
         (event) => {
           if (!event) return;
-          console.log('🔔 Message received in chat:', event.chatNickname);
           // Find the chat and clear unread count
           const chat = this.chats.find(c => c.userNickname === event.chatNickname);
           if (chat) {
-            console.log('📭 Clearing unread count for chat:', chat.userNickname);
             chat.unreadCount = 0;
             this.cdr.detectChanges();
           }
@@ -188,7 +194,6 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
         const payload = token.split('.')[1];
         const decoded = JSON.parse(atob(payload));
         this.currentUsername = decoded.sub || '';
-        console.log('Current username:', this.currentUsername);
       } catch (e) {
         console.error('Failed to decode token:', e);
       }
@@ -197,7 +202,6 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
 
   selectChat(chat: any): void {
     this.selectedChat = chat;
-    console.log('Selected chat:', chat);
 
     // Clear unread count locally and notify server that chat is read
     if (chat && chat.unreadCount && chat.unreadCount > 0) {
@@ -223,5 +227,29 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
    */
   getWebSocketService(): WebSocketService {
     return this.wsService;
+  }
+
+  /**
+   * Выбрать чат по никнейму пользователя
+   */
+  selectChatByNickname(nickname: string): void {
+    // Try to find chat in current list
+    const chat = this.chats.find(c => c.userNickname === nickname);
+    if (chat) {
+      this.selectChat(chat);
+    } else {
+      // If not found, we'll need to create a new chat session
+      // For now, just try to open it
+      // Create a temporary chat object
+      const newChat = {
+        userNickname: nickname,
+        senderNickname: this.currentUsername,
+        text: '',
+        dateTime: new Date(),
+        unreadCount: 0,
+        avatarKey: null
+      };
+      this.selectChat(newChat);
+    }
   }
 }

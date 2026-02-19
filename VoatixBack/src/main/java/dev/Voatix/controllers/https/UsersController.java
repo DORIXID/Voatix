@@ -2,12 +2,11 @@ package dev.Voatix.controllers.https;
 
 import dev.Voatix.dto.UpdateUserCredentialsPasswordDTO;
 import dev.Voatix.dto.UserCredentialsPasswordDTO;
-import dev.Voatix.dto.projection.ResponseUserProjection;
+import dev.Voatix.dto.projection.ResponseUserProfileProjection;
 import dev.Voatix.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -35,7 +34,7 @@ public class UsersController {
     }
 
     @GetMapping("profile")
-    public ResponseUserProjection getMyProfile(Principal principal) {
+    public ResponseUserProfileProjection getMyProfile(Principal principal) {
         return userService.getMyProfile(principal);
     }
 

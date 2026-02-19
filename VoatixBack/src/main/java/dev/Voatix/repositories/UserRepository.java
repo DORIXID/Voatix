@@ -1,6 +1,6 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.ResponseUserProjection;
+import dev.Voatix.dto.projection.ResponseUserProfileProjection;
 import dev.Voatix.entity.UserEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,7 +37,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             FROM UserEntity u
             WHERE u.nickname = :nickname
             """)
-    Optional<ResponseUserProjection> findUserInfoByNickname(String nickname);
+    Optional<ResponseUserProfileProjection> findUserInfoByNickname(String nickname);
 
     @Modifying
     @Query(value = """

@@ -3,9 +3,9 @@
     <h1 class="idea-title">{{ idea.title }}</h1>
 
     <div class="meta-row">
-      <div class="author">
+      <div class="author" (click)="openChat(idea.nickname!, $event)" style="cursor: pointer;">
         <img [src]="getAvatarUrl(idea.avatarKey)" alt="avatar" class="avatar">
-        <div class="nick">{{ idea.nickname }}</div>
+        <div class="nick" style="color: #7e57c2; text-decoration: underline;">{{ idea.nickname }}</div>
       </div>
       <div class="idea-date">{{ idea.dateTime | date:'d MMMM yyyy':'':'ru-RU' }}</div>
     </div>
@@ -66,7 +66,10 @@
         <div class="comment-card" *ngFor="let item of comments; let i = index">
           <div class="comment-meta">
             <img [src]="getCommentAvatarUrl(item.comment.avatarKey)" alt="avatar" class="comment-avatar">
-            <div class="comment-author">{{ item.comment.username }}</div>
+            <div class="comment-author" (click)="openChat(item.comment.username, $event)" 
+              style="cursor: pointer; color: #7e57c2; text-decoration: underline;">
+              {{ item.comment.username }}
+            </div>
             <div class="comment-date">{{ formatCommentDate(item.comment.dateTime) }}</div>
           </div>
 

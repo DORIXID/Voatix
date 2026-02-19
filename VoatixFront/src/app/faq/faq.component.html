@@ -1,0 +1,22 @@
+<div class="faq-container">
+  <div class="faq-header">
+    <h1>Часто задаваемые вопросы</h1>
+  </div>
+
+  <div class="faq-content">
+    <div class="faq-list">
+      <div class="faq-item" *ngFor="let faq of faqs" [class.open]="faq.isOpen">
+        <button class="faq-question" (click)="toggleFAQ(faq)">
+          <span class="question-text">{{ faq.question }}</span>
+          <mat-icon class="toggle-icon">{{ faq.isOpen ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        
+        <div class="faq-answer" *ngIf="faq.isOpen">
+          <div class="answer-content">
+            {{ faq.answer }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

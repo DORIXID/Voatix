@@ -76,14 +76,14 @@ public class IdeaService {
     public IdeaWithStatsDTO getIdea(Long ideaId, Principal principal) {
         Long userId = userRepository.findIdByNickname(principal.getName())
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        IdeaEntity ideaProjection = ideaRepository.findIdeaById(ideaId)
+        IdeaEntity idea = ideaRepository.findIdeaById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
         VoteStatsProjection voteStatsProjection = ideaRepository.getVoteStatsIdeaById(ideaId, userId)
                 .orElseThrow(() -> new VoteStatsNotFoundException(ideaId));
         CommentCountProjection commentCountProjection = ideaRepository.getCommentCountByIdeaId(ideaId)
                 .orElseThrow(() -> new CommentCountNotFoundException(ideaId));
         List<String> files = ideaRepository.findFileByIdeaId(ideaId);
-        return ideaMapper.toStatsDto(ideaProjection, voteStatsProjection, commentCountProjection, files);
+        return ideaMapper.toStatsDto(idea, voteStatsProjection, commentCountProjection, files);
     }
 
     public void upsertLike(Long ideaId, Long like, Principal principal) {
@@ -145,8 +145,9 @@ public class IdeaService {
                 .orElseThrow(() -> new RoleOfUserNotFoundException(principal.getName()));
         boolean isAuthor = authorIdOfIdea.equals(userId);
         if (!isAuthor && !role.equals(RoleOfUserEnum.ADMIN)) {
-            ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, projectId)
-                    .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
+            if(!moderatorRepository.existsByUserIdAndProjectId(userId, projectId)){
+                throw new ModeratorAccessDeniedException(principal.getName());
+            }
         }
         // Удаляем оценки и файлы идеи
         votingEstimatesRepository.deleteByIdeaId(ideaId);
@@ -168,8 +169,9 @@ public class IdeaService {
                 .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
         IdeaEntity idea = ideaRepository.findEntityById(ideaId)
                 .orElseThrow(() -> new IdeaNotFoundException(ideaId));
-        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, idea.getProject().getId())
-                .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
+        if(!moderatorRepository.existsByUserIdAndProjectId(userId, idea.getProjectId())){
+            throw new ModeratorAccessDeniedException(principal.getName());
+        }
         ideaMapper.updateEntity(dto, idea);
         ideaRepository.save(idea);
     }

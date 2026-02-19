@@ -16,6 +16,7 @@ import dev.Voatix.utils.exceptions.surveyException.SurveyNotFoundException;
 import dev.Voatix.utils.exceptions.surveyException.SurveyVotingTimeIsUpException;
 import dev.Voatix.utils.exceptions.surveyException.VotingPointNotFoundException;
 import dev.Voatix.utils.exceptions.userException.UserAlreadyExistsException;
+import dev.Voatix.utils.exceptions.userException.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -183,6 +184,12 @@ public class ExceptionController {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<?> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", ex.getMessage()));
     }
 }

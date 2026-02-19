@@ -25,7 +25,6 @@ export class WebSocketService {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.stomp && this.stomp.connected) {
-        console.log('Already connected');
         resolve();
         return;
       }
@@ -42,27 +41,23 @@ export class WebSocketService {
       this.stomp.connect(
         { Authorization: 'Bearer ' + token },
         (frame: any) => {
-          console.log('✅ WS CONNECTED:', frame);
           this.connected$.next(true);
 
           const username = this.getUsernameFromToken(token);
 
           // Subscribe to chats updates (which may include messages)
           this.stomp.subscribe('/user/queue/chats', (msg: StompMessage) => {
-            console.log('🔔 Chats channel event:', msg.body);
             try {
               const data = JSON.parse(msg.body);
-              console.log('📊 Event data keys:', Object.keys(data));
-              console.log('📊 Event data:', data);
               
               // ALWAYS send chat update event (for list refresh)
-              console.log('🔄 Sending CHAT UPDATE event');
               this.chatsUpdateSubject$.next(data);
               
-              // ADDITIONALLY, if it has text, also send it as a message
-              const isMessage = data.text && (data.text.trim().length > 0);
+              // ADDITIONALLY, if it has text OR files, also send it as a message
+              const hasText = data.text && (data.text.trim().length > 0);
+              const hasFiles = data.files && data.files.length > 0;
+              const isMessage = hasText || hasFiles;
               if (isMessage) {
-                console.log('📩 Also sending as MESSAGE');
                 this.messageSubject$.next(data);
               }
             } catch (e) {
@@ -74,7 +69,6 @@ export class WebSocketService {
           // Subscribe to incoming messages for current user (direct channel)
           if (username) {
             this.stomp.subscribe(`/user/queue/chat.${username}`, (msg: StompMessage) => {
-              console.log('📩 Incoming message via user queue:', msg.body);
               try {
                 const message = JSON.parse(msg.body);
                 this.messageSubject$.next(message);
@@ -85,7 +79,6 @@ export class WebSocketService {
 
             // Subscribe to read notifications
             this.stomp.subscribe('/user/queue/read', (msg: StompMessage) => {
-              console.log('📘 Read notification:', msg.body);
               try {
                 const notification = JSON.parse(msg.body);
                 this.readNotificationSubject$.next(notification);
@@ -95,11 +88,10 @@ export class WebSocketService {
             });
           }
 
-          console.log('✅ All subscriptions established');
           resolve();
         },
         (error: any) => {
-          console.error('❌ WS ERROR:', error);
+          console.error('WebSocket connection error:', error);
           this.connected$.next(false);
           reject(error);
         }
@@ -112,7 +104,7 @@ export class WebSocketService {
    */
   sendMessage(receiver: string, text: string, files: any[] = []): void {
     if (!this.stomp || !this.stomp.connected) {
-      console.warn('STOMP not connected, cannot send message');
+      console.warn('WebSocket not connected, cannot send message');
       return;
     }
 
@@ -123,7 +115,6 @@ export class WebSocketService {
     };
 
     this.stomp.send('/app/messages.send', {}, JSON.stringify(message));
-    console.log('➡️ Message sent:', message);
   }
 
   /**
@@ -131,7 +122,7 @@ export class WebSocketService {
    */
   markAsRead(receiver: string): void {
     if (!this.stomp || !this.stomp.connected) {
-      console.warn('STOMP not connected, cannot mark as read');
+      console.warn('WebSocket not connected, cannot mark as read');
       return;
     }
 
@@ -140,7 +131,6 @@ export class WebSocketService {
     };
 
     this.stomp.send('/app/messages.read', {}, JSON.stringify(dto));
-    console.log('📘 Marked as read:', dto);
   }
 
   /**
@@ -201,7 +191,6 @@ export class WebSocketService {
     return new Promise((resolve) => {
       if (this.stomp && this.stomp.connected) {
         this.stomp.disconnect(() => {
-          console.log('🔌 WS disconnected');
           this.connected$.next(false);
           this.stomp = null;
           resolve();

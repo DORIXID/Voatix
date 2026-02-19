@@ -6,4 +6,6 @@ export interface Project {
   active: boolean;
   roleOfUser: UserRole;
   key: string; //это ключ для URL аватарки проекта. Например: http://localhost:8080/api/files/КЛЮЧ/view
+  id?: number;
+  avatarKey?: string;
 }

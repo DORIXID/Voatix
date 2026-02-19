@@ -120,8 +120,9 @@ public class CommentService {
         RoleOfUserEnum role = credentialsRepository.findRoleOfUserByUserId(userId)
                 .orElseThrow(() -> new RoleOfUserNotFoundException(principal.getName()));
         if (!userIdOfComment.equals(userId) && !role.equals(RoleOfUserEnum.ADMIN)) {
-            ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, projectId)
-                    .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
+            if(!moderatorRepository.existsByUserIdAndProjectId(userId, projectId)){
+                throw new ModeratorAccessDeniedException(principal.getName());
+            }
         }
         commentRatingRepository.deleteByCommentId(commentId);
         fileRepository.deleteByCommentId(commentId);

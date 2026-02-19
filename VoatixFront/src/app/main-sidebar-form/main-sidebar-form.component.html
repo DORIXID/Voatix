@@ -8,7 +8,8 @@
         </div>
 
         <div class="simpleSelect">
-            <div class="selected" (click)="toggle()"
+            <!-- Если есть проекты -->
+            <div class="selected" *ngIf="projects.length > 0" (click)="toggle()"
                 style="display: flex; align-items: center; gap: 8px;">
                 <img *ngIf="selectedProject?.key && (getProjectAvatarUrl(selectedProject) | async) as avatarUrl"
                     [src]="avatarUrl"
@@ -17,11 +18,30 @@
                 <img *ngIf="!selectedProject?.key || !(getProjectAvatarUrl(selectedProject) | async)" 
                     src="assets/icons/default-project.png" alt="default project"
                     style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
-                <span style="flex: 1;">{{ selectedProject?.title || '' }}</span>
+                <span style="flex: 1;">{{ selectedProject?.title || 'Выберите проект' }}</span>
                 <div *ngIf="selectedProject?.roleOfUser !== 'VIEWER'" class="role-dot"></div>
             </div>
 
-            <div class="options" *ngIf="isOpen">
+            <!-- Если нет проектов -->
+            <div class="selected" *ngIf="projects.length === 0" (click)="toggleFindOrCreateDropdown()" style="display: flex; align-items: center; gap: 8px;">
+                <mat-icon style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 20px;">add</mat-icon>
+                <span style="flex: 1;">Найти или создать</span>
+            </div>
+
+            <!-- Dropdown для найти/создать -->
+            <div class="find-create-dropdown" *ngIf="showFindOrCreateDropdown && projects.length === 0">
+                <button class="option find-project-btn" (click)="openProjectSearch(); $event.stopPropagation()">
+                    <mat-icon>search</mat-icon>
+                    <span>Найти проект</span>
+                </button>
+                <div class="option create-project-option" (click)="openCreateProjectModal(); $event.stopPropagation()"
+                    style="display: flex; align-items: center; gap: 8px; color: #cf78ef; font-weight: 500; cursor: pointer;">
+                    <span style="font-size: 24px; margin: 0 8px;">+</span>
+                    <span>Создать проект</span>
+                </div>
+            </div>
+
+            <div class="options" *ngIf="isOpen && projects.length > 0">
                 <div class="option" *ngFor="let p of projects" (click)="selectProject(p); $event.stopPropagation()"
                     style="display: flex; align-items: center; gap: 8px;">
                     <img *ngIf="p.key && (getProjectAvatarUrl(p) | async) as avatarUrl" 
@@ -32,6 +52,15 @@
                         style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
                     <span style="flex: 1;">{{ p.title }}</span>
                     <div *ngIf="p.roleOfUser !== 'VIEWER'" class="role-dot"></div>
+                </div>
+                <button class="option find-project-btn" (click)="openProjectSearch(); $event.stopPropagation()">
+                    <mat-icon>search</mat-icon>
+                    <span>Найти проект</span>
+                </button>
+                <div class="option create-project-option" (click)="openCreateProjectModal(); $event.stopPropagation()"
+                    style="display: flex; align-items: center; gap: 8px; color: #cf78ef; font-weight: 500; cursor: pointer;">
+                    <span style="font-size: 24px; margin: 0 8px;">+</span>
+                    <span>Создать проект</span>
                 </div>
             </div>
         </div>
@@ -58,6 +87,12 @@
                 alt="rectangle">
             <span class="sectionText">Сообщения</span>
         </div>
+        <div class="section">
+                        <div class="section" style="margin-bottom: 10px;" *ngIf="isProjectOwner()" (click)="clickOnProjectSettings()">
+                <img src="/assets/icons/gear.png" style="width: 25px; margin-left: 4px;" alt="settings">
+                <span class="sectionText" style="font-size: 25; margin-left: 3px;">Настройки</span>
+            </div>
+        </div>
 
         <div
             style="height: 455px; width: 200px; margin-top: 20px; display: flex; flex-direction: column; justify-content: flex-end;">
@@ -65,7 +100,7 @@
                 <img src="/assets/icons/user.png" style="width: 40px; margin-right: 18px;" alt="profile">
                 <span class="sectionText" style="font-size: 25;">Профиль</span>
             </div>
-            <div class="section" style="margin-bottom: 10px;">
+            <div class="section" style="margin-bottom: 10px;" (click)="clickOnFAQ()">
                 <img src="/assets/icons/faq.png" style="width: 40px; margin-right: 19px;" alt="faq">
                 <span class="sectionText" style="font-size: 25;">Справка</span>
             </div>
@@ -78,4 +113,119 @@
 
     </div>
     <router-outlet></router-outlet>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal-overlay" *ngIf="showCreateProjectModal" (click)="closeCreateProjectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeCreateProjectModal()" aria-label="Закрыть">×</button>
+    <h2>Создать проект</h2>
+    
+    <!-- Project Title Input -->
+    <div class="input-group">
+      <label>Название проекта (3-30 символов)</label>
+      <input 
+        type="text" 
+        class="input-field" 
+        [(ngModel)]="newProjectTitle"
+        placeholder="Введите название проекта"
+        [disabled]="isCreatingProject">
+    </div>
+
+    <!-- Project Avatar Upload -->
+    <div class="input-group">
+      <label>Аватарка проекта (опционально)</label>
+      
+      <!-- Crop Editor Modal -->
+      <div class="crop-editor-overlay" *ngIf="showCropEditor" (click)="$event.stopPropagation()">
+        <div class="crop-editor-modal">
+          <div class="crop-editor-header">
+            <h3>Обрезать изображение</h3>
+            <button class="modal-close" (click)="cancelCrop()">×</button>
+          </div>
+          
+          <div class="crop-editor-body">
+            <canvas 
+              id="projectCropperCanvas"
+              class="crop-canvas"
+              width="400" 
+              height="400"
+              (mousedown)="onCropperMouseDown($event)"
+              (mousemove)="onCropperMouseMove($event)"
+              (mouseup)="onCropperMouseUp()"
+              (mouseleave)="onCropperMouseUp()">
+            </canvas>
+            <p class="crop-hint">Перетащите прямоугольник, чтобы выбрать область. Потяните угол для изменения размера.</p>
+          </div>
+          
+          <div class="crop-editor-actions">
+            <button class="btn btn-cancel" (click)="cancelCrop()">Отмена</button>
+            <button class="btn btn-submit" (click)="confirmCrop()">Готово</button>
+          </div>
+        </div>
+      </div>
+
+      <div 
+        class="avatar-upload-section"
+        [class.drag-over]="isDragOverDropZone"
+        (dragover)="onProjectAvatarDragOver($event)"
+        (dragleave)="onProjectAvatarDragLeave($event)"
+        (drop)="onProjectAvatarDrop($event)">
+        
+        <div *ngIf="uploadedProjectAvatarPreview" class="preview-container">
+          <img [src]="uploadedProjectAvatarPreview" alt="Preview" class="preview-image">
+        </div>
+        <div *ngIf="!uploadedProjectAvatarPreview" class="upload-placeholder">
+          <mat-icon>cloud-upload</mat-icon>
+          <p>Перетащите фото сюда или нажмите кнопку</p>
+          <small>JPEG, PNG</small>
+        </div>
+        
+        <input 
+          id="projectAvatarFileInput"
+          type="file" 
+          accept="image/*" 
+          (change)="onProjectAvatarFileSelected($event)"
+          style="display: none;">
+        
+        <button class="btn-upload" type="button" (click)="triggerProjectAvatarFileInput()" [disabled]="isCreatingProject">
+          Выбрать файл
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeCreateProjectModal()" [disabled]="isCreatingProject">Отмена</button>
+      <button class="btn btn-submit" (click)="createProject()" [disabled]="isCreatingProject || newProjectTitle.length < 3">
+        {{ isCreatingProject ? 'Создание...' : 'Создать' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Search Modal -->
+<div class="modal-overlay" *ngIf="showProjectSearch" (click)="closeProjectSearch()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeProjectSearch()" aria-label="Закрыть">×</button>
+    <h2>Найти проект</h2>
+    
+    <div class="input-group">
+      <label>Введите название проекта</label>
+      <input 
+        type="text" 
+        class="input-field" 
+        [(ngModel)]="searchProjectName"
+        placeholder="Название проекта"
+        (keypress)="onSearchKeyPress($event)"
+        autofocus>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" (click)="closeProjectSearch()">Отмена</button>
+      <button class="btn btn-submit" (click)="findProject()" [disabled]="searchProjectName.trim().length === 0">
+        Найти
+      </button>
+    </div>
+  </div>
 </div>

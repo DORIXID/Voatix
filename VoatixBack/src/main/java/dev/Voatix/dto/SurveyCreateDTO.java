@@ -23,13 +23,10 @@ public class SurveyCreateDTO {
     private String title;
     @Size(max = 500)
     private String description;
-    @NotBlank
     @FutureOrPresent
     private LocalDateTime startDate;
-    @NotBlank
     @Future
     private LocalDateTime endDate;
-    @NotBlank
     private TypeOfSurveyEnum type;
     private String projectName;
     @Size(min = 2, max = 20)
