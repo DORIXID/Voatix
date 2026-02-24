@@ -29,7 +29,7 @@
 .headline-title {
     display: flex;
     align-items: center;
-
+    margin-bottom: 10px;
     h1 {
         margin: 0;
     }
@@ -362,12 +362,14 @@
 
 // QR Code Share Button
 .qr-share-button {
+    height: 35px;
     background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: 5px;
     border-radius: 8px;
     transition: all 0.2s ease;
     color: #cf78ef;

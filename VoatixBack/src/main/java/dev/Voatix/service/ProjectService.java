@@ -117,9 +117,9 @@ public class ProjectService {
         if (!moderatorRepository.existsByUserNicknameAndProjectTitleAndRole(principal.getName(), title, RoleOfProjectManager.OWNER)){
             throw new ModeratorAccessDeniedException(principal.getName());
         }
-        ProjectEntity project = projectRepository.findByTitle(title)
+        Long projectId = projectRepository.findIdByTitle(title)
                 .orElseThrow(() -> new ProjectNotFoundException(title));
-        projectRepository.delete(project);
+        projectRepository.deleteById(projectId);
     }
 
 }

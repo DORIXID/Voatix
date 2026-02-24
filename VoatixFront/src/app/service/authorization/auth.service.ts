@@ -29,7 +29,8 @@ export class AuthService {
   isLoggedIn(): boolean {
     if (this.authorized) return true;
     // Also consider stored token or cookie as logged-in state
-    if (this.getAuthHeader()) return true;
+    const token = localStorage.getItem('jwt');
+    if (token && token.trim().length > 0) return true;
     if (this.getTokenFromCookie()) return true;
     return false;
   }
@@ -62,5 +63,18 @@ export class AuthService {
       eMail: eMail
     };
     return this.http.post(`${this.apiUrl}/users/new`, registrationData);
+  }
+
+  logout() {
+    // Удаляем токен из localStorage
+    localStorage.removeItem('jwt');
+    
+    // Очищаем куки с токеном
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    
+    // Сбрасываем состояние авторизации
+    this.authorized = false;
+    this.username = '';
+    this.password = '';
   }
 }

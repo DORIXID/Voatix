@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { Project } from '../service/interfaces/project.interface';
 import { ProjectService } from '../service/project.service';
 import { FileService } from '../service/file.service';
+import { AuthService } from '../service/authorization/auth.service';
 import { UserRole } from '../service/enums/user-role.enum';
 import { Observable } from 'rxjs';
 
@@ -37,7 +38,8 @@ export class MainSidebarFormComponent implements OnInit {
     private projectService: ProjectService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
-    private fileService: FileService
+    private fileService: FileService,
+    private auth: AuthService
   ) {}
 
   public selectedSection: String = 'ideas';
@@ -219,6 +221,9 @@ export class MainSidebarFormComponent implements OnInit {
     this.selectedProject = null;
     this.projectAvatarUrls.clear();
     this.projectService.clearProject();
+    
+    // Вызываем logout для очистки токенов и куков
+    this.auth.logout();
     
     this.router.navigate(['/login']);
   }

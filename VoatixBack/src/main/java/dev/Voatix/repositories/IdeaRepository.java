@@ -1,7 +1,6 @@
 package dev.Voatix.repositories;
 
 import dev.Voatix.dto.projection.CommentCountProjection;
-import dev.Voatix.dto.projection.CommentFileKeyProjection;
 import dev.Voatix.dto.projection.IdeaFileKeyProjection;
 import dev.Voatix.dto.projection.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;

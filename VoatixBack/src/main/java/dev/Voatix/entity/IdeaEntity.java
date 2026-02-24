@@ -45,13 +45,13 @@ public class IdeaEntity {
     @Column(name = "project_id")
     private Long projectId;
 
-    @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY)
     private List<CommentEntity> comments;
 
-    @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY)
     private List<VotingEstimateEntity> votingEstimates;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "idea_id")
     private List<FileEntity> files;
 }

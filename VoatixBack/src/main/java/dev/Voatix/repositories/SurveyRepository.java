@@ -53,7 +53,4 @@ public interface SurveyRepository extends JpaRepository<SurveyEntity, Long> {
     );
 
     Optional<SurveyEntity> findSurveyById(@Param("surveyId") Long surveyId);
-
-    @Query("select s.id from SurveyEntity s where s.id = :surveyId")
-    Optional<Long> findIdById(Long surveyId);
 }

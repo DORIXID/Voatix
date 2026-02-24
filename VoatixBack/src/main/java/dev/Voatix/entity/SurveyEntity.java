@@ -33,7 +33,7 @@ public class SurveyEntity {
     @Enumerated(EnumType.STRING)
     private TypeOfSurveyEnum type;
 
-    @OneToMany( mappedBy = "survey", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true )
+    @OneToMany( mappedBy = "survey", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<VotingPointEntity> votingPoints;
 
     @ManyToOne(fetch =  FetchType.LAZY)

@@ -38,20 +38,6 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
     @Modifying
     @Query(value = """
                     DELETE FROM files
-                    WHERE comment_id = :commentId
-                    """, nativeQuery = true)
-    void deleteByCommentId(Long commentId);
-
-    @Modifying
-    @Query(value = """
-                    DELETE FROM files
-                    WHERE idea_id = :ideaId
-                    """, nativeQuery = true)
-    void deleteByIdeaId(Long ideaId);
-
-    @Modifying
-    @Query(value = """
-                    DELETE FROM files
                     WHERE comment_id IN (SELECT id FROM comments WHERE idea_id = :ideaId)
                     """, nativeQuery = true)
     void deleteByIdeaIdFromComments(Long ideaId);

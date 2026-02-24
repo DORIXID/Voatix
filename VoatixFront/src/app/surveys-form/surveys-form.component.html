@@ -8,7 +8,7 @@
                 <button class="qr-share-button" (click)="openQrModal()" title="Поделиться ссылкой">
                     <mat-icon>share</mat-icon>
                 </button>
-                <button class="btn-create-survey" (click)="goToCreate()" title="Создать голосование">
+                <button class="btn-create-survey" (click)="goToCreate()" title="Создать голосование" *ngIf="canDeleteSurvey()">
                     <span>+</span>
                 </button>
             </div>

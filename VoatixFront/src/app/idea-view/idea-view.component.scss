@@ -193,6 +193,65 @@
     border-top: 1px solid #f0f0f0;
 }
 
+// Status change panel
+.status-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f9f5ff;
+    border-radius: 12px;
+    border: 1px solid #e7c4ff;
+    margin-top: 16px;
+    width: 95%;
+}
+
+.status-label {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    min-width: 80px;
+}
+
+.segmented-button {
+    display: flex;
+    background-color: #f3e6ff;
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+}
+
+.segment-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+        background-color: rgba(207, 120, 239, 0.1);
+        color: #333;
+    }
+
+    &.active {
+        background-color: #cf78ef;
+        color: white;
+        font-weight: 600;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
 .btn {
     border: none;
     border-radius: 10px;

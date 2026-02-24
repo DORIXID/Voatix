@@ -21,19 +21,19 @@ public class ProjectEntity {
 
     private Boolean active;
 
-    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "avatar", insertable = false, updatable = false)
     private FileEntity avatar;
 
     @Column(name = "avatar")
     private Long avatarId;
 
-    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY)
     private List<ModeratorEntity> moderators;
 
-    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY)
     private List<IdeaEntity> ideas;
 
-    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "project", fetch = FetchType.LAZY)
     private List<SurveyEntity> surveys;
 }

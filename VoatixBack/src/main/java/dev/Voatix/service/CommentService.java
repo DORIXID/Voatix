@@ -124,8 +124,6 @@ public class CommentService {
                 throw new ModeratorAccessDeniedException(principal.getName());
             }
         }
-        commentRatingRepository.deleteByCommentId(commentId);
-        fileRepository.deleteByCommentId(commentId);
         commentRepository.deleteById(commentId);
     }
 

@@ -87,11 +87,9 @@
                 alt="rectangle">
             <span class="sectionText">Сообщения</span>
         </div>
-        <div class="section">
-                        <div class="section" style="margin-bottom: 10px;" *ngIf="isProjectOwner()" (click)="clickOnProjectSettings()">
-                <img src="/assets/icons/gear.png" style="width: 25px; margin-left: 4px;" alt="settings">
-                <span class="sectionText" style="font-size: 25; margin-left: 3px;">Настройки</span>
-            </div>
+        <div class="section" style="margin-bottom: 10px;" *ngIf="isProjectOwner()" (click)="clickOnProjectSettings()">
+            <img src="/assets/icons/gear.png" style="width: 25px; margin-left: 4px;" alt="settings">
+            <span class="sectionText" style="font-size: 25; margin-left: 3px;">Настройки</span>
         </div>
 
         <div

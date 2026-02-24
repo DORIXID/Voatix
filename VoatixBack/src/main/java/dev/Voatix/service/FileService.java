@@ -39,7 +39,6 @@ public class FileService {
 
     private final List<String> ALLOWED_TYPES = List.of("image/png", "image/jpeg", "image/jpg");
 
-    @Transactional
     public FileResponseDTO upload(MultipartFile file, Principal principal) {
         validateFileType(file);
 

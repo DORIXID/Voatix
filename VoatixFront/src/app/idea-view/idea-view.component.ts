@@ -54,6 +54,9 @@ export class IdeaViewComponent implements OnInit {
   userRole: UserRole = UserRole.VIEWER;
   isDeleting = false;
 
+  // Update idea status
+  isUpdatingStatus = false;
+
   // Delete comment
   showDeleteCommentConfirm = false;
   deleteCommentId: number | null = null;
@@ -134,6 +137,10 @@ export class IdeaViewComponent implements OnInit {
       },
       error: (err) => {
         console.error('Ошибка загрузки изображения', key, err);
+        if (type === 'avatar') {
+          this.avatarUrl = null;
+        }
+        this.cdr.detectChanges();
       }
     });
   }
@@ -336,6 +343,7 @@ export class IdeaViewComponent implements OnInit {
       },
       error: (err) => {
         console.error('Ошибка загрузки аватара комментария', key, err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -405,6 +413,32 @@ export class IdeaViewComponent implements OnInit {
 
   canDeleteIdea(): boolean {
     return this.userRole === UserRole.OWNER || this.userRole === UserRole.MANAGER;
+  }
+
+  updateIdeaStatus(newStatus: string) {
+    if (!this.idea || this.isUpdatingStatus) return;
+
+    if (this.idea.status === newStatus) return; // Same status, no need to update
+
+    this.isUpdatingStatus = true;
+    const payload = { status: newStatus };
+
+    this.http.patch(
+      `http://localhost:8080/api/ideas/${this.idea.id}/status`,
+      payload,
+      { withCredentials: true }
+    ).subscribe({
+      next: () => {
+        this.idea.status = newStatus;
+        this.isUpdatingStatus = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Ошибка при изменении статуса идеи:', err);
+        this.isUpdatingStatus = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   openDeleteConfirm() {

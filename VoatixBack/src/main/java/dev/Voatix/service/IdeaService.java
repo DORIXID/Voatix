@@ -46,8 +46,6 @@ public class IdeaService {
     private final ModeratorRepository moderatorRepository;
     private final FileRepository fileRepository;
     private final VotingEstimateMapper votingEstimateMapper;
-    private final CommentRatingRepository commentRatingRepository;
-    private final CommentRepository commentRepository;
     private final CredentialsRepository credentialsRepository;
 
     public Page<IdeaWithStatsDTO> getIdeas(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal) {
@@ -149,18 +147,7 @@ public class IdeaService {
                 throw new ModeratorAccessDeniedException(principal.getName());
             }
         }
-        // Удаляем оценки и файлы идеи
-        votingEstimatesRepository.deleteByIdeaId(ideaId);
-        fileRepository.deleteByIdeaId(ideaId);
 
-        //Удаляем все, что есть у комментариев идеи
-        commentRatingRepository.deleteByIdeaId(ideaId);
-        fileRepository.deleteByIdeaIdFromComments(ideaId);
-
-        //Удаляем сами комменты
-        commentRepository.deleteByIdeaId(ideaId);
-
-        //ну и наконец саму идею
         ideaRepository.deleteByIdeaId(ideaId);
     }
 

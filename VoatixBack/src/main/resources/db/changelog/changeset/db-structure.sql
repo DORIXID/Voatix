@@ -173,187 +173,142 @@ CREATE TABLE IF NOT EXISTS public.votingpoints
     title character varying(255) COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT votingpoints_pkey PRIMARY KEY (id)
 );
-
+-- Таблица рейтингов комментариев удаляются при удалении комментария
 ALTER TABLE IF EXISTS public.commentraitings
     ADD CONSTRAINT fkf5alqd8wvogcouu0atpe9psyj FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.commentraitings
     ADD CONSTRAINT fkt0np5j07ebuj9mixbxxviipvf FOREIGN KEY (comment_id)
         REFERENCES public.comments (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE; -- Удаляем рейтинг, если нет коммента
 
-
+-- Комментарии удаляются при удалении идеи
 ALTER TABLE IF EXISTS public.comments
     ADD CONSTRAINT fk8omq0tc18jd43bu5tjh6jvraq FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.comments
     ADD CONSTRAINT fke0g88a07p93xa608dt5ea3pw FOREIGN KEY (idea_id)
         REFERENCES public.ideas (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE; -- Удаляем комменты, если нет идеи
 
-
+-- Учетные данные удаляются при удалении пароля или юзера
 ALTER TABLE IF EXISTS public.credentials
     ADD CONSTRAINT fk3avbhdmdw7t190y0pfluno8gq FOREIGN KEY (password_id)
         REFERENCES public.passwords (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-CREATE INDEX IF NOT EXISTS credentials_password_id_key
-    ON public.credentials(password_id);
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.credentials
     ADD CONSTRAINT fkcbcgksvnqvqxrrc4dwv3qys65 FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-CREATE INDEX IF NOT EXISTS credentials_user_id_key
-    ON public.credentials(user_id);
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Файлы удаляются при удалении родителя коммента/идеи/сообщения
 ALTER TABLE IF EXISTS public.files
     ADD CONSTRAINT fk3cfjbplxrqcb1n7qi9dsgckom FOREIGN KEY (comment_id)
         REFERENCES public.comments (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.files
     ADD CONSTRAINT fk6pp46ifm73sdejnw0n7co96b3 FOREIGN KEY (message_id)
         REFERENCES public.messages (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.files
     ADD CONSTRAINT fk6wyrnirk5xwq8ilgtjof1b09a FOREIGN KEY (idea_id)
         REFERENCES public.ideas (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.files
     ADD CONSTRAINT fkhaj8rngy0ky91ndcqv2isi9cr FOREIGN KEY (uploader_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Идеи удаляются при удалении проекта
 ALTER TABLE IF EXISTS public.ideas
     ADD CONSTRAINT fkcifipqiu010cssb7rbunpqlls FOREIGN KEY (project_id)
         REFERENCES public.projects (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.ideas
     ADD CONSTRAINT fkt4qp1368gdn4wk6ih62bj80ym FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Сообщения
 ALTER TABLE IF EXISTS public.messages
     ADD CONSTRAINT fkk4mihn10ohqge2as0b7nqlskw FOREIGN KEY (receiver_user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.messages
     ADD CONSTRAINT fkk4mpqp6gfuaelpcamqv01brkr FOREIGN KEY (sender_user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Модераторы удаляются при удалении проекта
 ALTER TABLE IF EXISTS public.moderators
     ADD CONSTRAINT fk88trnuotm3t0s0ew7cnpkup4a FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.moderators
     ADD CONSTRAINT fkmodqwh8otm3uvi7j6wb9igo2r FOREIGN KEY (project_id)
         REFERENCES public.projects (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Оценки в опросах
 ALTER TABLE IF EXISTS public.pointestimates
     ADD CONSTRAINT fk9p7mqt95ptqfbtfmbfgreq67h FOREIGN KEY (point_id)
         REFERENCES public.votingpoints (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.pointestimates
     ADD CONSTRAINT fkb3j9dwev1jglb85r55nnnsaxn FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Аватарки проектов
 ALTER TABLE IF EXISTS public.projects
     ADD CONSTRAINT fk78w8yx6dt2r444ilsu37jpwj7 FOREIGN KEY (avatar)
         REFERENCES public.files (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-CREATE INDEX IF NOT EXISTS projects_avatar_key
-    ON public.projects(avatar);
+        ON UPDATE NO ACTION ON DELETE SET NULL;
 
-
+-- Опросы удаляются при удалении проекта
 ALTER TABLE IF EXISTS public.surveys
     ADD CONSTRAINT fkegppux55yreqnrvbv6ybrn7k7 FOREIGN KEY (project_id)
         REFERENCES public.projects (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.surveys
     ADD CONSTRAINT fkiydpdbdg90l5bl365gt67qgrn FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Пользователи
 ALTER TABLE IF EXISTS public.users
     ADD CONSTRAINT fkda0fl66rh9qsoty4s66xk29m6 FOREIGN KEY (avatar_id)
         REFERENCES public.files (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-CREATE INDEX IF NOT EXISTS users_avatar_id_key
-    ON public.users(avatar_id);
+        ON UPDATE NO ACTION ON DELETE SET NULL;
 
-
+-- Оценки идей
 ALTER TABLE IF EXISTS public.votingestimates
     ADD CONSTRAINT fk98kbb0nt48lpav489kp13oa6q FOREIGN KEY (user_id)
         REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.votingestimates
     ADD CONSTRAINT fkd25wx5of5lg4e6apspgtm8tsn FOREIGN KEY (idea_id)
         REFERENCES public.ideas (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
-
+-- Пункты голосования удаляются при удалении опроса
 ALTER TABLE IF EXISTS public.votingpoints
     ADD CONSTRAINT fk3jyw3nqtkp83uqixk0hr6r8xr FOREIGN KEY (survey_id)
         REFERENCES public.surveys (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
+        ON UPDATE NO ACTION ON DELETE CASCADE;
 
 END;

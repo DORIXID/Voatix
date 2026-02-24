@@ -39,7 +39,7 @@ public class MessageEntity {
     @Column(name = "receiver_user_id")
     private Long receiverId;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "message_id")
     private List<FileEntity> files;
 

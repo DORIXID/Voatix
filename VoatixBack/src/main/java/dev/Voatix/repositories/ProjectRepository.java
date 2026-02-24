@@ -16,10 +16,6 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 
     Optional<ProjectEntity> findById(Long projectId);
 
-    @Query("SELECT p " +
-            "FROM ProjectEntity p " +
-            "WHERE p.title LIKE :name")
-    Optional<ProjectEntity> findByName(String name);
 
     @Query(value = """
     SELECT

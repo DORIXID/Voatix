@@ -51,7 +51,7 @@ public class MessageWSController {
                 principal
         );
 
-        // уведомляем собеседника
+        // уведомляем собеседника о прочтении сообщения
         messaging.convertAndSendToUser(
                 dto.getReceiver(),
                 "/queue/read",

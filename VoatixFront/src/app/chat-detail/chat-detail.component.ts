@@ -36,7 +36,7 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   messages: Message[] = [];
   messageText: string = '';
   loading: boolean = false;
-  avatarUrl: SafeUrl | string = '/assets/icons/default-avatar.png';
+  avatarUrl: SafeUrl | string | null = '/assets/icons/default-avatar.png';
   
   // File upload
   selectedFiles: Array<{
@@ -217,6 +217,8 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       },
       error: (err) => {
         console.error('Failed to load avatar', err);
+        this.avatarUrl = null;
+        this.cdr.detectChanges();
       }
     });
   }

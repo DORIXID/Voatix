@@ -37,10 +37,10 @@ public class CommentEntity {
     @Column(name = "idea_id")
     private Long ideaId;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "comment_id")
     private List<FileEntity> files;
 
-    @OneToMany( mappedBy = "comment", fetch = FetchType.LAZY, orphanRemoval = true )
+    @OneToMany( mappedBy = "comment", fetch = FetchType.LAZY )
     private List<CommentRatingEntity> commentRaitings;
 }

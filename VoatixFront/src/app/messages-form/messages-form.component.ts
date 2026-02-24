@@ -157,6 +157,7 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Ошибка загрузки изображения', key, err);
+        this.cdr.detectChanges();
       }
     });
   }

@@ -39,6 +39,41 @@
       </button>
     </div>
 
+    <!-- Status change panel -->
+    <div class="status-panel" *ngIf="canDeleteIdea()">
+      <h3 class="status-label">Статус идеи:</h3>
+      <div class="segmented-button">
+        <button 
+          class="segment-btn" 
+          [class.active]="idea.status === 'CREATED'"
+          (click)="updateIdeaStatus('CREATED')"
+          [disabled]="isUpdatingStatus">
+          Создан
+        </button>
+        <button 
+          class="segment-btn" 
+          [class.active]="idea.status === 'IN_WORK'"
+          (click)="updateIdeaStatus('IN_WORK')"
+          [disabled]="isUpdatingStatus">
+          В работе
+        </button>
+        <button 
+          class="segment-btn" 
+          [class.active]="idea.status === 'DONE'"
+          (click)="updateIdeaStatus('DONE')"
+          [disabled]="isUpdatingStatus">
+          Готово
+        </button>
+        <button 
+          class="segment-btn" 
+          [class.active]="idea.status === 'CANCELLED'"
+          (click)="updateIdeaStatus('CANCELLED')"
+          [disabled]="isUpdatingStatus">
+          Отклонено
+        </button>
+      </div>
+    </div>
+
         <!-- Comment creation form -->
     <div class="comment-create-section">
       <h2 class="comments-title">Оставить комментарий</h2>

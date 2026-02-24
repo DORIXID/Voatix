@@ -217,15 +217,10 @@
       <span style="color: #f44336; font-weight: 500;">Это действие невозможно отменить!</span>
     </p>
 
-    <div class="timer-section" *ngIf="deleteTimer > 0" style="text-align: center; margin: 16px 0; padding: 12px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #ffebee;">
-      <p style="color: #f44336; font-weight: 500; margin: 0;">Подтверждение через <strong>{{ deleteTimer }}</strong> сек...</p>
-      <p style="color: #999; font-size: 12px; margin: 4px 0 0 0;">Кнопка удаления будет доступна после отсчета</p>
-    </div>
-
     <div class="modal-actions">
       <button class="btn btn-cancel" (click)="closeDeleteProjectConfirm()" [disabled]="isDeleteProjectLoading">Отмена</button>
-      <button class="btn btn-delete" (click)="deleteProject()" [disabled]="isDeleteProjectLoading || deleteTimer > 0">
-        {{ isDeleteProjectLoading ? 'Удаление...' : (deleteTimer > 0 ? `Удалить (${deleteTimer}с)` : 'Удалить проект') }}
+      <button class="btn btn-delete" (click)="deleteProject()" [disabled]="isDeleteProjectLoading">
+        {{ isDeleteProjectLoading ? 'Удаление...' : 'Удалить проект' }}
       </button>
     </div>
   </div>

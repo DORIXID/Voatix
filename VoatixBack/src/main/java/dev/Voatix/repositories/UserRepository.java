@@ -33,8 +33,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             SELECT
                 u.nickname as nickname,
                 u.credentials.eMail as email,
-                u.avatar.key as key
+                a.key as key
             FROM UserEntity u
+            LEFT JOIN u.avatar a
             WHERE u.nickname = :nickname
             """)
     Optional<ResponseUserProfileProjection> findUserInfoByNickname(String nickname);

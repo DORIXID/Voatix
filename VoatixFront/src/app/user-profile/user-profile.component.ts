@@ -104,7 +104,11 @@ export class UserProfileComponent implements OnInit {
         this.avatarUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Failed to load avatar:', err)
+      error: (err) => {
+        console.error('Failed to load avatar:', err);
+        this.avatarUrl = null;
+        this.cdr.detectChanges();
+      }
     });
   }
 

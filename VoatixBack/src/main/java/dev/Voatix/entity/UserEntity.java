@@ -25,7 +25,7 @@ public class UserEntity {
     @Column(name = "avatar_id")
     private Long avatarId;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "user")
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "user")
     private CredentialsEntity credentials;
 
 

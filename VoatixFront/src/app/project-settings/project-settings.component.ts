@@ -48,8 +48,6 @@ export class ProjectSettingsComponent implements OnInit {
   // Удаление проекта
   showDeleteProjectConfirm = false;
   isDeleteProjectLoading = false;
-  deleteTimer = 5;
-  deleteTimerInterval: any = null;
 
   // Добавление модератора
   showAddModeratorModal = false;
@@ -144,7 +142,11 @@ export class ProjectSettingsComponent implements OnInit {
         this.projectAvatarUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
         this.cdr.detectChanges();
       },
-      error: (err: any) => console.error('Failed to load project avatar:', err)
+      error: (err: any) => {
+        console.error('Failed to load project avatar:', err);
+        this.projectAvatarUrl = null;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -158,7 +160,11 @@ export class ProjectSettingsComponent implements OnInit {
         moderator.avatarUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
         this.cdr.detectChanges();
       },
-      error: (err: any) => console.error('Failed to load moderator avatar:', err)
+      error: (err: any) => {
+        console.error('Failed to load moderator avatar:', err);
+        moderator.avatarUrl = null;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -605,37 +611,13 @@ export class ProjectSettingsComponent implements OnInit {
 
   openDeleteProjectConfirm() {
     this.showDeleteProjectConfirm = true;
-    this.deleteTimer = 5;
-    this.startDeleteTimer();
   }
 
   closeDeleteProjectConfirm() {
     this.showDeleteProjectConfirm = false;
-    if (this.deleteTimerInterval) {
-      clearInterval(this.deleteTimerInterval);
-      this.deleteTimerInterval = null;
-    }
-  }
-
-  startDeleteTimer() {
-    if (this.deleteTimerInterval) {
-      clearInterval(this.deleteTimerInterval);
-    }
-    
-    this.deleteTimerInterval = setInterval(() => {
-      this.deleteTimer--;
-      if (this.deleteTimer <= 0) {
-        clearInterval(this.deleteTimerInterval);
-        this.deleteTimerInterval = null;
-      }
-    }, 1000);
   }
 
   deleteProject() {
-    if (this.deleteTimer > 0) {
-      return; // Таймер еще не истек
-    }
-    
     this.isDeleteProjectLoading = true;
     
     this.http.delete(
@@ -647,9 +629,11 @@ export class ProjectSettingsComponent implements OnInit {
         this.closeDeleteProjectConfirm();
         this.isDeleteProjectLoading = false;
         
-        // Перенаправляем на главную после удаления
+        // Перенаправляем на главную после удаления и обновляем список проектов
         setTimeout(() => {
           this.router.navigate(['/main/ideas']);
+          // Reload projects list from sidebar
+          location.reload();
         }, 1000);
       },
       error: (err) => {
