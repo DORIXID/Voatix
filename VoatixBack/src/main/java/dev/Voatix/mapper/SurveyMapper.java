@@ -1,12 +1,10 @@
 package dev.Voatix.mapper;
 
-import dev.Voatix.dto.SurveyCreateDTO;
-import dev.Voatix.dto.SurveyResponseDTO;
-import dev.Voatix.dto.VotingEstimatesDTO;
-import dev.Voatix.dto.projection.VotingEstimatesProjection;
-import dev.Voatix.entity.ProjectEntity;
+import dev.Voatix.dto.survey.SurveyCreateDTO;
+import dev.Voatix.dto.survey.SurveyResponseDTO;
+import dev.Voatix.dto.survey.VotingEstimatesDTO;
+import dev.Voatix.dto.survey.VotingEstimatesProjection;
 import dev.Voatix.entity.SurveyEntity;
-import dev.Voatix.entity.UserEntity;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -53,10 +51,10 @@ public interface SurveyMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "title", source = "dto.title")
     @Mapping(target = "description", source = "dto.description")
-    @Mapping(target = "userId", source = "user")
-    @Mapping(target = "projectId", source = "project")
+    @Mapping(target = "userId", source = "userId")
+    @Mapping(target = "projectId", source = "projectId")
     @Mapping(target = "votingPoints", source = "dto.votingPoints")
-    SurveyEntity toEntity(SurveyCreateDTO dto, Long user, Long project);
+    SurveyEntity toEntity(SurveyCreateDTO dto, Long userId, Long projectId);
 
     @AfterMapping
     default void afterMapping(@MappingTarget SurveyEntity survey){

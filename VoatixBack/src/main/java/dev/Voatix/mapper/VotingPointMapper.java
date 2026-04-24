@@ -1,7 +1,7 @@
 package dev.Voatix.mapper;
 
 
-import dev.Voatix.dto.VotingPointDTO;
+import dev.Voatix.dto.survey.VotingPointDTO;
 import dev.Voatix.entity.VotingPointEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

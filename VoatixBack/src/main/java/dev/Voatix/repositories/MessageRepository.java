@@ -1,7 +1,7 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.LastMessageOfChatProjection;
-import dev.Voatix.dto.projection.MessageUserOfChatProjection;
+import dev.Voatix.dto.message.LastMessageOfChatProjection;
+import dev.Voatix.dto.message.MessageUserOfChatProjection;
 import dev.Voatix.entity.MessageEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

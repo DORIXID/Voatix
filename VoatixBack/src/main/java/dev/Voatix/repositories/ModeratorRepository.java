@@ -1,7 +1,8 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.UserModeratorProjection;
+import dev.Voatix.dto.user.UserModeratorProjection;
 import dev.Voatix.entity.ModeratorEntity;
+import dev.Voatix.entity.UserEntity;
 import dev.Voatix.entity.enums.RoleOfProjectManager;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,7 +30,7 @@ public interface ModeratorRepository extends JpaRepository<ModeratorEntity, Long
 
     boolean existsByUserIdAndProjectId(Long userId, Long projectId);
 
-    boolean existsByUserNicknameAndProjectTitleAndRole(String nickname, String title, RoleOfProjectManager role);
+    boolean existsByUserIdAndProjectIdAndRole(Long userId, Long projectId, RoleOfProjectManager role);
 
     @Query(value = """
         SELECT u.nickname as nickname, f.key as key
@@ -37,15 +38,17 @@ public interface ModeratorRepository extends JpaRepository<ModeratorEntity, Long
         JOIN users u on m.user_id = u.id
         LEFT JOIN files f on u.avatar_id = f.id
         JOIN projects p on m.project_id = p.id
-        WHERE p.title = :projectTitle and m.role = 'MANAGER'
+        WHERE p.title = :projectId and m.role = 'MANAGER'
         """, nativeQuery = true)
-    List<UserModeratorProjection> findManagersByProjectTitle(String projectTitle);
+    List<UserModeratorProjection> findManagersByProjectId(Long projectId);
 
     @Modifying
     @Query("""
     DELETE FROM ModeratorEntity m
-    WHERE m.user.nickname = :nickname
-    AND m.project.title = :projectTitle
+    WHERE m.user.id = :userId
+    AND m.project.id = :projectId
     """)
-    void deleteByNicknameAndTitle(String nickname, String projectTitle);
+    void deleteByUserIdAndProjectId(Long userId, Long projectId);
+
+    Long user(UserEntity user);
 }

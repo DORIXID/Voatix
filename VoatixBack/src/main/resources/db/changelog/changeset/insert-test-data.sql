@@ -18,50 +18,53 @@ FROM generate_series(4, 20) AS i;
 -- ==========================================================
 -- 2. ЗАПОЛНЕНИЕ ТАБЛИЦЫ USERS
 -- ==========================================================
-INSERT INTO public.users (id, nickname)
-VALUES (1, 'admin1'),
-       (2, 'manager1'),
-       (3, 'manager2'),
-       (4, 'caffeine_junkie'),   -- Любитель кофе
-       (5, 'startup_sam'),       -- Энтузиаст
-       (6, 'pixel_art_pro'),     -- Дизайнер
-       (7, 'backend_wizard'),    -- Разработчик
-       (8, 'latte_lover_99'),    -- Постоянный клиент
-       (9, 'tech_nomad'),        -- Удаленщик
-       (10, 'espresso_shot'),    -- Спешащий клиент
-       (11, 'green_bean_hunter'),-- Эко-активист
-       (12, 'roast_master_flex'),-- Профи в обжарке
-       (13, 'morning_owl'),      -- Тот самый клиент в 7 утра
-       (14, 'decaf_traitor'),    -- Шутливый ник
-       (15, 'sugar_rush_nina'),  -- Любитель сиропов
-       (16, 'ux_explorer'),      -- Проектировщик
-       (17, 'code_runner'),      -- Обычный айтишник
-       (18, 'bug_hunter_v'),     -- Тестировщик
-       (19, 'creamy_cap'),       -- Клиент
-       (20, 'dark_roast_man');
+-- Измените INSERT для users, чтобы сразу привязать файлы-аватарки
+INSERT INTO public.users (id, nickname, avatar_id)
+VALUES (1, 'admin1', NULL),
+       (2, 'manager1', NULL),
+       (3, 'manager2', NULL),
+       (4, 'caffeine_junkie', NULL),
+       (5, 'startup_sam', NULL),
+       (6, 'pixel_art_pro', NULL),
+       (7, 'backend_wizard', NULL),
+       (8, 'latte_lover_99', NULL),
+       (9, 'tech_nomad', NULL),
+       (10, 'espresso_shot', NULL),
+       (11, 'green_bean_hunter', NULL),
+       (12, 'roast_master_flex', NULL),
+       (13, 'morning_owl', NULL),
+       (14, 'decaf_traitor', NULL),
+       (15, 'sugar_rush_nina', NULL),
+       (16, 'ux_explorer', NULL),
+       (17, 'code_runner', NULL),
+       (18, 'bug_hunter_v', NULL),
+       (19, 'creamy_cap', NULL),
+       (20, 'dark_roast_man', NULL);
 -- Клиент
 
 -- ==========================================================
 -- 3. ЗАПОЛНЕНИЕ ТАБЛИЦЫ CREDENTIALS
 -- ==========================================================
-INSERT INTO public.credentials (user_id, password_id, role, active)
-VALUES (1, 1, 'ADMIN', true),
-       (2, 2, 'USER', true),
-       (3, 3, 'USER', true);
+INSERT INTO public.credentials (user_id, password_id, role, active, e_mail)
+VALUES (1, 1, 'ADMIN', true, 'admin@test.com'),
+       (2, 2, 'USER', true, 'manager1@test.com'),
+       (3, 3, 'USER', true, 'manager2@test.com');
 
 -- Все боты тоже активные USER
-INSERT INTO public.credentials (user_id, password_id, role, active)
-SELECT i, i, 'USER', true
+-- Добавляем генерацию e_mail для ботов
+INSERT INTO public.credentials (user_id, password_id, role, active, e_mail)
+SELECT i, i, 'USER', true, 'test_user' || i || '@voatix.com'
 FROM generate_series(4, 20) AS i;
 
+
+
 -- ==========================================================
--- 1. ЗАПОЛНЕНИЕ ТАБЛИЦЫ PROJECTS
+-- 4. ЗАПОЛНЕНИЕ ТАБЛИЦЫ PROJECTS
 -- ==========================================================
--- Поля: id, title, active, avatar (пока NULL)
 INSERT INTO public.projects (id, title, active, avatar)
 VALUES (1, 'CoffeeWay', true, NULL),
        (2, 'EcoOffice', true, NULL),
-       (3, 'TaskMaster', true, NULL);
+       (3, 'TaskMaster', true, null);
 
 -- Сбросим счетчик сиквенса, так как мы вставили ID вручную
 SELECT setval(pg_get_serial_sequence('public.projects', 'id'), 3);
@@ -218,13 +221,7 @@ VALUES
  'Разработать совместно с парфюмерами арома-диффузор для дома с нашим фирменным запахом.', 'CREATED');
 
 -- Обновляем сиквенс идей до 50
-SELECT setval(pg_get_serial_sequence('public.ideas', 'id'), 50);
 
-SELECT setval('passwords_id_seq', (SELECT MAX(id) FROM passwords));
-
-SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
-
-SELECT setval('credentials_id_seq', (SELECT MAX(id) FROM credentials));
 
 DO
 $$
@@ -290,5 +287,10 @@ $$
             END LOOP;
     END
 $$;
-
+-- Универсальный сброс для всех затронутых таблиц
+SELECT setval(pg_get_serial_sequence('public.passwords', 'id'), (SELECT MAX(id) FROM public.passwords));
+SELECT setval(pg_get_serial_sequence('public.users', 'id'), (SELECT MAX(id) FROM public.users));
+SELECT setval(pg_get_serial_sequence('public.credentials', 'id'), (SELECT MAX(id) FROM public.credentials));
+SELECT setval(pg_get_serial_sequence('public.ideas', 'id'), (SELECT MAX(id) FROM public.ideas));
+SELECT setval(pg_get_serial_sequence('public.projects', 'id'), (SELECT MAX(id) FROM public.projects));
 GO

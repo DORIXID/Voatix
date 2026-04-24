@@ -1,10 +1,6 @@
 package dev.Voatix.service;
 
-import dev.Voatix.dto.MessageChatDTO;
-import dev.Voatix.dto.MessageDTO;
-import dev.Voatix.dto.SendMessageDTO;
-import dev.Voatix.dto.projection.LastMessageOfChatProjection;
-import dev.Voatix.dto.projection.MessageUserOfChatProjection;
+import dev.Voatix.dto.message.*;
 import dev.Voatix.entity.FileEntity;
 import dev.Voatix.entity.MessageEntity;
 import dev.Voatix.entity.UserEntity;
@@ -35,10 +31,8 @@ public class MessageService {
     private final MessageMapper messageMapper;
     private final FileRepository fileRepository;
 
-    public Page<MessageChatDTO> getChats(Integer page, Integer limit, Principal principal) {
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Pageable pageParam = PageRequest.of(page, limit);
+    public Page<MessageChatDTO> getChats(ChatsRequestDTO dto, Long userId) {
+        Pageable pageParam = PageRequest.of(dto.getPage(), dto.getLimit());
         Page<MessageUserOfChatProjection> userOfChatProjections = messageRepository.findChatsByUserId(userId, pageParam);
 
         List<Long> ids = userOfChatProjections.getContent().stream().map(MessageUserOfChatProjection::getUserId).toList();
@@ -49,32 +43,14 @@ public class MessageService {
         return messageMapper.toPageDto(userOfChatProjections, lastMessageOfChatProjections, users);
     }
 
-    public List<MessageDTO> getChat(String companionNickname, Principal principal) {
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.findIdByNickname(companionNickname)
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        //Помечаем сообщения от собеседника как прочитанные
-        messageRepository.markMessagesAsRead(userId, companionId);
-        List<MessageEntity> messages = messageRepository.getMessages(userId, companionId);
+    public List<MessageDTO> getChat(ChatRequestDTO dto, Long userId) {
+        List<MessageEntity> messages = messageRepository.getMessages(userId, dto.getCompanionId());
         return messageMapper.toMessageDto(messages);
     }
 
-    public void markMessagesAsRead(String companionNickname, Principal principal) {
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.findIdByNickname(companionNickname)
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        messageRepository.markMessagesAsRead(userId, companionId);
-    }
-
-    public MessageDTO saveMessage(SendMessageDTO dto, Principal principal) {
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long companionId = userRepository.findIdByNickname(dto.getReceiver())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        List<FileEntity> files = fileRepository.findByFileKeys(dto.getFiles());
-        MessageEntity message = messageMapper.toMessageEntity(dto, userId, companionId, files);
+    public MessageDTO saveMessage(SendMessageDTO dto, Long userId) {
+        List<FileEntity> files = fileRepository.findById(dto.getFiles());
+        MessageEntity message = messageMapper.toMessageEntity(dto, userId, dto.getReceiverId(), files);
         messageRepository.save(message);
         return messageMapper.toMessageDto(message);
     }

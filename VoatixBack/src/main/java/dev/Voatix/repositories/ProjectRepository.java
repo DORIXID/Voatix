@@ -1,9 +1,8 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.ProjectOfUserProjection;
-import dev.Voatix.dto.projection.ProjectProfileWithoutModeratorsProjection;
+import dev.Voatix.dto.project.ProjectOfUserProjection;
+import dev.Voatix.dto.project.ProjectProfileWithoutModeratorsProjection;
 import dev.Voatix.entity.ProjectEntity;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,7 +20,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     SELECT
         p.id as projectId,
         p.title as title,
-        f.key as key,
+        f.id as filerId,
         p.active as active,
         m.role as roleOfUser
     FROM projects p
@@ -40,27 +39,19 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
         """)
     Optional<Long> findIdByTitle(String title);
 
-    @EntityGraph(attributePaths = {"avatar"})
-    @Query("""
-        SELECT p
-        from ProjectEntity p
-        where p.title = :title
-        """)
-    Optional<ProjectEntity> findByTitle(String title);
-
     @Query(value = """
-            select p.title as title, f.key as key
+            select p.title as title, f.id as fileId
             FROM projects p
             JOIN files f on p.avatar = f.id
             WHERE p.title = :title
            """, nativeQuery = true)
-    Optional<ProjectProfileWithoutModeratorsProjection> findProjectProfileWithoutModeratorsProjection(String title);
+    Optional<ProjectProfileWithoutModeratorsProjection> findProjectProfileWithoutModeratorsProjection(Long id);
 
     @Modifying
     @Query(value = """
             UPDATE ProjectEntity p
             SET p.avatarId = :fileId
-            WHERE p.title = :title
+            WHERE p.id = :projectId
         """)
-    void setAvatar(String title, Long fileId);
+    void setAvatar(Long projectId, Long fileId);
 }

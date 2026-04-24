@@ -1,11 +1,7 @@
 package dev.Voatix.mapper;
 
 
-import dev.Voatix.dto.CommentDTO;
-import dev.Voatix.dto.CommentUpdateDTO;
-import dev.Voatix.dto.CommentWithStatsDTO;
-import dev.Voatix.dto.IdeaUpdateDTO;
-import dev.Voatix.dto.projection.*;
+import dev.Voatix.dto.comment.*;
 import dev.Voatix.entity.*;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;
@@ -21,17 +17,17 @@ public interface CommentMapper {
     default Page<CommentWithStatsDTO> toPageDto(
             Page<CommentEntity> commentPage,
             List<CommentStatsProjection> votes,
-            List<CommentFileKeyProjection> files
+            List<CommentFileIdProjection> files
     ) {
 
         Map<Long, CommentStatsProjection> votesMap = votes.stream()
                 .collect(Collectors.toMap(CommentStatsProjection::getCommentId, v -> v, (a, b) -> a));
 
-        Map<Long, List<String>> filesMap = files.stream()
+        Map<Long, List<Long>> filesMap = files.stream()
                 .filter(f -> f.getCommentId() != null)
                 .collect(Collectors.groupingBy(
-                        CommentFileKeyProjection::getCommentId,
-                        Collectors.mapping(CommentFileKeyProjection::getKey, Collectors.toList())
+                        CommentFileIdProjection::getCommentId,
+                        Collectors.mapping(CommentFileIdProjection::getId, Collectors.toList())
                 ));
 
         return commentPage.map(comm -> toStatsDto(
@@ -45,26 +41,26 @@ public interface CommentMapper {
     @Mapping(target = "likes", expression = "java(stats != null ? stats.getLikes() : 0L)")
     @Mapping(target = "disLikes", expression = "java(stats != null ? stats.getDislikes() : 0L)")
     @Mapping(target = "vote", expression = "java(stats != null ? stats.getUserVote() : 0L)")
-    CommentWithStatsDTO toStatsDto(CommentEntity comment, CommentStatsProjection stats, @Context List<String> fileKeys);
+    CommentWithStatsDTO toStatsDto(CommentEntity comment, CommentStatsProjection stats, @Context List<Long> fileIds);
 
     @Mapping(target = "username", source = "comment.user.nickname")
-    @Mapping(target = "avatarKey", source = "comment.user.avatar.key")
+    @Mapping(target = "avatarId", source = "comment.user.avatar.id")
     @Mapping(target = "ideaId", source = "comment.idea.id")
-    @Mapping(target = "fileKeys", ignore = true)
+    @Mapping(target = "fileIds", ignore = true)
     CommentDTO toCommentDto(CommentEntity comment);
 
     @AfterMapping
-    default void linkFileKeys(@MappingTarget CommentWithStatsDTO dto, @Context List<String> fileKeys) {
-        if (dto.getComment() != null && fileKeys != null) {
-            dto.getComment().setFileKeys(fileKeys);
+    default void linkFileIds(@MappingTarget CommentWithStatsDTO dto, @Context List<Long> fileIds) {
+        if (dto.getComment() != null && fileIds != null) {
+            dto.getComment().setFileIds(fileIds);
         }
     }
 
-    default String map(FileEntity file) {
+    default Long map(FileEntity file) {
         if (file == null) {
             return null;
         }
-        return file.getKey();
+        return file.getId();
     }
 
     @Mapping(target = "id", ignore = true)

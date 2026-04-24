@@ -1,7 +1,7 @@
 package dev.Voatix.service;
 
-import dev.Voatix.dto.FileRequestDTO;
-import dev.Voatix.dto.FileResponseDTO;
+import dev.Voatix.dto.file.FileRequestDTO;
+import dev.Voatix.dto.file.FileResponseDTO;
 import dev.Voatix.entity.FileEntity;
 import dev.Voatix.mapper.FileMapper;
 import dev.Voatix.repositories.FileRepository;
@@ -34,31 +34,26 @@ import java.util.UUID;
 public class FileService {
     private final MinioService minioService;
     private final FileRepository fileRepository;
-    private final UserRepository userRepository;
     private final FileMapper fileMapper;
 
     private final List<String> ALLOWED_TYPES = List.of("image/png", "image/jpeg", "image/jpg");
 
-    public FileResponseDTO upload(MultipartFile file, Principal principal) {
+    public FileResponseDTO upload(MultipartFile file, Long userId) {
         validateFileType(file);
 
-        String storageKey = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
         try (InputStream inputStream = file.getInputStream()) {
-            minioService.putObject("images", storageKey, inputStream, file.getContentType());
 
             FileRequestDTO requestDto = new FileRequestDTO();
             requestDto.setName(file.getOriginalFilename());
-            requestDto.setKey(storageKey);
             requestDto.setContentType(file.getContentType());
             requestDto.setBucket("images");
 
-            Long uploaderId = userRepository.findIdByNickname(principal.getName())
-                    .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-            FileEntity fileEntity = fileMapper.toEntity(requestDto, uploaderId);
+            FileEntity fileEntity = fileMapper.toEntity(requestDto, userId);
             FileEntity savedFile = fileRepository.save(fileEntity);
             FileResponseDTO responseDto = fileMapper.toDTO(savedFile);
-            log.info("File uploaded successfully" + responseDto.getName() + " "+ responseDto.getKey() + " "+ responseDto.getBucket());
+
+            minioService.putObject("images", fileEntity.getId().toString(), inputStream, file.getContentType());
+
             return responseDto;
 
         } catch (IOException e) {
@@ -66,11 +61,11 @@ public class FileService {
         }
     }
 
-    public ResponseEntity<Resource> download(String key) {
-        FileEntity file = fileRepository.findByKey(key)
-                .orElseThrow(() -> new FileNotFoundException(key));
+    public ResponseEntity<Resource> download(Long id) {
+        FileEntity file = fileRepository.findById(id)
+                .orElseThrow(() -> new FileNotFoundException(id));
 
-        InputStream stream = minioService.getObject(file.getBucket(), file.getKey());
+        InputStream stream = minioService.getObject(file.getBucket(), file.getId().toString());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/png")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
@@ -83,14 +78,14 @@ public class FileService {
         }
     }
 
-    public void delete(String key) {
-        FileEntity file = fileRepository.findByKey(key)
-                .orElseThrow(() -> new FileNotFoundException(key));
+    public void delete(Long id) {
+        FileEntity file = fileRepository.findById(id)
+                .orElseThrow(() -> new FileNotFoundException(id));
 
         fileRepository.delete(file);
 
         try {
-            minioService.removeObject(file.getBucket(), file.getKey());
+            minioService.removeObject(file.getBucket(), file.getId().toString());
         } catch (Exception e) {
             throw new FileProcessingException(file.getName());
         }

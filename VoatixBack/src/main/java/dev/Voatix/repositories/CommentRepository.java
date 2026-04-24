@@ -1,7 +1,7 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.CommentStatsProjection;
-import dev.Voatix.dto.projection.CommentFileKeyProjection;
+import dev.Voatix.dto.comment.CommentStatsProjection;
+import dev.Voatix.dto.comment.CommentFileIdProjection;
 import dev.Voatix.entity.CommentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +31,7 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             FROM files f
             WHERE comment_id IN :commentIds
             """, nativeQuery = true)
-    List<CommentFileKeyProjection> findFilesByCommentIds(@Param("commentIds") List<Long> commentIds);
+    List<CommentFileIdProjection> findFilesByCommentIds(@Param("commentIds") List<Long> commentIds);
 
     @Query(value = """ 
             SELECT c.comment_id as commentId,
@@ -56,6 +56,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             @Param("commentId") Long commentId
     );
 
+    boolean existsByIdAndUserId(Long id, Long authorId);
+
     @Query("select c.id from CommentEntity c where c.id = :commentId")
     Optional<Long> findIdById(Long commentId);
 
@@ -65,6 +67,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     @Query("select c.ideaId from CommentEntity c where c.id = :commentId")
     Optional<Long> findIdeaIdById(Long commentId);
 
+    @Query("SELECT c.idea.projectId FROM CommentEntity c WHERE c.id = :commentId")
+    Optional<Long> findProjectIdByCommentId(@Param("commentId") Long commentId);
 
     void deleteById(Long commentId);
 

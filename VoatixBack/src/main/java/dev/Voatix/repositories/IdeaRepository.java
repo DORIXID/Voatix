@@ -1,8 +1,8 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.CommentCountProjection;
-import dev.Voatix.dto.projection.IdeaFileKeyProjection;
-import dev.Voatix.dto.projection.VoteStatsProjection;
+import dev.Voatix.dto.comment.CommentCountProjection;
+import dev.Voatix.dto.idea.IdeaFileIdProjection;
+import dev.Voatix.dto.idea.VoteStatsProjection;
 import dev.Voatix.entity.IdeaEntity;
 
 import dev.Voatix.entity.enums.IdeaStatusEnum;
@@ -45,11 +45,11 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
             where (i.description ilike CONCAT('%', :search, '%')
                or i.title ilike CONCAT('%', :search, '%'))
               and (:status is null or i.status = :status)
-              and p.title like :project
+              and p.id = :projectId
             order by i.dateTime DESC
         """)
     Page<IdeaEntity> findIdeas(
-            @Param("project") String project,
+            @Param("projectId") Long projectId,
             @Param("status") IdeaStatusEnum status,
             @Param("search") String search,
             Pageable pageable
@@ -76,7 +76,7 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
             JOIN ideas i ON f.idea_id = i.id
             WHERE idea_id IN :ideaIds
             """, nativeQuery = true)
-    List<IdeaFileKeyProjection> findFilesByIdeaIds(@Param("ideaIds") List<Long> ideaIds);
+    List<IdeaFileIdProjection> findFilesByIdeaIds(@Param("ideaIds") List<Long> ideaIds);
 
 
     @Query(value = """ 
@@ -132,11 +132,11 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     );
 
     @Query(value = """
-            SELECT f.key
+            SELECT f.id
             FROM files f
             JOIN ideas i ON f.idea_id = i.id
             WHERE idea_id = :ideaId
             """, nativeQuery = true)
-    List<String> findFileByIdeaId(@Param("ideaId") Long ideaId);
+    List<Long> findIdsByIdeaId(@Param("ideaId") Long ideaId);
 
 }

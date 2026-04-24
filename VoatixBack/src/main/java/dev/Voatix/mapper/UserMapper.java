@@ -1,8 +1,8 @@
 package dev.Voatix.mapper;
 
 
-import dev.Voatix.dto.UpdateUserCredentialsPasswordDTO;
-import dev.Voatix.dto.UserCredentialsPasswordDTO;
+import dev.Voatix.dto.user.UpdateUserCredentialsPasswordDTO;
+import dev.Voatix.dto.user.UserCredentialsPasswordDTO;
 import dev.Voatix.entity.UserEntity;
 import org.mapstruct.*;
 

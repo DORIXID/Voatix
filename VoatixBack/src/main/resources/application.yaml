@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: Voatix
+
+
+  # Postgres
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Voatix
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  # Liquibase
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  # Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+# JWT
+jwt:
+  expiration: 36000
+  public:
+    key: classpath:keys/public.pem
+  private:
+    key: classpath:keys/keypair.pem
+
+minio:
+   endpoint: http://minio:9000
+   access-key: minioadmin
+   secret-key: minioadmin
+
+# Logging
+logging:
+  level:
+    org:
+      liquibase: error
+      hibernate:
+        SQL: error
+        tool:
+          schema: error
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+      springframework:
+        web: DEBUG
+debug: true

@@ -16,5 +16,7 @@ public interface PointEstimateRepository extends JpaRepository<PointEstimateEnti
             WHERE p.user.id = :userId
             AND p.votingPoint.survey.id = :surveyId
             """)
-    Optional<PointEstimateEntity> findByUserIdAndSurveyId(@Param("userId") Long userId, @Param("surveyId") Long surveyId);
+    Optional<PointEstimateEntity> findByUserIdAndSurveyId(
+            @Param("userId") Long userId,
+            @Param("surveyId") Long surveyId);
 }

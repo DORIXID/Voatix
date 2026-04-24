@@ -1,6 +1,6 @@
 package dev.Voatix.repositories;
 
-import dev.Voatix.dto.projection.VotingEstimatesProjection;
+import dev.Voatix.dto.survey.VotingEstimatesProjection;
 import dev.Voatix.entity.SurveyEntity;
 import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import org.springframework.data.domain.Page;
@@ -23,12 +23,12 @@ public interface SurveyRepository extends JpaRepository<SurveyEntity, Long> {
                 join s.project p
                     where (s.title ilike CONCAT('%', :search, '%')
                     or s.description ilike CONCAT('%', :search, '%'))
-                    and p.title like :project
+                    and p.id = :projectId
                     and (:status is null or s.type = :status)
                 order by s.startDate DESC
             """)
     Page<SurveyEntity> findSurveys(
-            @Param("project") String project,
+            @Param("projectId") Long projectId,
             @Param("status") TypeOfSurveyEnum status,
             @Param("search") String search,
             Pageable pageable

@@ -1,10 +1,11 @@
 package dev.Voatix.mapper;
 
 
-import dev.Voatix.dto.UpdateUserCredentialsPasswordDTO;
-import dev.Voatix.dto.UserCredentialsPasswordDTO;
+import dev.Voatix.dto.user.UpdateUserCredentialsPasswordDTO;
+import dev.Voatix.dto.user.UserCredentialsPasswordDTO;
 import dev.Voatix.entity.PasswordEntity;
 import dev.Voatix.utils.PasswordEncoding;
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,7 +15,8 @@ import java.time.LocalDateTime;
 public abstract class PasswordMapper {
 
     @Autowired
-    PasswordEncoding encoder;
+    protected PasswordEncoding encoder;
+
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", expression = "java(encoder.encode(dto.getPassword()))")

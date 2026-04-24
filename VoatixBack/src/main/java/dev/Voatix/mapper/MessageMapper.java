@@ -1,10 +1,10 @@
 package dev.Voatix.mapper;
 
-import dev.Voatix.dto.MessageChatDTO;
-import dev.Voatix.dto.MessageDTO;
-import dev.Voatix.dto.SendMessageDTO;
-import dev.Voatix.dto.projection.LastMessageOfChatProjection;
-import dev.Voatix.dto.projection.MessageUserOfChatProjection;
+import dev.Voatix.dto.message.MessageChatDTO;
+import dev.Voatix.dto.message.MessageDTO;
+import dev.Voatix.dto.message.SendMessageDTO;
+import dev.Voatix.dto.message.LastMessageOfChatProjection;
+import dev.Voatix.dto.message.MessageUserOfChatProjection;
 import dev.Voatix.entity.FileEntity;
 import dev.Voatix.entity.MessageEntity;
 import dev.Voatix.entity.UserEntity;
@@ -45,9 +45,7 @@ public interface MessageMapper {
             expression = "java(messagesProj == null ? null : messagesProj.getText())")
     @Mapping(target = "dateTime",
             expression = "java(usersProj == null ? null : usersProj.getDateTime())")
-    @Mapping(target = "unreadCount",
-            expression = "java(usersProj == null ? null : usersProj.getUnreadCount())")
-    @Mapping(target = "avatarKey", source = "user.avatar.key")
+    @Mapping(target = "avatarId", source = "user.avatarId")
     MessageChatDTO toMessageDto(
             MessageUserOfChatProjection usersProj,
             LastMessageOfChatProjection messagesProj,
@@ -61,7 +59,7 @@ public interface MessageMapper {
     @Mapping(target = "receiver", source = "receiver.nickname")
     MessageDTO toMessageDto(MessageEntity message);
 
-    List<String> toDto(List<FileEntity> files);
+    List<Long> toDto(List<FileEntity> files);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "sender", ignore = true)
@@ -77,11 +75,11 @@ public interface MessageMapper {
                                   Long receiver,
                                   List<FileEntity> files);
 
-    default String map(FileEntity file) {
+    default Long map(FileEntity file) {
         if (file == null) {
             return null;
         }
-        return file.getKey();
+        return file.getId();
     }
 
 }

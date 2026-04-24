@@ -1,17 +1,15 @@
 package dev.Voatix.mapper;
 
 
-import dev.Voatix.dto.ProjectCreateDTO;
-import dev.Voatix.dto.ProjectOfUserDTO;
-import dev.Voatix.dto.ProjectProfileDTO;
-import dev.Voatix.dto.projection.ProjectOfUserProjection;
-import dev.Voatix.dto.projection.ProjectProfileWithoutModeratorsProjection;
-import dev.Voatix.dto.projection.UserModeratorProjection;
+import dev.Voatix.dto.project.ProjectCreateDTO;
+import dev.Voatix.dto.project.ProjectOfUserDTO;
+import dev.Voatix.dto.project.ProjectProfileDTO;
+import dev.Voatix.dto.project.ProjectOfUserProjection;
+import dev.Voatix.dto.project.ProjectProfileWithoutModeratorsProjection;
+import dev.Voatix.dto.user.UserModeratorProjection;
 import dev.Voatix.entity.ProjectEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.util.List;
 
@@ -26,16 +24,15 @@ public interface ProjectMapper {
     @Mapping(target = "avatarId", source = "avatarId")
     ProjectEntity toEntity(ProjectCreateDTO dto, Long avatarId);
 
-    @Mapping(target = "key", source = "key")
     ProjectOfUserDTO toDto(ProjectOfUserProjection project);
 
     List<ProjectOfUserDTO> toDto(List<ProjectOfUserProjection> projection);
 
-    @Mapping(target = "key", source = "avatar.key")
+    @Mapping(target = "fileId", source = "avatar.id")
     ProjectOfUserDTO toDto(ProjectEntity project);
 
     @Mapping(target = "title", source = "project.title")
-    @Mapping(target = "key", source = "project.key")
+    @Mapping(target = "fileId", source = "project.fileId")
     @Mapping(target = "moderators", source = "moderators")
     ProjectProfileDTO toDto(ProjectProfileWithoutModeratorsProjection project, List<UserModeratorProjection> moderators);
 }

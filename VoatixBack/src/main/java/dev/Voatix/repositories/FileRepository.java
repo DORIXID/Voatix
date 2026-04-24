@@ -1,6 +1,7 @@
 package dev.Voatix.repositories;
 
 import dev.Voatix.entity.FileEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,28 +13,29 @@ import java.util.Optional;
 public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 
+    @EntityGraph(attributePaths = {})
     @Query(value = """
-                        SELECT *
-                            FROM files
-                            WHERE files.key IN :keys
-            """, nativeQuery = true)
-    List<FileEntity> findByFileKeys(
-            @Param("keys") List<String> keys
+                        SELECT f
+                            FROM FileEntity f
+                            WHERE f.id IN :ids
+            """)
+    List<FileEntity> findById(
+            @Param("ids") List<Long> ids
     );
 
     @Query(value = """
     SELECT EXISTS (
         SELECT 1 FROM files
-        WHERE key IN :keys
+        WHERE id IN :fileIds
         AND uploader_id != :uploaderId
     )
     """, nativeQuery = true)
     boolean existsByOwner(
-            @Param("keys") List<String> keys,
+            @Param("keys") List<Long> fileIds,
             @Param("uploaderId") Long uploaderId
     );
 
-    Optional<FileEntity> findByKey(String key);
+    Optional<FileEntity> findById(Long id);
 
     @Modifying
     @Query(value = """
@@ -41,12 +43,6 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
                     WHERE comment_id IN (SELECT id FROM comments WHERE idea_id = :ideaId)
                     """, nativeQuery = true)
     void deleteByIdeaIdFromComments(Long ideaId);
-
-    @Query(value = """
-        SELECT f.id FROM files f
-        WHERE f.key = :key
-        """, nativeQuery = true)
-    Optional<Long> findIdByKey(String key);
 
 
 }

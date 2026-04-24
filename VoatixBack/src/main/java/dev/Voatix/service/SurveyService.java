@@ -1,19 +1,17 @@
 package dev.Voatix.service;
 
-import dev.Voatix.dto.SurveyCreateDTO;
-import dev.Voatix.dto.SurveyResponseDTO;
-import dev.Voatix.dto.projection.VotingEstimatesProjection;
+import dev.Voatix.dto.survey.SurveyCreateDTO;
+import dev.Voatix.dto.survey.SurveyResponseDTO;
+import dev.Voatix.dto.survey.SurveysRequestDTO;
+import dev.Voatix.dto.survey.VotingEstimatesProjection;
 import dev.Voatix.entity.*;
 import dev.Voatix.entity.enums.RoleOfProjectManager;
-import dev.Voatix.entity.enums.RoleOfUserEnum;
 import dev.Voatix.entity.enums.TypeOfSurveyEnum;
 import dev.Voatix.mapper.PointEstimateMapper;
 import dev.Voatix.mapper.SurveyMapper;
 import dev.Voatix.repositories.*;
 import dev.Voatix.utils.exceptions.commonException.UnknownStatusException;
-import dev.Voatix.utils.exceptions.commonException.UserUnauthorizedException;
 import dev.Voatix.utils.exceptions.moderatorException.ModeratorAccessDeniedException;
-import dev.Voatix.utils.exceptions.projectException.ProjectNotFoundException;
 import dev.Voatix.utils.exceptions.surveyException.SurveyAccessDeniedException;
 import dev.Voatix.utils.exceptions.surveyException.SurveyNotFoundException;
 import dev.Voatix.utils.exceptions.surveyException.SurveyVotingTimeIsUpException;
@@ -26,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,27 +36,23 @@ public class SurveyService {
     private final SurveyRepository surveyRepository;
     private final UserRepository userRepository;
     private final SurveyMapper surveyMapper;
-    private final ProjectRepository projectRepository;
     private final ModeratorRepository moderatorRepository;
     private final PointEstimateRepository pointEstimateRepository;
     private final PointEstimateMapper pointEstimateMapper;
     private final VotingPointRepository votingPointRepository;
 
-    public Page<SurveyResponseDTO> getSurveys(String project, Integer page, Integer limit, String filterBy, String searchedValue, Principal principal){
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+    public Page<SurveyResponseDTO> getSurveys(SurveysRequestDTO dto, Long userId) {
         TypeOfSurveyEnum status = null;
-        if (!filterBy.isBlank() && !filterBy.equals("ALL")) {
+        if (!dto.getFilterBy().isBlank() && !dto.getFilterBy().equals("ALL")) {
             try {
-                log.info("\"" + filterBy + "\"");
-                status = TypeOfSurveyEnum.valueOf(filterBy);
+                status = TypeOfSurveyEnum.valueOf(dto.getFilterBy());
             } catch (IllegalArgumentException e) {
-                throw new UnknownStatusException(filterBy);
+                throw new UnknownStatusException(dto.getFilterBy());
             }
         }
-        Pageable pageable = PageRequest.of(page, limit);
+        Pageable pageable = PageRequest.of(dto.getPage(), dto.getLimit());
 
-        Page<SurveyEntity> surveys = surveyRepository.findSurveys(project, status, searchedValue, pageable);
+        Page<SurveyEntity> surveys = surveyRepository.findSurveys(dto.getProjectId(), status, dto.getSearchedValue(), pageable);
 
         List<Long> ids = surveys.getContent().stream().map(SurveyEntity::getId).toList();
 
@@ -67,56 +60,78 @@ public class SurveyService {
         return surveyMapper.toPageDto(surveys, votingEstimatesProj);
     }
 
-    public void createSurvey(SurveyCreateDTO dto, Principal principal){
-        Long userId = userRepository.findIdByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
-        Long projectId = projectRepository.findIdByTitle(dto.getProjectName())
-                .orElseThrow(() -> new ProjectNotFoundException(dto.getProjectName()));
-        if(!moderatorRepository.existsByUserIdAndProjectId(userId, projectId)){
-            throw new ModeratorAccessDeniedException(principal.getName());
+    public void createSurvey(SurveyCreateDTO dto, Long userId){
+        if(!moderatorRepository.existsByUserIdAndProjectId(userId, dto.getProjectId())){
+            throw new ModeratorAccessDeniedException(userId);
         }
-        surveyRepository.save(surveyMapper.toEntity(dto, userId, projectId));
+        surveyRepository.save(surveyMapper.toEntity(dto, userId, dto.getProjectId()));
     }
 
-    public void deleteSurvey(Long surveyId, Principal principal){
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+    public void deleteSurvey(Long surveyId, Long userId){
         SurveyEntity survey = surveyRepository.findSurveyById(surveyId)
                 .orElseThrow(() -> new SurveyNotFoundException(surveyId));
-        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(user.getId(), survey.getProject().getId())
-                .orElseThrow(() -> new ModeratorAccessDeniedException(principal.getName()));
-        boolean isAuthor = user.getId().equals(survey.getUser().getId());
-        boolean isProjectOwner = moderator.getRole().equals(RoleOfProjectManager.OWNER);
-        if (!isAuthor && !isProjectOwner && !user.getCredentials().getRole().equals(RoleOfUserEnum.ADMIN)) {
-            throw new SurveyAccessDeniedException(principal.getName());
+        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, survey.getProjectId())
+                .orElseThrow(() -> new ModeratorAccessDeniedException(userId));
+        RoleOfProjectManager role = moderator.getRole();
+        if (role.equals(RoleOfProjectManager.OWNER) || role.equals(RoleOfProjectManager.MANAGER)) {
+            throw new SurveyAccessDeniedException(userId);
         }
         surveyRepository.delete(survey);
     }
 
-    public void doVote(Long votingPointId, Principal principal){
-        UserEntity user = userRepository.findByNickname(principal.getName())
-                .orElseThrow(() -> new UserUnauthorizedException(principal.getName()));
+    public void doVote(Long votingPointId, Long userId){
         VotingPointEntity votingPoint = votingPointRepository.findById(votingPointId)
                 .orElseThrow(() -> new VotingPointNotFoundException(votingPointId));
-        PointEstimateEntity pointEstimate = pointEstimateRepository.findByUserIdAndVotingPointId(user.getId(), votingPointId)
-                .orElse(null);
         SurveyEntity survey = votingPoint.getSurvey();
 
+        timeUpCheck(survey);
+        if (isRadioButtonType(survey)){
+            radioButtonVote(survey.getId(), userId, votingPointId);
+        } else {
+            checkBoxVote(userId, votingPointId);
+        }
+
+    }
+
+    private void radioButtonVote(Long surveyId, Long userId, Long votingPointId){
+        PointEstimateEntity pointEstimate = pointEstimateRepository.findByUserIdAndSurveyId(userId, surveyId)
+                .orElse(null);
+        if (pointEstimate == null) {
+            createPointEstimate(userId, votingPointId);
+        } else {
+            if (pointEstimate.getVotingPoint().getId().equals(votingPointId)) {
+                pointEstimateRepository.delete(pointEstimate);
+            } else {
+                pointEstimateRepository.delete(pointEstimate);
+                createPointEstimate(userId, votingPointId);
+            }
+        }
+    }
+
+    private void checkBoxVote(Long userId, Long votingPointId){
+        PointEstimateEntity pointEstimate = pointEstimateRepository.findByUserIdAndVotingPointId(userId, votingPointId)
+                .orElse(null);
+        if (pointEstimate == null) {
+            createPointEstimate(userId, votingPointId);
+        } else {
+            pointEstimateRepository.delete(pointEstimate);
+        }
+    }
+
+    private void createPointEstimate(Long userId, Long votingPointId){
+        pointEstimateRepository.save(pointEstimateMapper.toEntity(
+                userRepository.getReferenceById(userId),
+                votingPointRepository.getReferenceById(votingPointId)));
+    }
+
+    private void timeUpCheck(SurveyEntity survey){
         if (survey.getEndDate().isBefore(LocalDateTime.now())){
             throw new SurveyVotingTimeIsUpException();
         }
+    }
 
-        if (survey.getType().equals(TypeOfSurveyEnum.RADIO_BUTTON) && pointEstimate == null) {
-            pointEstimateRepository.findByUserIdAndSurveyId(user.getId(), survey.getId())
-                    .ifPresent(pointEstimateRepository::delete);
-        }
-
-        if (pointEstimate == null) {
-            pointEstimateRepository.save(pointEstimateMapper.toEntity(user, votingPoint));
-        } else  {
-            pointEstimateRepository.delete(pointEstimate);
-        }
-
+    private boolean isRadioButtonType(SurveyEntity survey){
+        return survey.getType().equals(TypeOfSurveyEnum.RADIO_BUTTON);
     }
 
 }

@@ -23,6 +23,7 @@ public class VotingEstimateEntity {
     @JoinColumn(name = "idea_id", nullable = false)
     private IdeaEntity idea = new IdeaEntity();
 
+    //todo переделать на like
     @Column(nullable = false, name = "is_like")
     private Boolean isLike;
 }

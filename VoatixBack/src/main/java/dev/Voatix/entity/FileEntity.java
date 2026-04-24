@@ -20,9 +20,6 @@ public class FileEntity {
     private String bucket;
 
     @Column(nullable = false)
-    private String key;
-
-    @Column(nullable = false)
     private String contentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
