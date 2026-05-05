@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:voatix-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  h2:
+    console:
+      enabled: false
+
+jwt:
+  expiration: 36000
+  public:
+    key: classpath:keys/public.pem
+  private:
+    key: classpath:keys/keypair.pem
+
+
+jwt-token: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJzZWxmIiwic3ViIjoibWFuYWdlcjEiLCJleHAiOjE3Nzc2NjAwNzAsImlhdCI6MTc3NzYyNDA3MCwidXNlcklkIjoyLCJzY29wZSI6IlVTRVIifQ.BfbUfooD-FhkuHms4gMSskMIR57oFuYu1eYGizgiW9tXfcn-2nGAzvcXO6XrokaNCrLz-0tNSm2tDU4OiUNPdm1uR1hie4LHZYrLCePbfva3LajZqM2zlx6AlnpSVKb7J7uj6FK0n6HIgvffNoxGVFjwRgGwJ3nhEAtIlGNi14mbEULjyqP25TQLHjQcVZCjbptLnDBjmXfBvpmzNPQiyzTJo-H20ZFwlGuqWQBpUcOa8uCClKPu1mwma8Lt9OHxgoDeY3McyHQ8LalFOTH-g4mmQVYtSdtJ0fBnEGau1962FSy_5KKEtRlwjehyiO869jQZIbUCq4FggTQ8SjrIfA
+
+minio:
+  endpoint: http://minio:9000
+  access-key: minioadmin
+  secret-key: minioadmin
