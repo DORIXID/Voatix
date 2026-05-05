@@ -40,24 +40,26 @@ public class FileService {
 
     public FileResponseDTO upload(MultipartFile file, Long userId) {
         validateFileType(file);
-
         try (InputStream inputStream = file.getInputStream()) {
-
             FileRequestDTO requestDto = new FileRequestDTO();
             requestDto.setName(file.getOriginalFilename());
             requestDto.setContentType(file.getContentType());
             requestDto.setBucket("images");
 
             FileEntity fileEntity = fileMapper.toEntity(requestDto, userId);
-            FileEntity savedFile = fileRepository.save(fileEntity);
-            FileResponseDTO responseDto = fileMapper.toDTO(savedFile);
+            fileEntity = fileRepository.save(fileEntity);
 
-            minioService.putObject("images", fileEntity.getId().toString(), inputStream, file.getContentType());
+            minioService.putObject(
+                    fileEntity.getBucket(),
+                    fileEntity.getId().toString(),
+                    inputStream,
+                    file.getContentType()
+            );
 
-            return responseDto;
+            return fileMapper.toDTO(fileEntity);
 
         } catch (IOException e) {
-            throw new FileProcessingException(e.getMessage());
+            throw new FileProcessingException("Failed to store file: " + e.getMessage());
         }
     }
 
@@ -66,28 +68,25 @@ public class FileService {
                 .orElseThrow(() -> new FileNotFoundException(id));
 
         InputStream stream = minioService.getObject(file.getBucket(), file.getId().toString());
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "image/png")
+                .header(HttpHeaders.CONTENT_TYPE, file.getContentType())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
                 .body(new InputStreamResource(stream));
-    }
-
-    private void validateFileType(MultipartFile file) {
-        if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new InvalidFileTypeException(file.getContentType());
-        }
     }
 
     public void delete(Long id) {
         FileEntity file = fileRepository.findById(id)
                 .orElseThrow(() -> new FileNotFoundException(id));
 
-        fileRepository.delete(file);
+        minioService.removeObject(file.getBucket(), file.getId().toString());
 
-        try {
-            minioService.removeObject(file.getBucket(), file.getId().toString());
-        } catch (Exception e) {
-            throw new FileProcessingException(file.getName());
+        fileRepository.delete(file);
+    }
+
+    private void validateFileType(MultipartFile file) {
+        if (!ALLOWED_TYPES.contains(file.getContentType())) {
+            throw new InvalidFileTypeException(file.getContentType());
         }
     }
 }

@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProjectOfUserDTO {
+    private Long id;
     @Size(min = 3, max = 30)
     private String title;
     private Long fileId;
-    private Boolean active;
     private RoleOfProjectManager roleOfUser;
 }

@@ -18,10 +18,9 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 
     @Query(value = """
     SELECT
-        p.id as projectId,
+        p.id,
         p.title as title,
-        f.id as filerId,
-        p.active as active,
+        f.id as fileId,
         m.role as roleOfUser
     FROM projects p
     JOIN files f ON p.avatar = f.id
@@ -43,7 +42,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
             select p.title as title, f.id as fileId
             FROM projects p
             JOIN files f on p.avatar = f.id
-            WHERE p.title = :title
+            WHERE p.id = :id
            """, nativeQuery = true)
     Optional<ProjectProfileWithoutModeratorsProjection> findProjectProfileWithoutModeratorsProjection(Long id);
 

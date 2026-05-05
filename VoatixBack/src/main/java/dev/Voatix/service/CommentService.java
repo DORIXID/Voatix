@@ -42,17 +42,15 @@ public class CommentService {
 
         List<Long> ids = comment.getContent().stream().map(CommentEntity::getId).toList();
 
-        List<CommentFileIdProjection> fileKeyProjs = commentRepository.findFilesByCommentIds(ids);
+        List<CommentFileIdProjection> fileIdsProjs = commentRepository.findFilesByCommentIds(ids);
         List<CommentStatsProjection> commStatsProjs = commentRepository.getCommentsRaitingsStats(ids, userId);
-        return commentMapper.toPageDto(comment, commStatsProjs, fileKeyProjs);
+        return commentMapper.toPageDto(comment, commStatsProjs, fileIdsProjs);
     }
 
     public void createComment(CommentDTO dto, Long userId) {
         Long ideaId = ideaRepository.findIdById(dto.getIdeaId())
                 .orElseThrow(() -> new IdeaNotFoundException(dto.getIdeaId()));
         List<FileEntity> files = fileRepository.findById(dto.getFileIds());
-        boolean allOwned = files.stream().allMatch(f -> f.getUploaderId().equals(userId));
-        if (!allOwned) throw new FileOwnershipException();
         commentRepository.save(commentMapper.toEntity(dto, userId, ideaId, files));
     }
 
@@ -64,12 +62,12 @@ public class CommentService {
     }
 
     public void upsertLike(CommentLikeDTO dto, Long userId) {
-        commentRatingRepository.deleteByCommentIdAndUserId(dto.getComentId(), userId);
+        commentRatingRepository.deleteByCommentIdAndUserId(dto.getCommentId(), userId);
         if (dto.getLike() != 0) {
             UserEntity user = userRepository.getReferenceById(userId);
-            CommentEntity comment = commentRepository.getReferenceById(dto.getComentId());
+            CommentEntity comment = commentRepository.getReferenceById(dto.getCommentId());
             commentRatingRepository.save(commentRaitingMapper
-                    .toEntity(user, comment, userId, dto.getComentId(), dto.getLike() == 1));
+                    .toEntity(user, comment, userId, dto.getCommentId(), dto.getLike() == 1));
         }
     }
 

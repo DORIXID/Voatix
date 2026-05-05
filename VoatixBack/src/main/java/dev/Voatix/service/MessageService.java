@@ -43,9 +43,10 @@ public class MessageService {
         return messageMapper.toPageDto(userOfChatProjections, lastMessageOfChatProjections, users);
     }
 
-    public List<MessageDTO> getChat(ChatRequestDTO dto, Long userId) {
-        List<MessageEntity> messages = messageRepository.getMessages(userId, dto.getCompanionId());
-        return messageMapper.toMessageDto(messages);
+    public Page<MessageDTO> getChat(ChatRequestDTO dto, Long userId) {
+        Pageable pageParam = PageRequest.of(dto.getPage(), dto.getLimit());
+        Page<MessageEntity> messages = messageRepository.getMessages(userId, dto.getCompanionId(), pageParam);
+        return messages.map(messageMapper::toMessageDto);
     }
 
     public MessageDTO saveMessage(SendMessageDTO dto, Long userId) {

@@ -12,6 +12,7 @@ import java.util.List;
 @Setter @Getter
 public class AuthUserDTO implements UserDetails {
 
+    private Long id;
     private String password;
     private String username;
 

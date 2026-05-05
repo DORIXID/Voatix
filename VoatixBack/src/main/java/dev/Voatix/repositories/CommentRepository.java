@@ -27,7 +27,7 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
             Pageable pageable);
 
     @Query(value = """
-            SELECT f.comment_id AS commentId, f.key
+            SELECT f.comment_id AS commentId, f.id AS fileId
             FROM files f
             WHERE comment_id IN :commentIds
             """, nativeQuery = true)

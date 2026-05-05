@@ -27,7 +27,7 @@ public interface CommentMapper {
                 .filter(f -> f.getCommentId() != null)
                 .collect(Collectors.groupingBy(
                         CommentFileIdProjection::getCommentId,
-                        Collectors.mapping(CommentFileIdProjection::getId, Collectors.toList())
+                        Collectors.mapping(CommentFileIdProjection::getFileId, Collectors.toList())
                 ));
 
         return commentPage.map(comm -> toStatsDto(

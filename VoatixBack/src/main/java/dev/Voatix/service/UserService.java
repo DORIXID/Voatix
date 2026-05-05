@@ -26,15 +26,18 @@ public class UserService {
     private final CredentialsMapper authMapper;
     private final UserRepository userRepository;
     private final CredentialsMapper credentialsMapper;
-    private final FileRepository fileRepository;
 
     public void createUser(UserCredentialsPasswordDTO dto) {
-        Long userId = userRepository.findIdByNickname(dto.getNickname())
-                .orElseThrow(() -> new UserAlreadyExistsException(dto.getNickname()));
+        if(userRepository.existsByNickname(dto.getNickname())) {
+                throw new UserAlreadyExistsException(dto.getNickname());
+        }
         credentialsRepository.save(authMapper.toCredentialsEntity(dto));
     }
 
     public void editUser(UpdateUserCredentialsPasswordDTO dto, Long userId) {
+        if(userRepository.existsByNickname(dto.getNickname())) {
+            throw new UserAlreadyExistsException(dto.getNickname());
+        }
         CredentialsEntity credentials = credentialsRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserUnauthorizedException(userId));
         credentialsMapper.updateCredentialsEntity(dto, credentials);

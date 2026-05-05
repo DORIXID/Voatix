@@ -21,10 +21,10 @@ public class IdeaEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = true, length = 1600)
+    @Column(nullable = false, length = 1600)
     private String description;
 
-    @Column(nullable = true, length = 1600)
+    @Column(nullable = false, length = 1600)
     private LocalDateTime dateTime;
 
     @Enumerated(EnumType.STRING)
@@ -35,14 +35,14 @@ public class IdeaEntity {
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private UserEntity user;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false, insertable = false, updatable = false)
     private ProjectEntity project;
 
-    @Column(name = "project_id")
+    @Column(name = "project_id", nullable = false)
     private Long projectId;
 
     @OneToMany( mappedBy = "idea", fetch = FetchType.LAZY)

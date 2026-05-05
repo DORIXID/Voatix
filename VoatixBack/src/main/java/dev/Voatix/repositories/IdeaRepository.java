@@ -71,7 +71,7 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     );
 
     @Query(value = """
-            SELECT f.idea_id, f.key
+            SELECT f.idea_id, f.id as fileId
             FROM files f
             JOIN ideas i ON f.idea_id = i.id
             WHERE idea_id IN :ideaIds

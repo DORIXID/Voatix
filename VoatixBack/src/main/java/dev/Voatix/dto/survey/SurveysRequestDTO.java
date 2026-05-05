@@ -1,8 +1,6 @@
 package dev.Voatix.dto.survey;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +14,8 @@ public class SurveysRequestDTO {
     private Long projectId;
     @NotNull
     private Integer page;
-    @Size(min = 1, max = 30)
+    @Min(1)
+    @Max(10)
     private Integer limit = 1;
     private String filterBy = "";
     private String searchedValue = "";

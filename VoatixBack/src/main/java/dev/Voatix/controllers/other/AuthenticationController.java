@@ -1,5 +1,6 @@
 package dev.Voatix.controllers.other;
 
+import dev.Voatix.dto.auth.AuthUserDTO;
 import dev.Voatix.dto.auth.JwtRequestDTO;
 import dev.Voatix.dto.auth.JwtResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -46,11 +47,14 @@ public class AuthenticationController {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));
 
+        AuthUserDTO authUser = (AuthUserDTO) auth.getPrincipal();
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(expiration))
                 .subject(auth.getName())
+                .claim("userId", authUser.getId())
                 .claim("scope", scope)
                 .build();
 

@@ -23,26 +23,10 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
             @Param("ids") List<Long> ids
     );
 
-    @Query(value = """
-    SELECT EXISTS (
-        SELECT 1 FROM files
-        WHERE id IN :fileIds
-        AND uploader_id != :uploaderId
-    )
-    """, nativeQuery = true)
-    boolean existsByOwner(
-            @Param("keys") List<Long> fileIds,
-            @Param("uploaderId") Long uploaderId
-    );
+
 
     Optional<FileEntity> findById(Long id);
 
-    @Modifying
-    @Query(value = """
-                    DELETE FROM files
-                    WHERE comment_id IN (SELECT id FROM comments WHERE idea_id = :ideaId)
-                    """, nativeQuery = true)
-    void deleteByIdeaIdFromComments(Long ideaId);
 
 
 }

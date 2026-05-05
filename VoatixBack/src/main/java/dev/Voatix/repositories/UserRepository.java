@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+
     Optional<UserEntity> findByNickname(String userName);
 
     Optional<UserEntity> findById(Long id);
@@ -25,6 +26,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
         """)
     List<UserEntity> findUsersByUserIds(
             @Param("userIds") List<Long> userIds);
+    boolean existsByNickname(String nickname);
 
     @Query("select u.id from UserEntity u where u.nickname = :nickname")
     Optional<Long> findIdByNickname(String nickname);

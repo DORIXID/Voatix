@@ -1,7 +1,6 @@
 package dev.Voatix.controllers;
 
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.comment.*;
 import dev.Voatix.service.CommentService;
 import jakarta.validation.Valid;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/comments")
-public class CommentsController {
+public class CommentsController extends BaseController {
 
     final private CommentService commentsService;
 
@@ -64,9 +63,5 @@ public class CommentsController {
         commentsService.upsertLike(dto, userId);
     }
 
-    //todo Мб сделать костом аннотацию
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
-    }
+
 }

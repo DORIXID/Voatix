@@ -1,6 +1,5 @@
 package dev.Voatix.controllers;
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.idea.*;
 import dev.Voatix.service.IdeaService;
 import jakarta.validation.Valid;
@@ -14,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/ideas")
-public class IdeasController {
+public class IdeasController extends BaseController {
 
     final private IdeaService ideaService;
 
@@ -25,14 +24,14 @@ public class IdeasController {
         return ideaService.getIdeas(dto, getUserId(auth));
     }
 
-    @PutMapping("/like")
+    @PutMapping("like")
     public void upsertLike(
             @Valid @RequestBody IdeaLikeDTO dto,
             Authentication auth) {
         ideaService.upsertLike(dto, getUserId(auth));
     }
 
-    @GetMapping("")
+    @GetMapping("idea")
     public IdeaWithStatsDTO getIdea(
             @Valid @RequestBody IdeaSingleRequestDTO dto,
             Authentication auth) {
@@ -43,7 +42,7 @@ public class IdeasController {
     public void createIdea(
             @Valid @RequestBody() IdeaCreateDTO dto,
             Authentication auth
-            ){
+    ) {
         ideaService.createIdea(dto, getUserId(auth));
     }
 
@@ -51,7 +50,7 @@ public class IdeasController {
     public void updateIdea(
             @RequestBody() IdeaUpdateDTO ideaDTO,
             Authentication auth
-    ){
+    ) {
         ideaService.updateIdea(ideaDTO, getUserId(auth));
     }
 
@@ -61,7 +60,7 @@ public class IdeasController {
     public void updateIdea(
             @Valid @RequestBody() IdeaStatusDTO dto,
             Authentication auth
-            ){
+    ) {
         ideaService.updateStatus(dto, getUserId(auth));
     }
 
@@ -69,13 +68,8 @@ public class IdeasController {
     public void deleteComment(
             @Valid @RequestBody IdeaDeleteDTO dto,
             Authentication auth
-    ){
+    ) {
         ideaService.deleteIdea(dto.getIdeaId(), getUserId(auth));
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 
 }

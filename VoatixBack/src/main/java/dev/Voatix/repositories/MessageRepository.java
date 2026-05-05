@@ -83,9 +83,10 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
                   (m.sender.id = :companionId and m.receiver.id = :userId)
             order by m.date DESC
             """)
-    List<MessageEntity> getMessages(
+    Page<MessageEntity> getMessages(
             @Param("userId") Long userId,
-            @Param("companionId") Long companionId
+            @Param("companionId") Long companionId,
+            Pageable pageable
     );
 
     @Modifying

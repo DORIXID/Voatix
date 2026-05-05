@@ -40,15 +40,14 @@ minio:
 logging:
   level:
     org:
-      liquibase: error
+      liquibase: debug
       hibernate:
-        SQL: error
+        SQL: debug
         tool:
-          schema: error
+          schema: debug
         type:
           descriptor:
             sql:
-              BasicBinder: TRACE
+              BasicBinder: debug
       springframework:
         web: DEBUG
-debug: true

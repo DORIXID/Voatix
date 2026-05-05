@@ -1,6 +1,5 @@
 package dev.Voatix.controllers;
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.message.ChatRequestDTO;
 import dev.Voatix.dto.message.ChatsRequestDTO;
 import dev.Voatix.dto.message.MessageChatDTO;
@@ -13,13 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/messages")
-public class MessagesController {
+public class MessagesController extends BaseController {
 
     final private MessageService messageService;
 
@@ -32,15 +29,10 @@ public class MessagesController {
     }
 
     @GetMapping("chat")
-    public List<MessageDTO> getChat(
-            @RequestParam @Valid ChatRequestDTO dto,
+    public Page<MessageDTO> getChat(
+            @RequestBody @Valid ChatRequestDTO dto,
             Authentication auth
     ) {
         return messageService.getChat(dto, getUserId(auth));
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 }

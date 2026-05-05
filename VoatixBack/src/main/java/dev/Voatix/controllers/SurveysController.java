@@ -1,11 +1,7 @@
 package dev.Voatix.controllers;
 
 
-import dev.Voatix.configuration.security.CustomUserDetails;
-import dev.Voatix.dto.survey.SurveyCreateDTO;
-import dev.Voatix.dto.survey.SurveyDeleteDTO;
-import dev.Voatix.dto.survey.SurveyResponseDTO;
-import dev.Voatix.dto.survey.SurveysRequestDTO;
+import dev.Voatix.dto.survey.*;
 import dev.Voatix.service.SurveyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/surveys")
-public class SurveysController {
+public class SurveysController extends BaseController {
 
     final private SurveyService surveyService;
 
@@ -49,14 +45,10 @@ public class SurveysController {
 
     @PostMapping("vote")
     public void voteSurvey(
-            @Valid @RequestBody SurveyResponseDTO dto,
+            @Valid @RequestBody SurveyVoteDTO dto,
             Authentication auth
     ){
-        surveyService.doVote(dto.getId(), getUserId(auth));
+        surveyService.doVote(dto.getVotingPointId(), getUserId(auth));
     }
 
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
-    }
 }

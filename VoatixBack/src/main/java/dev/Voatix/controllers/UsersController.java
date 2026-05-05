@@ -1,6 +1,5 @@
 package dev.Voatix.controllers;
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.user.UpdateUserCredentialsPasswordDTO;
 import dev.Voatix.dto.user.UserCredentialsPasswordDTO;
 import dev.Voatix.dto.user.ResponseUserProfileProjection;
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/users")
-public class UsersController {
+public class UsersController extends BaseController {
 
     final private UserService userService;
 
@@ -46,10 +45,5 @@ public class UsersController {
             Authentication auth
             ) {
         userService.setAvatar(getUserId(auth), dto.getFileId());
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 }

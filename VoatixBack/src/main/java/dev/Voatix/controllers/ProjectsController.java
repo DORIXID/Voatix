@@ -1,7 +1,6 @@
 package dev.Voatix.controllers;
 
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.project.*;
 import dev.Voatix.service.ProjectService;
 import jakarta.validation.Valid;
@@ -16,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/projects")
-public class ProjectsController {
+public class ProjectsController extends BaseController {
 
     final private ProjectService projectService;
 
@@ -69,10 +68,5 @@ public class ProjectsController {
             Authentication auth
     ){
         projectService.deleteProject(getUserId(auth), dto.getId());
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 }

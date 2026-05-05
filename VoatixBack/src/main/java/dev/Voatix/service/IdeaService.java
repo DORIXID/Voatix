@@ -89,9 +89,6 @@ public class IdeaService {
         if (files.size() != ideaDTO.getFileIds().size()) {
             throw new FilesNotFoundException();
         }
-        if (fileRepository.existsByOwner(ideaDTO.getFileIds(), userId)){
-            throw new FileOwnershipException();
-        }
         IdeaEntity idea = ideaMapper.toEntity(ideaDTO, ideaDTO.getProjectId() , userId, files);
         ideaRepository.save(idea);
     }

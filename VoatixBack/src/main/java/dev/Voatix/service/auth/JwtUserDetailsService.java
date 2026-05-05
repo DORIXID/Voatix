@@ -35,10 +35,11 @@ public class JwtUserDetailsService implements UserDetailsService {
                 .orElseThrow(
                         () -> new UsernameNotFoundException(String.format("User`s credentials %s not found", username))
                 );
-        //вот тут прикол был с прокчи затычкой - сущности password
+        //вот тут прикол был с прокси затычкой - сущности password
 
 
         return AuthUserDTO.builder()
+                .id(user.getId())
                 .username(user.getNickname())
                 .password(credentials.getPassword().getPassword())
                 .authorities(List.of(new SimpleGrantedAuthority(credentials.getRole().name())))

@@ -1,7 +1,6 @@
 package dev.Voatix.controllers;
 
 
-import dev.Voatix.configuration.security.CustomUserDetails;
 import dev.Voatix.dto.file.FileResponseDTO;
 import dev.Voatix.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/files")
-public class FilesController {
+public class FilesController extends BaseController {
 
     final private FileService fileService;
 
@@ -30,18 +27,13 @@ public class FilesController {
         return fileService.upload(file, getUserId(auth));
     }
 
-    @GetMapping("/{id}/view")
+    @GetMapping("{id}/view")
     public ResponseEntity<Resource> getFile(@PathVariable Long id) {
         return fileService.download(id);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("{id}")
     public void deleteFile(@PathVariable Long id) {
         fileService.delete(id);
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 }

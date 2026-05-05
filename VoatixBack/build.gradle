@@ -58,7 +58,24 @@ dependencies {
 
     // Websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    //Debug
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+
+    //testContainers
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+
+
 }
+
+test {
+    useJUnitPlatform()
+    maxParallelForks = 1
+}
+
 
 tasks.named('test') {
 	useJUnitPlatform()

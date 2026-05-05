@@ -20,25 +20,17 @@ public interface ModeratorRepository extends JpaRepository<ModeratorEntity, Long
             "WHERE m.user.id = :userId")
     List<ModeratorEntity> findByUserId(Long userId);
 
-    @Query(value = """
-            SELECT *
-                        FROM moderators
-                        WHERE user_id = :userId
-                        AND project_id = :projectId
-            """, nativeQuery = true)
-    Optional<ModeratorEntity> findByUserIdAndProjectId(Long userId, Long projectId);
-
     boolean existsByUserIdAndProjectId(Long userId, Long projectId);
 
     boolean existsByUserIdAndProjectIdAndRole(Long userId, Long projectId, RoleOfProjectManager role);
 
     @Query(value = """
-        SELECT u.nickname as nickname, f.key as key
+        SELECT u.id as userId, u.nickname as nickname, f.id as fileId
         FROM moderators m
         JOIN users u on m.user_id = u.id
         LEFT JOIN files f on u.avatar_id = f.id
         JOIN projects p on m.project_id = p.id
-        WHERE p.title = :projectId and m.role = 'MANAGER'
+        WHERE p.id = :projectId and m.role = 'MANAGER'
         """, nativeQuery = true)
     List<UserModeratorProjection> findManagersByProjectId(Long projectId);
 

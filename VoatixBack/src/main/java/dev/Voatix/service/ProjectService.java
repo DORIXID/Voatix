@@ -68,10 +68,11 @@ public class ProjectService {
 
     public void deleteModerator(Long userId, ProjectModeratorDTO dto){
         if (!moderatorRepository
-                .existsByUserIdAndProjectIdAndRole(userId, dto.getProjectId(), RoleOfProjectManager.OWNER)){
+                .existsByUserIdAndProjectIdAndRole(userId, dto.getProjectId(), RoleOfProjectManager.OWNER)
+        || userId.equals(dto.getModeratorId())){ // Проверка на самоудаление
             throw new ModeratorAccessDeniedException(userId);
         }
-        moderatorRepository.deleteByUserIdAndProjectId(userId, dto.getProjectId());
+        moderatorRepository.deleteByUserIdAndProjectId(dto.getModeratorId(), dto.getProjectId());
     }
 
     public void addModerator(Long userId, ProjectModeratorDTO dto){

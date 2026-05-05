@@ -70,11 +70,8 @@ public class SurveyService {
     public void deleteSurvey(Long surveyId, Long userId){
         SurveyEntity survey = surveyRepository.findSurveyById(surveyId)
                 .orElseThrow(() -> new SurveyNotFoundException(surveyId));
-        ModeratorEntity moderator = moderatorRepository.findByUserIdAndProjectId(userId, survey.getProjectId())
-                .orElseThrow(() -> new ModeratorAccessDeniedException(userId));
-        RoleOfProjectManager role = moderator.getRole();
-        if (role.equals(RoleOfProjectManager.OWNER) || role.equals(RoleOfProjectManager.MANAGER)) {
-            throw new SurveyAccessDeniedException(userId);
+        if (!moderatorRepository.existsByUserIdAndProjectId(userId, survey.getProjectId())){
+            throw new ModeratorAccessDeniedException(userId);
         }
         surveyRepository.delete(survey);
     }
