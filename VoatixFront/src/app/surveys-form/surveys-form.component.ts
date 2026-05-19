@@ -67,31 +67,9 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Сначала проверяем URL параметры
-    this.subs.add(this.route.paramMap.subscribe(params => {
-      const urlProjectTitle = params.get('projectTitle');
-      if (urlProjectTitle && urlProjectTitle !== this.project) {
-        this.project = urlProjectTitle;
-        this.page = 0;
-        this.loadSurvey();
-      }
-      this.projectService.selectedProject$.subscribe(project => {
-      this.selectedProject = project;
-    })
-    }));
-
-    // Затем проверяем выбранный проект в сервисе
-    const current: Project | null = this.projectService.getSelectedProject();
-    if (current && current.title && !this.project) {
-      this.project = current.title;
-      this.userRole = current.roleOfUser || UserRole.VIEWER;
-      this.loadSurvey();
-    }
-
-    this.showDeleteBtn = this.canDeleteSurvey();
-
     // Подписываемся на смену проекта через сервис
     this.subs.add(this.projectService.selectedProject$.subscribe(p => {
+      this.selectedProject = p;
       const key = p?.title || '';
       if (key && key !== this.project) {
         this.project = key;
@@ -100,6 +78,29 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
         this.loadSurvey();
       }
     }));
+
+    // Затем проверяем URL параметры
+    this.subs.add(this.route.paramMap.subscribe(params => {
+      const urlProjectId = params.get('projectId');
+      if (urlProjectId && urlProjectId !== this.selectedProject?.id?.toString()) {
+        const projectId = parseInt(urlProjectId, 10);
+        // Сохраняем ID проекта и загружаем опросы
+        this.page = 0;
+        // Будет использоваться selectedProject из projectService
+        this.loadSurvey();
+      }
+    }));
+
+    // Затем проверяем выбранный проект в сервисе для инициализации
+    const current: Project | null = this.projectService.getSelectedProject();
+    if (current && current.id && !this.selectedProject) {
+      this.selectedProject = current;
+      this.selectedProject = current;
+      this.userRole = current.roleOfUser || UserRole.VIEWER;
+      this.loadSurvey();
+    }
+
+    this.showDeleteBtn = this.canDeleteSurvey();
   }
 
   ngOnDestroy(): void {
@@ -108,12 +109,16 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
 
   loadSurvey(): void {
     this.loading = true;
-    const params = new HttpParams()
-      .set('project', this.project)
-      .set('page', String(this.page))
-      .set('limit', String(this.limit));
+    const projectId = this.selectedProject?.id || 0;
+    const payload = {
+      projectId: projectId,
+      page: this.page,
+      limit: this.limit,
+      filterBy: '',
+      searchedValue: ''
+    };
 
-    this.http.get<any>('http://localhost:8080/api/surveys', { params }).subscribe({
+    this.surveyService.getSurveys(payload).subscribe({
       next: res => {
         console.log('surveys response', res);
         if (res && res.content && res.content.length > 0) {
@@ -200,7 +205,7 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
   }
 
   openQrModal(): void {
-    this.shareUrl = `${window.location.origin}/main/surveys/${this.project}`;
+    this.shareUrl = `${window.location.origin}/main/surveys/${this.selectedProject?.id || ''}`;
     this.qrCodeUrl = this.qrCodeService.generateQrCodeUrl(this.shareUrl, 350);
     this.isQrModalOpen = true;
   }
@@ -216,7 +221,7 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
   }
 
   private votePoint(votingEstimateId: number) {
-    this.http.post<any>(`http://localhost:8080/api/surveys/vote/${votingEstimateId}`, {}, { withCredentials: true }).subscribe({
+    this.surveyService.voteSurvey({ votingPointId: votingEstimateId }).subscribe({
       next: () => this.loadSurvey(),
       error: err => {
         console.error('Vote failed', err);
@@ -249,7 +254,7 @@ export class SurveysSidebarFormComponent implements OnInit, OnDestroy {
     this.isDeletingSurvey = true;
     const surveyIdToDelete = this.survey.id;
 
-    this.surveyService.deleteSurvey(surveyIdToDelete).subscribe({
+    this.surveyService.deleteSurvey({ surveyId: surveyIdToDelete }).subscribe({
       next: () => {
         this.showToast('Голосование удалено', 'success');
         this.closeDeleteConfirm();

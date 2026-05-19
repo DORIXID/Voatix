@@ -1,5 +1,6 @@
 package dev.Voatix.controllers;
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.user.UpdateUserCredentialsPasswordDTO;
 import dev.Voatix.dto.user.UserCredentialsPasswordDTO;
 import dev.Voatix.dto.user.ResponseUserProfileProjection;

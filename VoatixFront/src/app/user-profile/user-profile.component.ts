@@ -17,6 +17,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 export class UserProfileComponent implements OnInit {
   nickname: string = '';
   email: string = '';
+  userId: number | null = null;
   avatarUrl: SafeUrl | null = null;
   avatarKey: string = '';
 
@@ -77,13 +78,14 @@ export class UserProfileComponent implements OnInit {
     this.http.get<any>('http://localhost:8080/api/users/profile', { withCredentials: true })
       .subscribe({
         next: (data) => {
+          this.userId = data.userId || null;
           this.nickname = data.nickname || '';
           this.email = data.email || '';
-          this.avatarKey = data.key || '';
+          this.avatarKey = data.fileId || '';
           
           // Загружаем аватар если есть
-          if (data.key) {
-            this.loadAvatar(data.key);
+          if (data.fileId) {
+            this.loadAvatar(data.fileId.toString());
           }
           this.cdr.detectChanges();
         },
@@ -421,8 +423,8 @@ export class UserProfileComponent implements OnInit {
     this.http.post<any>('http://localhost:8080/api/files/upload', formData, { withCredentials: true })
       .subscribe({
         next: (response) => {
-          const fileKey = response.key;
-          this.updateAvatarKey(fileKey);
+          const fileId = response.id;
+          this.updateAvatarKey(fileId);
         },
         error: (err) => {
           console.error('Failed to upload avatar:', err);
@@ -432,12 +434,12 @@ export class UserProfileComponent implements OnInit {
       });
   }
 
-  updateAvatarKey(key: string) {
-    this.http.patch('http://localhost:8080/api/users/avatar?key=' + key, {}, { withCredentials: true })
+  updateAvatarKey(fileId: number) {
+    this.http.patch('http://localhost:8080/api/users/avatar', { fileId: fileId }, { withCredentials: true })
       .subscribe({
         next: () => {
-          this.avatarKey = key;
-          this.loadAvatar(key);
+          this.avatarKey = fileId.toString();
+          this.loadAvatar(fileId.toString());
           this.showToast('Аватар успешно изменён', 'success');
           this.closeAvatarModal();
           this.isSubmitting = false;
@@ -460,9 +462,7 @@ export class UserProfileComponent implements OnInit {
 
     this.isSubmitting = true;
     const payload = {
-      nickname: this.editNickname,
-      eMail: null,
-      password: null
+      nickname: this.editNickname
     };
 
     this.http.patch('http://localhost:8080/api/users/edit', payload, { withCredentials: true })
@@ -490,9 +490,7 @@ export class UserProfileComponent implements OnInit {
 
     this.isSubmitting = true;
     const payload = {
-      nickname: null,
-      eMail: this.editEmail,
-      password: null
+      eMail: this.editEmail
     };
 
     this.http.patch('http://localhost:8080/api/users/edit', payload, { withCredentials: true })
@@ -525,8 +523,6 @@ export class UserProfileComponent implements OnInit {
 
     this.isSubmitting = true;
     const payload = {
-      nickname: null,
-      eMail: null,
       password: this.editPassword
     };
 

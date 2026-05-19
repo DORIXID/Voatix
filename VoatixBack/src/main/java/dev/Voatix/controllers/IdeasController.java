@@ -1,5 +1,6 @@
 package dev.Voatix.controllers;
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.idea.*;
 import dev.Voatix.service.IdeaService;
 import jakarta.validation.Valid;
@@ -17,7 +18,7 @@ public class IdeasController extends BaseController {
 
     final private IdeaService ideaService;
 
-    @GetMapping("")
+    @PostMapping("get")
     public Page<IdeaWithStatsDTO> getIdeas(
             @Valid @RequestBody IdeaSearchDTO dto,
             Authentication auth) {
@@ -31,11 +32,11 @@ public class IdeasController extends BaseController {
         ideaService.upsertLike(dto, getUserId(auth));
     }
 
-    @GetMapping("idea")
+    @GetMapping("{ideaId}")
     public IdeaWithStatsDTO getIdea(
-            @Valid @RequestBody IdeaSingleRequestDTO dto,
+            @PathVariable Long ideaId,
             Authentication auth) {
-        return ideaService.getIdea(dto.getIdeaId(), getUserId(auth));
+        return ideaService.getIdea(ideaId, getUserId(auth));
     }
 
     @PostMapping("")

@@ -23,14 +23,14 @@ export const routes: Routes = [
                { path: 'ideas/create', component: IdeaCreateFormComponent },
                { path: 'ideas/view/:id', component: IdeaViewComponent },
                { path: 'ideas', component: IdeasFormComponent},
-               { path: 'ideas/:projectTitle', component: IdeasFormComponent },
+               { path: 'ideas/:projectId', component: IdeasFormComponent },
                { path: 'surveys/create', component: SurveyCreateFormComponent },
                { path: 'surveys', component: SurveysSidebarFormComponent},
-               { path: 'surveys/:projectTitle', component: SurveysSidebarFormComponent },
+               { path: 'surveys/:projectId', component: SurveysSidebarFormComponent },
                { path: 'messages', component: MessagesFormComponent},
                { path: 'profile', component: UserProfileComponent },
                { path: 'faq', component: FAQComponent },
-               { path: 'project-settings/:projectTitle', component: ProjectSettingsComponent }
+               { path: 'project-settings/:projectId', component: ProjectSettingsComponent }
           ]
      }
 ];

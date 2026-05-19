@@ -13,7 +13,6 @@ import java.util.Optional;
 public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 
-    @EntityGraph(attributePaths = {})
     @Query(value = """
                         SELECT f
                             FROM FileEntity f

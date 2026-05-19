@@ -11,11 +11,11 @@
             <!-- Если есть проекты -->
             <div class="selected" *ngIf="projects.length > 0" (click)="toggle()"
                 style="display: flex; align-items: center; gap: 8px;">
-                <img *ngIf="selectedProject?.key && (getProjectAvatarUrl(selectedProject) | async) as avatarUrl"
+                <img *ngIf="hasProjectAvatar(selectedProject) && (getProjectAvatarUrl(selectedProject) | async) as avatarUrl"
                     [src]="avatarUrl"
                     alt="project avatar"
                     style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
-                <img *ngIf="!selectedProject?.key || !(getProjectAvatarUrl(selectedProject) | async)" 
+                <img *ngIf="!hasProjectAvatar(selectedProject) || !(getProjectAvatarUrl(selectedProject) | async)" 
                     src="assets/icons/default-project.png" alt="default project"
                     style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
                 <span style="flex: 1;">{{ selectedProject?.title || 'Выберите проект' }}</span>
@@ -44,16 +44,16 @@
             <div class="options" *ngIf="isOpen && projects.length > 0">
                 <div class="option" *ngFor="let p of projects" (click)="selectProject(p); $event.stopPropagation()"
                     style="display: flex; align-items: center; gap: 8px;">
-                    <img *ngIf="p.key && (getProjectAvatarUrl(p) | async) as avatarUrl" 
+                    <img *ngIf="hasProjectAvatar(p) && (getProjectAvatarUrl(p) | async) as avatarUrl" 
                         [src]="avatarUrl" alt="project avatar"
                         style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover">
-                    <img *ngIf="!p.key || !(getProjectAvatarUrl(p) | async)" 
+                    <img *ngIf="!hasProjectAvatar(p) || !(getProjectAvatarUrl(p) | async)" 
                         src="assets/icons/default-project.png" alt="default project"
                         style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
                     <span style="flex: 1;">{{ p.title }}</span>
                     <div *ngIf="p.roleOfUser !== 'VIEWER'" class="role-dot"></div>
                 </div>
-                <button class="option find-project-btn" (click)="openProjectSearch(); $event.stopPropagation()">
+                <button class="option find-project-btn" style="display: none;" (click)="openProjectSearch(); $event.stopPropagation()">
                     <mat-icon>search</mat-icon>
                     <span>Найти проект</span>
                 </button>

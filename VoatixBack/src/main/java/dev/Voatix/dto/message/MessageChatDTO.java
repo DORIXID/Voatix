@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageChatDTO {
+    Long userId;
     String userNickname;
     Long avatarId;
     String senderNickname;

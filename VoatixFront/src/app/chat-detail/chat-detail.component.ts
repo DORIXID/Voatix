@@ -14,6 +14,8 @@ interface Message {
   text: string;
   sender: string;
   receiver: string;
+  senderId?: number;
+  receiverId?: number;
   isRead: boolean;
   date: string;
   files: any[];
@@ -27,8 +29,10 @@ interface Message {
   styleUrls: ['./chat-detail.component.scss']
 })
 export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() chatNickname: string = '';
+  @Input() chatNickname: string = ''; // Keep for backwards compatibility, but use chatUserId
+  @Input() chatUserId?: number; // NEW: User ID of the chat partner
   @Input() currentUsername: string = '';
+  @Input() currentUserId?: number; // NEW: Current user's ID
   @Input() avatarKey?: string;
   @Input() wsService: WebSocketService | null = null;
   @Input() senderName?: string; // Имя отправителя из списка чатов
@@ -42,7 +46,8 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   selectedFiles: Array<{
     file: File;
     name: string;
-    key: string;
+    key?: string;
+    fileId?: number;
     progress: number;
     status: 'pending' | 'uploading' | 'done' | 'error';
   }> = [];
@@ -51,7 +56,7 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   // Image modal
   selectedImageUrl: SafeUrl | null = null;
   isImageModalOpen = false;
-  imageUrls: Record<string, string> = {}; // Store blob URLs as strings
+  imageUrls: Record<string, SafeUrl | string> = {}; // Store blob URLs and safe URLs
   
   private destroy$ = new Subject<void>();
 
@@ -64,7 +69,7 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    if (this.chatNickname) {
+    if (this.chatNickname || this.chatUserId) {
       this.loadMessages();
     }
 
@@ -77,7 +82,9 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['chatNickname'] && !changes['chatNickname'].firstChange) {
+    if ((changes['chatNickname'] || changes['chatUserId']) && 
+        (changes['chatNickname'] && !changes['chatNickname'].firstChange || 
+         changes['chatUserId'] && !changes['chatUserId'].firstChange)) {
       // Chat changed: reset messages and reload for the new chat
       this.messages = [];
       this.loadMessages();
@@ -94,14 +101,56 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
 
   loadMessages(): void {
     this.loading = true;
-    const url = `http://localhost:8080/api/messages/chat/${this.chatNickname}`;
+    // Use companionId (userId) for the request - ALWAYS use userId, not nickname
+    if (!this.chatUserId) {
+      console.warn('⚠️ No chatUserId available, cannot load messages');
+      this.loading = false;
+      return;
+    }
+
+    const payload = { companionId: this.chatUserId, page: 0, limit: 12 };
     
-    this.http.get<Message[]>(url, { withCredentials: true }).subscribe({
+    console.log('📨 Loading messages with payload:', payload);
+    this.http.post<any>('http://localhost:8080/api/messages/chat', payload, { withCredentials: true }).subscribe({
       next: (res) => {
+        console.log('✓ Messages loaded:', res);
+        // Extract messages from response (could be array or paginated response)
+        let messages = Array.isArray(res) ? res : (res?.content || []);
+        
+        // Process messages: determine sender/receiver based on senderId/receiverId
+        messages = messages.map((msg: any) => {
+          // senderId tells us who sent the message
+          if (msg.senderId === this.currentUserId) {
+            // This is a message I sent
+            msg.sender = this.currentUsername;
+          } else if (msg.senderId === this.chatUserId) {
+            // This is a message from the chat partner
+            msg.sender = this.chatNickname;
+          }
+          
+          // receiverId tells us who receives the message
+          if (msg.receiverId === this.currentUserId) {
+            msg.receiver = this.currentUsername;
+          } else if (msg.receiverId === this.chatUserId) {
+            msg.receiver = this.chatNickname;
+          }
+          
+          console.log(`📬 Message processed:`, {
+            text: msg.text?.substring(0, 20) || '(empty)',
+            senderId: msg.senderId,
+            sender: msg.sender,
+            isCurrentUser: msg.senderId === this.currentUserId
+          });
+          
+          return msg;
+        });
+        
         // Reverse to show newest at bottom
-        this.messages = (res || []).reverse();
+        this.messages = messages.reverse();
+        
         // Load all images from messages
         this.messages.forEach((message, index) => {
+          console.log(`Loading images for message ${index}:`, message.files);
           this.loadMessageImages(message);
         });
         this.loading = false;
@@ -127,21 +176,43 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         (newMessage: Message) => {
+          // Handle null messages
+          if (!newMessage) {
+            console.warn('Received null message');
+            return;
+          }
           
           // Try to determine if message belongs to this chat
           let belongsToThisChat = false;
           
-          // Method 1: Direct comparison - message FROM this chat user TO current user
-          if (newMessage.sender && newMessage.receiver) {
-            // For receiving: sender is the chat user, receiver is current user (us)
-            belongsToThisChat = newMessage.sender === this.chatNickname;
+          // PRIORITY 1: Check by senderId (MOST RELIABLE - userId from backend)
+          if (newMessage.senderId !== undefined && this.chatUserId !== undefined) {
+            belongsToThisChat = newMessage.senderId === this.chatUserId;
+            if (belongsToThisChat) {
+              console.log('✅ Message matched by senderId:', newMessage.senderId);
+            }
           }
           
-          // Method 2: If sender/receiver are null, assume message is from the current chat
-          // This happens when backend sends messages without explicit sender/receiver fields
-          if (!belongsToThisChat && !newMessage.sender && !newMessage.receiver) {
-            // Accept message from the current chat since there's no other way to identify it
+          // PRIORITY 2: Fall back to receiverId check 
+          if (!belongsToThisChat && newMessage.receiverId !== undefined && this.currentUserId !== undefined) {
+            belongsToThisChat = newMessage.receiverId === this.currentUserId && newMessage.senderId === this.chatUserId;
+            if (belongsToThisChat) {
+              console.log('✅ Message matched by receiverId:', newMessage.receiverId);
+            }
+          }
+          
+          // PRIORITY 3: Fall back to nickname comparison (old format - LESS RELIABLE)
+          if (!belongsToThisChat && newMessage.sender && this.chatNickname) {
+            belongsToThisChat = newMessage.sender === this.chatNickname;
+            if (belongsToThisChat) {
+              console.log('⚠️ Message matched by nickname (old format):', newMessage.sender);
+            }
+          }
+          
+          // PRIORITY 4: If sender/receiver are null, assume message is from the current chat
+          if (!belongsToThisChat && !newMessage.sender && !newMessage.receiver && !newMessage.senderId && !newMessage.receiverId) {
             belongsToThisChat = true;
+            console.log('⚠️ Message matched by default (no identifiers provided)');
           }
           
           if (belongsToThisChat) {
@@ -152,9 +223,14 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
             
             // Mark as read on server
             if (this.wsService) {
-              this.wsService.markAsRead(this.chatNickname);
-              // Notify parent that message was received in open chat
-              this.wsService.notifyMessageReceivedInChat(this.chatNickname);
+              // ALWAYS use userId if available
+              if (this.chatUserId) {
+                this.wsService.markAsRead({ userId: this.chatUserId });
+              } else if (this.chatNickname) {
+                this.wsService.markAsRead(this.chatNickname);
+              }
+              // Notify parent that message was received in open chat - pass userId
+              this.wsService.notifyMessageReceivedInChat(this.chatNickname || `user-${this.chatUserId}`, this.chatUserId);
             }
             
             // Force UI update - call multiple times to ensure update
@@ -166,6 +242,13 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
             }, 100);
             
             this.scrollToBottom();
+          } else {
+            console.log('❌ Message does not belong to this chat', {
+              senderId: newMessage.senderId,
+              chatUserId: this.chatUserId,
+              sender: newMessage.sender,
+              chatNickname: this.chatNickname
+            });
           }
         },
         (error) => console.error('Error receiving messages:', error)
@@ -178,19 +261,31 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    // Prepare file keys for sending
+    // Prepare file keys for sending - use fileIds if available
     const fileKeys = this.selectedFiles
-      .filter(f => f.status === 'done' && f.key)
-      .map(f => f.key);
+      .filter(f => f.status === 'done' && (f.key || f.fileId))
+      .map(f => f.fileId ? f.fileId.toString() : f.key);
 
-    // Send via WebSocket
-    this.wsService?.sendMessage(this.chatNickname, this.messageText.trim(), fileKeys);
+    console.log('📤 Sending message with files:', fileKeys);
+    console.log('🔍 chatUserId:', this.chatUserId, 'chatNickname:', this.chatNickname, 'currentUserId:', this.currentUserId);
+
+    // Send via WebSocket using userId if available, fall back to nickname
+    // ALWAYS use userId if available - never fall back to nickname!
+    if (this.chatUserId) {
+      console.log('✅ Sending with receiverId:', this.chatUserId);
+      this.wsService?.sendMessage(this.chatUserId, this.messageText.trim(), fileKeys);
+    } else {
+      console.warn('⚠️ No chatUserId, falling back to nickname:', this.chatNickname);
+      this.wsService?.sendMessage(this.chatNickname, this.messageText.trim(), fileKeys);
+    }
 
     // Add to local messages immediately for better UX
     const newMessage: Message = {
       text: this.messageText.trim(),
       sender: this.currentUsername,
+      senderId: this.currentUserId,
       receiver: this.chatNickname,
+      receiverId: this.chatUserId,
       isRead: false,
       date: new Date().toISOString(),
       files: fileKeys
@@ -220,6 +315,45 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
         this.avatarUrl = null;
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  getMessageImageUrl(fileKey: string): SafeUrl | string | null {
+    return this.imageUrls[fileKey] || null;
+  }
+
+
+  loadMessageImages(message: Message) {
+    if (!message.files || message.files.length === 0) {
+      console.log('No files in message');
+      return;
+    }
+    console.log('📸 Loading message images:', message.files);
+    message.files.forEach((fileKey: string | number) => {
+      // Handle both string fileKey and numeric ID
+      const keyStr = typeof fileKey === 'number' ? fileKey.toString() : fileKey;
+      
+      console.log(`   Processing file: ${keyStr}, isImage: ${this.isImageFile(keyStr)}`);
+      
+      // Skip if already loaded
+      if (this.imageUrls[keyStr]) {
+        console.log(`   ✓ Already cached: ${keyStr}`);
+        return;
+      }
+      
+      const url = this.ideaService.getFileViewUrl(keyStr);
+      console.log(`🔗 Loading file URL: ${url}`);
+      this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
+        next: (blob) => {
+          console.log(`✓ File blob loaded, size: ${blob.size}`);
+          const blobUrl = URL.createObjectURL(blob);
+          this.imageUrls[keyStr] = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.warn(`✗ Failed to load message image ${keyStr}`, err);
+        }
+      });
     });
   }
 
@@ -262,7 +396,12 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    this.wsService.markAsRead(this.chatNickname);
+    // ALWAYS use userId if available
+    if (this.chatUserId) {
+      this.wsService.markAsRead({ userId: this.chatUserId });
+    } else if (this.chatNickname) {
+      this.wsService.markAsRead(this.chatNickname);
+    }
   }
 
   onMessageInput(): void {
@@ -316,10 +455,16 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
         next: (event: any) => {
           if (event.type === HttpEventType.Response) {
             const res = event.body;
+            // Backend returns either fileId (new) or key (old format)
+            const fileId = res?.fileId ?? res?.id;
             const key = res?.key ?? res?.name ?? file.name;
+            
+            // Store both for backwards compatibility
+            this.selectedFiles[idx].fileId = fileId;
             this.selectedFiles[idx].key = key;
             this.selectedFiles[idx].status = 'done';
             this.selectedFiles[idx].progress = 100;
+            console.log(`✓ File uploaded: fileId=${fileId}, key=${key}`);
           } else if (event.type === HttpEventType.UploadProgress) {
             const loaded = event.loaded ?? 0;
             const total = event.total ?? loaded;
@@ -329,7 +474,7 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
           this.cdr.detectChanges();
         },
         error: (err) => {
-          console.error('Ошибка загрузки файла', file.name, err);
+          console.error('✗ Ошибка загрузки файла', file.name, err);
           this.selectedFiles[idx].status = 'error';
           this.cdr.detectChanges();
         }
@@ -386,55 +531,40 @@ export class ChatDetailComponent implements OnInit, OnDestroy, OnChanges {
     const lowerKey = fileKey.toLowerCase();
     
     // Check if any image extension is in the key
-    const isImage = imageExtensions.some(ext => lowerKey.includes(ext));
+    const hasImageExtension = imageExtensions.some(ext => lowerKey.includes(ext));
     
-    return isImage;
-  }
-
-  loadMessageImages(message: Message): void {
-    if (!message.files || message.files.length === 0) {
-      return;
+    // If has image extension - definitely an image
+    if (hasImageExtension) {
+      console.log(`🔍 File ${fileKey}: ✅ Has image extension`);
+      return true;
     }
     
-    message.files.forEach(fileKey => {
-      
-      if (this.isImageFile(fileKey)) {
-        if (this.imageUrls[fileKey]) {
-          this.cdr.detectChanges();
-          return;
-        }
-        
-        const url = this.ideaService.getFileViewUrl(fileKey);
-        
-        this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
-          next: (blob) => {
-            const blobUrl = URL.createObjectURL(blob);
-            this.imageUrls[fileKey] = blobUrl;
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.error('❌ Error loading image', fileKey, err);
-            // Still try to display via API URL - will be loaded by fallback in template
-            this.cdr.detectChanges();
-          }
-        });
-      }
-    });
+    // If it's just a number (ID) - assume it's an image (for backward compatibility with numeric file IDs)
+    const isNumericId = /^\d+$/.test(fileKey);
+    if (isNumericId) {
+      console.log(`🔍 File ${fileKey}: ✅ Is numeric ID (treating as image)`);
+      return true;
+    }
+    
+    console.log(`🔍 File ${fileKey}: ❌ Not an image`);
+    return false;
   }
 
-  openImageModal(imageUrl: string | null | undefined): void {
+openImageModal(imageUrl: string | SafeUrl | null | undefined): void {
     if (!imageUrl) return;
-    this.selectedImageUrl = this.sanitizer.bypassSecurityTrustUrl(imageUrl);
+    
+    // If already SafeUrl, use directly; otherwise sanitize
+    if (typeof imageUrl === 'string') {
+      this.selectedImageUrl = this.sanitizer.bypassSecurityTrustUrl(imageUrl);
+    } else {
+      this.selectedImageUrl = imageUrl;
+    }
+    
     this.isImageModalOpen = true;
   }
 
   closeImageModal(): void {
     this.selectedImageUrl = null;
     this.isImageModalOpen = false;
-  }
-
-  getMessageImageUrl(fileKey: string): string | null {
-    const url = this.imageUrls[fileKey];
-    return url || null;
   }
 }

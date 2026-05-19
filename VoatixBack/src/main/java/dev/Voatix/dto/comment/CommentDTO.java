@@ -17,6 +17,7 @@ import java.util.List;
 public class CommentDTO {
     private Long id;
     private String text;
+    private Long userId;
     private String username;
     private Long avatarId;
     private Long ideaId;

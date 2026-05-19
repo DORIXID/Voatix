@@ -42,7 +42,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                         .toList();
 
                 Authentication authentication =
-                        new JwtAuthenticationToken(jwt, authorities, jwt.getSubject());
+                        new JwtAuthenticationToken(jwt, authorities, jwt.getClaimAsString("userId"));
 
                 accessor.setUser(authentication);
             }

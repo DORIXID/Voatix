@@ -37,6 +37,8 @@ public interface MessageMapper {
         ));
     }
 
+    @Mapping(target = "userId",
+            expression = "java(messagesProj == null ? null : messagesProj.getCompanionId())")
     @Mapping(target = "userNickname",
             expression = "java(messagesProj == null ? null : messagesProj.getCompanionNickname())")
     @Mapping(target = "senderNickname",
@@ -54,9 +56,9 @@ public interface MessageMapper {
 
     List<MessageDTO> toMessageDto(List<MessageEntity> messages);
 
-    @Mapping(target = "sender", source = "sender.nickname")
+    @Mapping(target = "senderId", source = "senderId")
     @Mapping(target = "files", source = "files")
-    @Mapping(target = "receiver", source = "receiver.nickname")
+    @Mapping(target = "receiverId", source = "receiverId")
     MessageDTO toMessageDto(MessageEntity message);
 
     List<Long> toDto(List<FileEntity> files);

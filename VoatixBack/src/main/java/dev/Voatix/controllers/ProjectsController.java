@@ -1,6 +1,7 @@
 package dev.Voatix.controllers;
 
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.project.*;
 import dev.Voatix.service.ProjectService;
 import jakarta.validation.Valid;

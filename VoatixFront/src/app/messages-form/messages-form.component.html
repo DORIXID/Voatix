@@ -14,7 +14,7 @@
                         [class.active]="selectedChat?.userNickname === chat.userNickname"
                     >
                         <div class="chat-avatar">
-                            <img [src]="getAvatarUrl(chat.avatarKey)" alt="avatar" class="avatar-img">
+                            <img [src]="getAvatarUrl((chat.avatarId || chat.fileId || chat.avatarKey)?.toString())" alt="avatar" class="avatar-img">
                         </div>
                         <div class="chat-content">
                             <div class="chat-header">
@@ -26,7 +26,7 @@
                                 <span class="message-text">{{ chat.text }}</span>
                             </div>
                         </div>
-                        <div class="chat-unread" *ngIf="chat.unreadCount > 0">
+                        <div class="chat-unread" *ngIf="(chat.unreadCount ?? 0) > 0">
                             <span class="unread-badge">{{ chat.unreadCount }}</span>
                         </div>
                     </div>
@@ -55,7 +55,9 @@
             </div>
             <chat-detail-component
                 [chatNickname]="selectedChat.userNickname"
+                [chatUserId]="selectedChat.userId"
                 [currentUsername]="currentUsername"
+                [currentUserId]="currentUserId"
                 [avatarKey]="selectedChat.avatarKey"
                 [wsService]="getWebSocketService()"
                 [senderName]="selectedChat.senderNickname"

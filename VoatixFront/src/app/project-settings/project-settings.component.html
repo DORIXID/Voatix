@@ -140,18 +140,19 @@
     <h2>Добавить модератора</h2>
     
     <div class="input-group">
-      <label>Никнейм пользователя</label>
+      <label>ID модератора</label>
       <input 
-        type="text" 
+        type="number" 
         class="input-field" 
-        [(ngModel)]="newModeratorNickname"
-        placeholder="Введите никнейм"
-        [disabled]="isAdding">
+        [(ngModel)]="newModeratorId"
+        placeholder="Введите ID пользователя"
+        [disabled]="isAdding"
+        min="1">
     </div>
 
     <div class="modal-actions">
       <button class="btn btn-cancel" (click)="closeAddModeratorModal()" [disabled]="isAdding">Отмена</button>
-      <button class="btn btn-submit" (click)="openAddModeratorConfirm()" [disabled]="isAdding || !newModeratorNickname">
+      <button class="btn btn-submit" (click)="openAddModeratorConfirm()" [disabled]="isAdding || !newModeratorId">
         Далее
       </button>
     </div>
@@ -165,22 +166,23 @@
     <h2>Подтверждение</h2>
     
     <p style="margin: 16px 0; color: #666;">
-      Вы уверены, что хотите добавить модератора с никнеймом <strong>{{ newModeratorNickname }}</strong>?
+      Вы уверены, что хотите добавить модератора с ID <strong>{{ newModeratorId }}</strong>?
     </p>
 
     <div class="input-group">
-      <label>Повторите никнейм для подтверждения</label>
+      <label>Повторите ID для подтверждения</label>
       <input 
-        type="text" 
+        type="number" 
         class="input-field" 
-        [(ngModel)]="confirmModeratorNickname"
-        placeholder="Введите никнейм еще раз"
-        [disabled]="isAdding">
+        [(ngModel)]="confirmModeratorId"
+        placeholder="Введите ID еще раз"
+        [disabled]="isAdding"
+        min="1">
     </div>
 
     <div class="modal-actions">
       <button class="btn btn-cancel" (click)="closeAddModeratorConfirm()" [disabled]="isAdding">Отмена</button>
-      <button class="btn btn-submit" (click)="confirmAddModerator()" [disabled]="isAdding || !confirmModeratorNickname">
+      <button class="btn btn-submit" (click)="confirmAddModerator()" [disabled]="isAdding || !confirmModeratorId">
         {{ isAdding ? 'Добавление...' : 'Добавить' }}
       </button>
     </div>

@@ -14,12 +14,14 @@
       <div class="message-bubble">
         <p class="message-text" *ngIf="message.text">{{ message.text }}</p>
         <div class="message-images" *ngIf="message.files && message.files.length > 0">
-          <div class="image-container" *ngFor="let fileKey of message.files">
+          <ng-container *ngFor="let fileKey of message.files.slice(0, 5)">
             <img *ngIf="isImageFile(fileKey)" 
               [src]="getMessageImageUrl(fileKey) || ideaService.getFileViewUrl(fileKey)" 
               alt="image" 
-              class="message-image"
-              (click)="openImageModal(getMessageImageUrl(fileKey) || ideaService.getFileViewUrl(fileKey))">
+              class="message-image-thumb"
+              (click)="openImageModal(imageUrls[fileKey])">
+          </ng-container>
+          <ng-container *ngFor="let fileKey of message.files">
             <a *ngIf="!isImageFile(fileKey)" 
               [href]="ideaService.getFileViewUrl(fileKey)" 
               target="_blank" 
@@ -27,7 +29,7 @@
               <mat-icon>attach_file</mat-icon>
               <span>Файл</span>
             </a>
-          </div>
+          </ng-container>
         </div>
         <span class="message-date">{{ formatDate(message.date) }}</span>
         <mat-icon *ngIf="message.sender === currentUsername && message.isRead" class="read-icon">done_all</mat-icon>

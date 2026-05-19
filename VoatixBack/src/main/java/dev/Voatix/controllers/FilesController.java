@@ -1,6 +1,7 @@
 package dev.Voatix.controllers;
 
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.file.FileResponseDTO;
 import dev.Voatix.service.FileService;
 import lombok.RequiredArgsConstructor;

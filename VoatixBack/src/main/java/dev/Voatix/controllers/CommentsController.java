@@ -1,6 +1,7 @@
 package dev.Voatix.controllers;
 
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.comment.*;
 import dev.Voatix.service.CommentService;
 import jakarta.validation.Valid;
@@ -18,7 +19,7 @@ public class CommentsController extends BaseController {
 
     final private CommentService commentsService;
 
-    @GetMapping("")
+    @PostMapping("get")
     public Page<CommentWithStatsDTO> getComments(
             @Valid @RequestBody CommentSearchDTO dto,
             Authentication auth){

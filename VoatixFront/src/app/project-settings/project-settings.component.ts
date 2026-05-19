@@ -11,6 +11,7 @@ import { Project } from '../service/interfaces/project.interface';
 interface Moderator {
   nickname: string;
   key: string;
+  id?: number;
   avatarUrl?: SafeUrl | null;
 }
 
@@ -29,6 +30,7 @@ interface ProjectProfile {
 })
 export class ProjectSettingsComponent implements OnInit {
   projectTitle: string = '';
+  projectId: number | null = null;
   projectAvatarUrl: SafeUrl | null = null;
   projectAvatarKey: string = '';
   moderators: Moderator[] = [];
@@ -52,8 +54,8 @@ export class ProjectSettingsComponent implements OnInit {
   // Добавление модератора
   showAddModeratorModal = false;
   showAddModeratorConfirm = false;
-  newModeratorNickname: string = '';
-  confirmModeratorNickname: string = '';
+  newModeratorId: number | null = null;
+  confirmModeratorId: number | null = null;
   isAdding = false;
 
   // Avatar upload
@@ -90,30 +92,37 @@ export class ProjectSettingsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Получаем параметр projectTitle из маршрута или из selectedProject в сервисе
+    // Получаем параметр projectId из маршрута или из selectedProject в сервисе
     this.route.params.subscribe(params => {
-      const titleFromRoute = params['projectTitle'];
+      const idFromRoute = params['projectId'];
       const selectedProject = this.projectService.getSelectedProject();
       
-      this.projectTitle = titleFromRoute || selectedProject?.title || '';
-      if (this.projectTitle) {
+      // Используем ID из маршрута или из сервиса
+      this.projectId = idFromRoute ? parseInt(idFromRoute, 10) : selectedProject?.id || null;
+      this.projectTitle = selectedProject?.title || '';
+      
+      if (this.projectId) {
         this.loadProjectProfile();
       }
     });
   }
 
   loadProjectProfile() {
-    this.http.get<ProjectProfile>(
-      `http://localhost:8080/api/projects/${this.projectTitle}/profile`,
-      { withCredentials: true }
-    ).subscribe({
+    if (!this.projectId) return;
+    
+    this.projectService.getProjectById(this.projectId).subscribe({
       next: (data) => {
         this.projectTitle = data.title || '';
-        this.projectAvatarKey = data.key || '';
-        this.moderators = data.moderators || [];
+        // Handle both old (avatarKey) and new (fileId) formats
+        this.projectAvatarKey = data.avatarKey || (data.fileId ? data.fileId.toString() : '');
+        this.moderators = (data.moderators || []).map((m: any) => ({
+          nickname: m.nickname || m.username,
+          key: m.avatarKey || m.key || (m.fileId ? m.fileId.toString() : null),
+          id: m.id
+        }));
         
-        if (data.key) {
-          this.loadProjectAvatar(data.key);
+        if (this.projectAvatarKey) {
+          this.loadProjectAvatar(this.projectAvatarKey);
         }
         
         // Загружаем аватарки для каждого модератора
@@ -429,8 +438,8 @@ export class ProjectSettingsComponent implements OnInit {
     this.http.post<any>('http://localhost:8080/api/files/upload', formData, { withCredentials: true })
       .subscribe({
         next: (response) => {
-          const fileKey = response.key;
-          this.updateProjectAvatarKey(fileKey);
+          const fileId = response.id;
+          this.updateProjectAvatarKey(fileId);
         },
         error: (err) => {
           console.error('Failed to upload avatar:', err);
@@ -440,18 +449,19 @@ export class ProjectSettingsComponent implements OnInit {
       });
   }
 
-  updateProjectAvatarKey(key: string) {
-    this.http.patch(
-      `http://localhost:8080/api/projects/avatar?key=${key}&title=${this.projectTitle}`,
-      {},
-      { withCredentials: true }
-    ).subscribe({
+  updateProjectAvatarKey(fileId: number) {
+    if (!this.projectId) return;
+
+    this.projectService.updateProjectAvatar({
+      projectId: this.projectId,
+      fileId: fileId
+    }).subscribe({
       next: () => {
-        this.projectAvatarKey = key;
-        this.loadProjectAvatar(key);
+        this.projectAvatarKey = fileId.toString();
         this.showToast('Аватар проекта успешно изменён', 'success');
         this.closeAvatarModal();
         this.isSubmitting = false;
+        this.loadProjectProfile();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -489,15 +499,16 @@ export class ProjectSettingsComponent implements OnInit {
   }
 
   confirmDeleteModerator() {
-    if (!this.moderatorToDelete) return;
+    if (!this.moderatorToDelete || !this.projectId) return;
 
     this.isDeleting = true;
     const nicknameToDelete = this.moderatorToDelete;
+    const moderator = this.moderators.find(m => m.nickname === nicknameToDelete);
 
-    this.http.delete(
-      `http://localhost:8080/api/projects/${this.projectTitle}/moderators/${nicknameToDelete}`,
-      { withCredentials: true }
-    ).subscribe({
+    this.projectService.deleteModerator({
+      projectId: this.projectId,
+      moderatorId: moderator?.id || 0
+    }).subscribe({
       next: () => {
         // Удаляем модератора из списка
         this.moderators = this.moderators.filter(m => m.nickname !== nicknameToDelete);
@@ -517,8 +528,8 @@ export class ProjectSettingsComponent implements OnInit {
 
   // Добавление модератора
   openAddModeratorModal() {
-    this.newModeratorNickname = '';
-    this.confirmModeratorNickname = '';
+    this.newModeratorId = null;
+    this.confirmModeratorId = null;
     this.showAddModeratorModal = true;
     this.showAddModeratorConfirm = false;
   }
@@ -526,13 +537,13 @@ export class ProjectSettingsComponent implements OnInit {
   closeAddModeratorModal() {
     this.showAddModeratorModal = false;
     this.showAddModeratorConfirm = false;
-    this.newModeratorNickname = '';
-    this.confirmModeratorNickname = '';
+    this.newModeratorId = null;
+    this.confirmModeratorId = null;
   }
 
   openAddModeratorConfirm() {
-    if (!this.newModeratorNickname || this.newModeratorNickname.trim().length === 0) {
-      this.showToast('Введите никнейм пользователя', 'error');
+    if (!this.newModeratorId || this.newModeratorId <= 0) {
+      this.showToast('Введите корректный ID модератора', 'error');
       return;
     }
     this.showAddModeratorConfirm = true;
@@ -543,19 +554,18 @@ export class ProjectSettingsComponent implements OnInit {
   }
 
   confirmAddModerator() {
-    if (this.newModeratorNickname !== this.confirmModeratorNickname) {
-      this.showToast('Никнеймы не совпадают', 'error');
+    if (this.newModeratorId !== this.confirmModeratorId || !this.projectId) {
+      this.showToast('ID модераторов не совпадают', 'error');
       return;
     }
 
     this.isAdding = true;
-    const nicknameToAdd = this.newModeratorNickname.trim();
+    const moderatorIdToAdd = this.newModeratorId;
 
-    this.http.post(
-      `http://localhost:8080/api/projects/${this.projectTitle}/moderators/${nicknameToAdd}`,
-      {},
-      { withCredentials: true }
-    ).subscribe({
+    this.projectService.addModerator({
+      projectId: this.projectId,
+      moderatorId: moderatorIdToAdd
+    }).subscribe({
       next: () => {
         this.showToast('Модератор успешно добавлен', 'success');
         this.closeAddModeratorModal();
@@ -574,7 +584,7 @@ export class ProjectSettingsComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/main/ideas', this.projectTitle]);
+    this.router.navigate(['/main/ideas', this.projectId]);
   }
 
   // Drag and drop
@@ -618,12 +628,11 @@ export class ProjectSettingsComponent implements OnInit {
   }
 
   deleteProject() {
+    if (!this.projectId) return;
+    
     this.isDeleteProjectLoading = true;
     
-    this.http.delete(
-      `http://localhost:8080/api/projects/${this.projectTitle}`,
-      { withCredentials: true }
-    ).subscribe({
+    this.projectService.deleteProject({ id: this.projectId }).subscribe({
       next: () => {
         this.showToast('Проект успешно удален', 'success');
         this.closeDeleteProjectConfirm();

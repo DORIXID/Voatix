@@ -14,13 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SurveyRepository extends JpaRepository<SurveyEntity, Long> {
-
-
-    @EntityGraph(attributePaths = {"project"})
+    
     @Query(value = """
             select s
                 from SurveyEntity s
-                join s.project p
+                join fetch s.project p
                     where (s.title ilike CONCAT('%', :search, '%')
                     or s.description ilike CONCAT('%', :search, '%'))
                     and p.id = :projectId

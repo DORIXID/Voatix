@@ -12,7 +12,7 @@ import { ProjectService } from '../service/project.service';
 import { FileService } from '../service/file.service';
 import { AuthService } from '../service/authorization/auth.service';
 import { UserRole } from '../service/enums/user-role.enum';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 
 @Component({
@@ -115,63 +115,53 @@ export class MainSidebarFormComponent implements OnInit {
   
 
   loadProjects() {
-    this.http.get<Project[]>('http://localhost:8080/api/projects', { withCredentials: true })
-      .subscribe({
-        next: (data) => {
-          this.projects = data;
+    this.projectService.getProjects().subscribe({
+      next: (data) => {
+        this.projects = data.content || data;
 
-          // Загружаем аватары для всех проектов
-          this.projects.forEach(p => {
-            if (p.key) {
-              this.projectAvatarUrls.set(p.title, this.fileService.getImageDataUrl(p.key));
+        // Загружаем аватары для всех проектов
+        this.projects.forEach(p => {
+          // Use avatarId (new format), fileId, avatarKey or key (legacy) — prefer numeric ids when possible
+          const avatarId = p.avatarId || p.fileId || p.avatarKey || p.key;
+          
+          if (avatarId) {
+            const avatarIdStr = typeof avatarId === 'number' ? avatarId.toString() : avatarId;
+            
+            // Check if already loading
+            if (!this.projectAvatarUrls.has(p.title)) {
+              this.projectAvatarUrls.set(p.title, this.fileService.getImageDataUrl(avatarIdStr));
             }
-          });
+          }
+        });
 
-          // 3. Если в URL есть ключ проекта — выбираем соответствующий проект
-          const child = this.route.snapshot.firstChild;
-          const urlProjectTitle = child?.paramMap.get('projectTitle');
+        // 3. Если в URL есть projectId — выбираем соответствующий проект
+        const child = this.route.snapshot.firstChild;
+        const urlProjectId = child?.paramMap.get('projectId');
 
-          if (urlProjectTitle) {
-            let p = this.projects.find(pr => pr.title === urlProjectTitle);
-            if (p) {
-              this.selectProject(p);
-            } else {
-              // Проект не возвращён в общем списке — пытаемся получить его по title
-              this.http.get<Project>(`http://localhost:8080/api/projects/${encodeURIComponent(urlProjectTitle)}`, { withCredentials: true })
-                .subscribe({
-                  next: (proj) => {
-                    // Устанавливаем роль VIEWER для проектов, полученных по отдельному запросу
-                    proj.roleOfUser = UserRole.VIEWER;
-                    // Вставляем проект в список и выбираем его
-                    this.projects.unshift(proj);
-                    if (proj.key) {
-                      this.projectAvatarUrls.set(proj.title, this.fileService.getImageDataUrl(proj.key));
-                    }
-                    this.selectProject(proj);
-                    this.cdr.detectChanges();
-                  },
-                  error: (err) => {
-                    console.warn('Не удалось загрузить проект по title из URL:', urlProjectTitle, err);
-                    if (!this.projectService.getSelectedProject() && this.projects.length > 0) {
-                      this.selectProject(this.projects[0]);
-                    }
-                  }
-                });
-            }
+        if (urlProjectId) {
+          const projectIdNum = parseInt(urlProjectId, 10);
+          let p = this.projects.find(pr => pr.id === projectIdNum);
+          if (p) {
+            this.selectProject(p);
           } else {
-            // 4. Если проект ещё не выбран — выбираем первый
+            // Проект не найден в списке — выбираем первый
             if (!this.projectService.getSelectedProject() && this.projects.length > 0) {
               this.selectProject(this.projects[0]);
             }
           }
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error('Ошибка загрузки проектов:', err)
-      });
+        } else {
+          // 4. Если проект ещё не выбран — выбираем первый
+          if (!this.projectService.getSelectedProject() && this.projects.length > 0) {
+            this.selectProject(this.projects[0]);
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {}
+    });
   }
 
   openProject(projectTitle?: string) {
-    console.log("Открыть проект:", projectTitle);
   }
 
   select(selectedSection: String) {
@@ -181,7 +171,7 @@ export class MainSidebarFormComponent implements OnInit {
   clickOnIdeas() {
     this.select('ideas');
     if (this.selectedProject) {
-      this.router.navigate(['/main/ideas', this.selectedProject.title]);
+      this.router.navigate(['/main/ideas', this.selectedProject.id]);
     } else {
       this.router.navigate(['/main/ideas']);
     }
@@ -190,7 +180,7 @@ export class MainSidebarFormComponent implements OnInit {
   clickOnSurveys() {
     this.select('surveys');
     if (this.selectedProject) {
-      this.router.navigate(['/main/surveys', this.selectedProject.title]);
+      this.router.navigate(['/main/surveys', this.selectedProject.id]);
     } else {
       this.router.navigate(['/main/surveys']);
     }
@@ -211,7 +201,7 @@ export class MainSidebarFormComponent implements OnInit {
 
   clickOnProjectSettings() {
     if (this.selectedProject) {
-      this.router.navigate(['/main/project-settings', this.selectedProject.title]);
+      this.router.navigate(['/main/project-settings', this.selectedProject.id]);
     }
   }
 
@@ -240,11 +230,11 @@ export class MainSidebarFormComponent implements OnInit {
     this.projectService.setProject(p);
 
     this.openProject(p.title);
-    // Обновляем URL для возможностей шаринга Deep Link (используем title проекта)
+    // Обновляем URL для возможностей шаринга Deep Link (используем id проекта)
     if (this.selectedSection === 'ideas') {
-      this.router.navigate(['/main/ideas', p.title]);
+      this.router.navigate(['/main/ideas', p.id]);
     } else if (this.selectedSection === 'surveys') {
-      this.router.navigate(['/main/surveys', p.title]);
+      this.router.navigate(['/main/surveys', p.id]);
     }
   }
 
@@ -556,11 +546,10 @@ export class MainSidebarFormComponent implements OnInit {
       this.http.post<any>('http://localhost:8080/api/files/upload', formData, { withCredentials: true })
         .subscribe({
           next: (response) => {
-            this.projectAvatarKey = response.key;
+            this.projectAvatarKey = response.id;
             this.createProjectWithAvatar();
           },
           error: (err) => {
-            console.error('Failed to upload project avatar:', err);
             this.showToast('Ошибка при загрузке аватарки', 'error');
             this.isCreatingProject = false;
           }
@@ -572,9 +561,12 @@ export class MainSidebarFormComponent implements OnInit {
 
   private createProjectWithAvatar() {
     const projectDto = {
-      title: this.newProjectTitle.trim(),
-      key: this.projectAvatarKey || null
-    };
+      title: this.newProjectTitle.trim()
+    } as any;
+
+    if (this.projectAvatarKey) {
+      projectDto.fileId = parseInt(this.projectAvatarKey, 10);
+    }
 
     this.http.post<any>(
       'http://localhost:8080/api/projects',
@@ -589,12 +581,14 @@ export class MainSidebarFormComponent implements OnInit {
         // Перезагружаем список проектов
         this.loadProjects();
         
-        // Переходим на новый проект
-        this.router.navigate(['/main/ideas', this.newProjectTitle.trim()]);
+        // Переходим на новый проект по его ID
+        const projectId = response.id || response.projectId;
+        if (projectId) {
+          this.router.navigate(['/main/ideas', projectId]);
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Ошибка при создании проекта:', err);
         this.showToast('Ошибка при создании проекта', 'error');
         this.isCreatingProject = false;
         this.cdr.detectChanges();
@@ -614,25 +608,6 @@ export class MainSidebarFormComponent implements OnInit {
 
   closeToast() {
     this.toastVisible = false;
-  }
-
-  getProjectAvatarUrl(project: Project | null): Observable<string | null> {
-    if (!project || !project.key) {
-      return new Observable(observer => {
-        observer.next(null);
-        observer.complete();
-      });
-    }
-    
-    if (!this.projectAvatarUrls.has(project.title)) {
-      this.projectAvatarUrls.set(project.title, this.fileService.getImageDataUrl(project.key));
-    }
-    
-    return this.projectAvatarUrls.get(project.title)!;
-  }
-
-  isProjectOwner(): boolean {
-    return this.selectedProject?.roleOfUser === UserRole.OWNER;
   }
 
   toggleFindOrCreateDropdown() {
@@ -662,27 +637,58 @@ export class MainSidebarFormComponent implements OnInit {
     const projectTitle = this.searchProjectName.trim();
     this.closeProjectSearch();
     
-    // Создаем временный проект-заглушку для навигации
-    const tempProject: Project = {
-      title: projectTitle,
-      active: true,
-      roleOfUser: UserRole.OWNER,
-      key: null as any
-    };
+    // Ищем проект по названию
+    const foundProject = this.projects.find(p => p.title.toLowerCase() === projectTitle.toLowerCase());
     
-    this.projectService.setProject(tempProject);
-    this.selectedProject = tempProject;
-    this.selectedSection = 'ideas';
-    
-    // Загружаем проекты после навигации
-    this.router.navigate(['/main/ideas', projectTitle]).then(() => {
-      this.loadProjects();
-    });
+    if (foundProject) {
+      this.selectProject(foundProject);
+    } else {
+      // Если не найден в списке, можно попробовать загрузить с сервера
+      this.router.navigate(['/main/ideas']).then(() => {
+        this.loadProjects();
+      });
+    }
   }
 
   onSearchKeyPress(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       this.findProject();
     }
+  }
+
+  isProjectOwner(): boolean {
+    return this.selectedProject?.roleOfUser === UserRole.OWNER;
+  }
+
+  getProjectAvatarUrl(project: Project | null): Observable<string | null> {
+    if (!project) {
+      return of(null);
+    }
+    
+    // Get avatar ID from any available field (avatarId, fileId, avatarKey, key)
+    const avatarId = project.avatarId || project.fileId || project.avatarKey || project.key;
+    
+    if (!avatarId) {
+      return of(null);
+    }
+    
+    if (!this.projectAvatarUrls.has(project.title)) {
+      const avatarIdStr = typeof avatarId === 'number' ? avatarId.toString() : avatarId;
+      this.projectAvatarUrls.set(project.title, this.fileService.getImageDataUrl(avatarIdStr));
+    }
+    
+    const url = this.projectAvatarUrls.get(project.title);
+    return url!;
+  }
+
+  /**
+   * Проверить есть ли у проекта аватарка
+   */
+  hasProjectAvatar(project: Project | null): boolean {
+    if (!project) {
+      return false;
+    }
+    
+    return !!(project.avatarId || project.fileId || project.avatarKey || project.key);
   }
 }

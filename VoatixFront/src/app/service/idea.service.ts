@@ -5,23 +5,42 @@ import { HttpClient } from "@angular/common/http";
 export class IdeaService {
   constructor(private http: HttpClient) { }
 
-  loadIdeas(project: string, page: number, limit: number, filterBy: string, searchedValue: string = '') {
-    return this.http.get<any>('http://localhost:8080/api/ideas', {
-      params: { project, page, limit, filterBy, searchedValue },
-      withCredentials: true
-    });
+  loadIdeas(projectId: number, page: number, limit: number, filterBy: string, search: string = '') {
+    const payload = {
+      projectId,
+      page,
+      limit,
+      filterBy,
+      search
+    };
+    return this.http.post<any>('http://localhost:8080/api/ideas/get', payload, { withCredentials: true });
   }
 
-  doVote(ideaId: number, like: number) {
-    return this.http.put<any>(
-      `http://localhost:8080/api/ideas/${ideaId}/likes?like=${like}`,
-      {},
-      { withCredentials: true }
-    );
+  getIdeaById(id: number) {
+    return this.http.get<any>(`http://localhost:8080/api/ideas/${id}`, { withCredentials: true });
   }
 
   createIdea(payload: any) {
     return this.http.post<any>('http://localhost:8080/api/ideas', payload, { withCredentials: true });
+  }
+
+  updateIdea(payload: any) {
+    return this.http.patch<any>('http://localhost:8080/api/ideas', payload, { withCredentials: true });
+  }
+
+  updateIdeaStatus(payload: any) {
+    return this.http.patch<any>('http://localhost:8080/api/ideas/status', payload, { withCredentials: true });
+  }
+
+  deleteIdea(payload: any) {
+    return this.http.delete<any>('http://localhost:8080/api/ideas', {
+      body: payload,
+      withCredentials: true
+    });
+  }
+
+  doVote(payload: any) {
+    return this.http.put<any>('http://localhost:8080/api/ideas/like', payload, { withCredentials: true });
   }
 
   uploadFile(file: File) {
@@ -42,16 +61,28 @@ export class IdeaService {
     return `http://localhost:8080/api/files/${encodeURIComponent(key)}/view`;
   }
 
-  getIdeaById(id: number) {
-    return this.http.get<any>(`http://localhost:8080/api/ideas/${id}`, { withCredentials: true });
+  // Comments
+  getComments(payload: any) {
+    return this.http.post<any>('http://localhost:8080/api/comments/get', payload, { withCredentials: true });
   }
 
-  deleteIdea(id: number) {
-    return this.http.delete<any>(`http://localhost:8080/api/ideas/${id}`, { withCredentials: true });
+  createComment(payload: any) {
+    return this.http.post<any>('http://localhost:8080/api/comments/new', payload, { withCredentials: true });
   }
 
-  deleteComment(ideaId: number, commentId: number) {
-    return this.http.delete<any>(`http://localhost:8080/api/comments/${commentId}`, { withCredentials: true });
+  updateComment(payload: any) {
+    return this.http.patch<any>('http://localhost:8080/api/comments', payload, { withCredentials: true });
+  }
+
+  deleteComment(payload: any) {
+    return this.http.delete<any>('http://localhost:8080/api/comments', {
+      body: payload,
+      withCredentials: true
+    });
+  }
+
+  likeComment(payload: any) {
+    return this.http.put<any>('http://localhost:8080/api/comments/like', payload, { withCredentials: true });
   }
 
 }

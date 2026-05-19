@@ -74,11 +74,10 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
             @Param("userId") Long userId
     );
 
-    @EntityGraph(attributePaths = {"files"})
     @Query("""
             SELECT m
             FROM MessageEntity m
-            LEFT JOIN m.files
+            LEFT JOIN fetch m.files
             WHERE (m.sender.id = :userId and m.receiver.id = :companionId) or
                   (m.sender.id = :companionId and m.receiver.id = :userId)
             order by m.date DESC

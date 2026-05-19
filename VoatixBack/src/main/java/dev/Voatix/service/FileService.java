@@ -51,7 +51,7 @@ public class FileService {
 
             minioService.putObject(
                     fileEntity.getBucket(),
-                    fileEntity.getId().toString(),
+                    fileEntity.getId().toString() + ".jpg",
                     inputStream,
                     file.getContentType()
             );
@@ -67,7 +67,7 @@ public class FileService {
         FileEntity file = fileRepository.findById(id)
                 .orElseThrow(() -> new FileNotFoundException(id));
 
-        InputStream stream = minioService.getObject(file.getBucket(), file.getId().toString());
+        InputStream stream = minioService.getObject(file.getBucket(), file.getId().toString() + ".jpg");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, file.getContentType())

@@ -104,14 +104,24 @@ export class IdeaViewComponent implements OnInit {
         this.disLikes = res.disLikes ?? 0;
         this.userVote = res.vote ?? 0;
         this.commentsCount = res.commentsCount ?? 0;
-        // load avatar
-        if (this.idea.avatarKey) {
-          this.loadImage(this.idea.avatarKey, 'avatar');
+        
+        console.log('📖 Loaded idea:', this.idea);
+        
+        // Load avatar - use avatarId (new format) with fallback to old formats
+        const avatarId = this.idea.avatarId || this.idea.fileId || this.idea.avatarKey;
+        console.log('👤 Loading avatar with ID:', avatarId);
+        if (avatarId) {
+          const avatarIdStr = typeof avatarId === 'number' ? avatarId.toString() : avatarId;
+          this.loadImage(avatarIdStr, 'avatar');
         }
-        // load file images
-        if (this.idea.fileKeys?.length) {
-          this.idea.fileKeys.forEach((key: string) => {
-            this.loadImage(key, 'file');
+        
+        // Load file images - use fileIds from backend
+        const fileIds = this.idea.fileIds || [];
+        console.log('🖼️ Loading file images, fileIds:', fileIds);
+        if (fileIds?.length) {
+          fileIds.forEach((id: number) => {
+            console.log(`  Loading file image ID: ${id}`);
+            this.loadImage(id.toString(), 'file');
           });
         }
         this.cdr.detectChanges();
@@ -123,20 +133,34 @@ export class IdeaViewComponent implements OnInit {
   }
 
   loadImage(key: string, type: 'avatar' | 'file') {
+    // Skip if already loaded
+    if (type === 'avatar' && this.avatarUrl) {
+      console.log(`⏭️ Avatar already loaded, skipping`);
+      return;
+    }
+    if (type === 'file' && this.imageUrls[key]) {
+      console.log(`⏭️ Image ${key} already loaded, skipping`);
+      return;
+    }
+    
     const url = this.ideaService.getFileViewUrl(key);
+    console.log(`🔗 Loading ${type} from URL:`, url);
     this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
       next: (blob) => {
+        console.log(`✓ ${type} blob received, size:`, blob.size);
         const blobUrl = URL.createObjectURL(blob);
         const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
         if (type === 'avatar') {
           this.avatarUrl = safeUrl;
+          console.log('✓ Avatar URL set');
         } else {
           this.imageUrls[key] = safeUrl;
+          console.log(`✓ Image URL set for key: ${key}`);
         }
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Ошибка загрузки изображения', key, err);
+        console.error(`✗ Ошибка загрузки ${type}`, key, err);
         if (type === 'avatar') {
           this.avatarUrl = null;
         }
@@ -173,14 +197,14 @@ export class IdeaViewComponent implements OnInit {
     if (!this.idea) return;
     if (this.userVote === 1) {
       // Отменяем лайк
-      this.ideaService.doVote(this.idea.id, 0).subscribe(() => {
+      this.ideaService.doVote({ ideaId: this.idea.id, like: 0 }).subscribe(() => {
         this.likes = Math.max(0, this.likes - 1);
         this.userVote = 0;
         this.cdr.detectChanges();
       });
     } else {
       // Ставим лайк (и убираем дизлайк если он был)
-      this.ideaService.doVote(this.idea.id, 1).subscribe(() => {
+      this.ideaService.doVote({ ideaId: this.idea.id, like: 1 }).subscribe(() => {
         if (this.userVote === -1) {
           this.disLikes = Math.max(0, this.disLikes - 1);
           this.likes = this.likes + 1;
@@ -197,14 +221,14 @@ export class IdeaViewComponent implements OnInit {
     if (!this.idea) return;
     if (this.userVote === -1) {
       // Отменяем дизлайк
-      this.ideaService.doVote(this.idea.id, 0).subscribe(() => {
+      this.ideaService.doVote({ ideaId: this.idea.id, like: 0 }).subscribe(() => {
         this.disLikes = Math.max(0, this.disLikes - 1);
         this.userVote = 0;
         this.cdr.detectChanges();
       });
     } else {
       // Ставим дизлайк (и убираем лайк если он был)
-      this.ideaService.doVote(this.idea.id, -1).subscribe(() => {
+      this.ideaService.doVote({ ideaId: this.idea.id, like: -1 }).subscribe(() => {
         if (this.userVote === 1) {
           this.likes = Math.max(0, this.likes - 1);
           this.disLikes = this.disLikes + 1;
@@ -223,8 +247,8 @@ export class IdeaViewComponent implements OnInit {
   }
 
   loadComments(ideaId: number, pageNum: number = 0, shouldScroll: boolean = false) {
-    const url = `http://localhost:8080/api/comments?ideaId=${ideaId}&page=${pageNum}&limit=${this.limit}`;
-    this.http.get<any>(url, { withCredentials: true }).subscribe({
+    const payload = { ideaId, page: pageNum, limit: this.limit };
+    this.ideaService.getComments(payload).subscribe({
       next: (res) => {
         this.comments = res.content || [];
         this.page = res.number;
@@ -236,8 +260,14 @@ export class IdeaViewComponent implements OnInit {
             this.commentVotes[item.comment.id] = item.vote ?? 0;
           }
           // Load comment avatar if not already loaded
-          if (item.comment?.avatarKey && !this.commentAvatarUrls[item.comment.avatarKey]) {
-            this.loadCommentAvatar(item.comment.avatarKey);
+          // Use avatarId (new format) with fallback to old formats
+          const avatarId = item.comment?.avatarId || item.comment?.fileId || item.comment?.avatarKey;
+          if (avatarId) {
+            const avatarIdStr = typeof avatarId === 'number' ? avatarId.toString() : avatarId;
+            if (!this.commentAvatarUrls[avatarIdStr]) {
+              console.log(`💬 Loading comment avatar ID: ${avatarIdStr}`);
+              this.loadCommentAvatar(avatarIdStr);
+            }
           }
         });
         this.cdr.detectChanges();
@@ -281,14 +311,14 @@ export class IdeaViewComponent implements OnInit {
     
     if (currentVote === 1) {
       // Отменяем лайк
-      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=0`, {}, { withCredentials: true }).subscribe(() => {
+      this.ideaService.likeComment({ commentId, like: 0 }).subscribe(() => {
         comment.likes = Math.max(0, comment.likes - 1);
         this.commentVotes[commentId] = 0;
         this.cdr.detectChanges();
       });
     } else {
       // Ставим лайк (и убираем дизлайк если он был)
-      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=1`, {}, { withCredentials: true }).subscribe(() => {
+      this.ideaService.likeComment({ commentId, like: 1 }).subscribe(() => {
         if (currentVote === -1) {
           comment.disLikes = Math.max(0, comment.disLikes - 1);
           comment.likes = comment.likes + 1;
@@ -307,14 +337,14 @@ export class IdeaViewComponent implements OnInit {
     
     if (currentVote === -1) {
       // Отменяем дизлайк
-      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=0`, {}, { withCredentials: true }).subscribe(() => {
+      this.ideaService.likeComment({ commentId, like: 0 }).subscribe(() => {
         comment.disLikes = Math.max(0, comment.disLikes - 1);
         this.commentVotes[commentId] = 0;
         this.cdr.detectChanges();
       });
     } else {
       // Ставим дизлайк (и убираем лайк если он был)
-      this.http.put(`http://localhost:8080/api/comments/${commentId}/likes?like=-1`, {}, { withCredentials: true }).subscribe(() => {
+      this.ideaService.likeComment({ commentId, like: -1 }).subscribe(() => {
         if (currentVote === 1) {
           comment.likes = Math.max(0, comment.likes - 1);
           comment.disLikes = comment.disLikes + 1;
@@ -334,15 +364,18 @@ export class IdeaViewComponent implements OnInit {
 
   loadCommentAvatar(key: string) {
     const url = this.ideaService.getFileViewUrl(key);
+    console.log(`🔗 Loading comment avatar from URL:`, url);
     this.http.get(url, { responseType: 'blob', withCredentials: true }).subscribe({
       next: (blob) => {
+        console.log(`✓ Comment avatar blob received, size:`, blob.size);
         const blobUrl = URL.createObjectURL(blob);
         const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
         this.commentAvatarUrls[key] = safeUrl;
+        console.log(`✓ Comment avatar URL set for key: ${key}`);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Ошибка загрузки аватара комментария', key, err);
+        console.error('✗ Ошибка загрузки аватара комментария', key, err);
         this.cdr.detectChanges();
       }
     });
@@ -369,7 +402,7 @@ export class IdeaViewComponent implements OnInit {
       ideaId: this.idea.id
     };
 
-    this.http.post<any>('http://localhost:8080/api/comments/new', payload, { withCredentials: true }).subscribe({
+    this.ideaService.createComment(payload).subscribe({
       next: (res) => {
         this.showCommentToast('Комментарий успешно создан!', 'success');
         this.commentText = '';
@@ -421,13 +454,9 @@ export class IdeaViewComponent implements OnInit {
     if (this.idea.status === newStatus) return; // Same status, no need to update
 
     this.isUpdatingStatus = true;
-    const payload = { status: newStatus };
+    const payload = { ideaId: this.idea.id, status: newStatus };
 
-    this.http.patch(
-      `http://localhost:8080/api/ideas/${this.idea.id}/status`,
-      payload,
-      { withCredentials: true }
-    ).subscribe({
+    this.ideaService.updateIdeaStatus(payload).subscribe({
       next: () => {
         this.idea.status = newStatus;
         this.isUpdatingStatus = false;
@@ -453,7 +482,7 @@ export class IdeaViewComponent implements OnInit {
     if (!this.idea) return;
     
     this.isDeleting = true;
-    this.ideaService.deleteIdea(this.idea.id).subscribe({
+    this.ideaService.deleteIdea({ ideaId: this.idea.id }).subscribe({
       next: () => {
         this.showCommentToast('Идея удалена', 'success');
         setTimeout(() => {
@@ -485,7 +514,7 @@ export class IdeaViewComponent implements OnInit {
     this.isDeletingComment = true;
     const commentIdToDelete = this.deleteCommentId;
 
-    this.ideaService.deleteComment(this.idea.id, commentIdToDelete).subscribe({
+    this.ideaService.deleteComment({ id: commentIdToDelete }).subscribe({
       next: () => {
         // Удаляем комментарий из списка
         this.comments = this.comments.filter(item => item.comment.id !== commentIdToDelete);
@@ -511,8 +540,12 @@ export class IdeaViewComponent implements OnInit {
     });
   }
 
-  openChat(nickname: string, event: Event) {
+  openChat(nickname: string, event: Event, userId?: number) {
     event.stopPropagation();
-    this.router.navigate(['/main/messages'], { queryParams: { chat: nickname } });
+    const queryParams: any = { chat: nickname };
+    if (userId) {
+      queryParams.userId = userId;
+    }
+    this.router.navigate(['/main/messages'], { queryParams });
   }
 }

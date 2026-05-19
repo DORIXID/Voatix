@@ -573,3 +573,19 @@
   flex-direction: column;
   gap: 20px;
 }
+
+// User ID Section
+.user-id-section {
+  border-bottom: none;
+  padding: 16px 0;
+  
+  .user-id-text {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+    
+    span {
+      color: #999;
+    }
+  }
+}

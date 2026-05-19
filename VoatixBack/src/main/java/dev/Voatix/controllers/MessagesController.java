@@ -1,5 +1,6 @@
 package dev.Voatix.controllers;
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.message.ChatRequestDTO;
 import dev.Voatix.dto.message.ChatsRequestDTO;
 import dev.Voatix.dto.message.MessageChatDTO;
@@ -20,7 +21,7 @@ public class MessagesController extends BaseController {
 
     final private MessageService messageService;
 
-    @GetMapping("chats")
+    @PostMapping("chats")
     public Page<MessageChatDTO> getLastMessagesOfChats(
             @RequestBody @Valid ChatsRequestDTO dto,
             Authentication auth
@@ -28,7 +29,7 @@ public class MessagesController extends BaseController {
         return messageService.getChats(dto, getUserId(auth));
     }
 
-    @GetMapping("chat")
+    @PostMapping("chat")
     public Page<MessageDTO> getChat(
             @RequestBody @Valid ChatRequestDTO dto,
             Authentication auth

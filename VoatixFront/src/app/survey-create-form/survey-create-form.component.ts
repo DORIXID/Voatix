@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ProjectService } from '../service/project.service';
+import { SurveyService } from '../service/survey.service';
 import { Project } from '../service/interfaces/project.interface';
 
 @Component({
@@ -66,6 +67,7 @@ export class SurveyCreateFormComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private projectService: ProjectService,
+    private surveyService: SurveyService,
     private router: Router
   ) { }
 
@@ -174,15 +176,13 @@ export class SurveyCreateFormComponent implements OnInit {
       type: this.type,
       startDate: this.toISOStringWithLocalTime(startDate),
       endDate: this.toISOStringWithLocalTime(endDate),
-      projectName: this.selectedProject?.title || '',
+      projectId: this.selectedProject?.id || 0,
       votingPoints: this.votingPoints
         .filter(o => o.title.trim())
         .map(o => ({ title: o.title.trim() }))
     };
 
-    this.http.post<any>('http://localhost:8080/api/surveys/new', payload, {
-      withCredentials: true
-    }).subscribe({
+    this.surveyService.createSurvey(payload).subscribe({
       next: (res) => {
         this.submitting = false;
         this.showToast('Голосование успешно создано!', 'success');

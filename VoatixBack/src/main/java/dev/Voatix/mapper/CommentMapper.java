@@ -43,9 +43,10 @@ public interface CommentMapper {
     @Mapping(target = "vote", expression = "java(stats != null ? stats.getUserVote() : 0L)")
     CommentWithStatsDTO toStatsDto(CommentEntity comment, CommentStatsProjection stats, @Context List<Long> fileIds);
 
+    @Mapping(target = "userId", source = "comment.userId")
     @Mapping(target = "username", source = "comment.user.nickname")
-    @Mapping(target = "avatarId", source = "comment.user.avatar.id")
-    @Mapping(target = "ideaId", source = "comment.idea.id")
+    @Mapping(target = "avatarId", source = "comment.user.avatarId")
+    @Mapping(target = "ideaId", source = "comment.ideaId")
     @Mapping(target = "fileIds", ignore = true)
     CommentDTO toCommentDto(CommentEntity comment);
 

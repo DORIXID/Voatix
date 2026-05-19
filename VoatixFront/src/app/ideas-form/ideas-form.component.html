@@ -47,10 +47,10 @@
                     <p class="idea-description">{{ ideaWithStats.idea.description }}</p>
                 </div>
 
-                <div class="idea-images" *ngIf="ideaWithStats.idea.fileKeys && ideaWithStats.idea.fileKeys.length > 0">
-                    <img *ngFor="let fileKey of ideaWithStats.idea.fileKeys.slice(0, 5)"
-                        [src]="ideaWithStats.imageUrls?.[fileKey]" alt="idea image" class="idea-image"
-                        (click)="openImageModal(ideaWithStats.imageUrls?.[fileKey])">
+                <div class="idea-images" *ngIf="ideaWithStats.idea.fileIds && ideaWithStats.idea.fileIds.length > 0">
+                    <img *ngFor="let fileId of ideaWithStats.idea.fileIds.slice(0, 5)"
+                        [src]="getIdeaImageUrl(ideaWithStats, fileId.toString())" alt="idea image" class="idea-image"
+                        (click)="openImageModal(ideaWithStats.imageUrls?.[fileId.toString()])">
                 </div>
 
                 <div class="idea-footer" style="position: relative;">

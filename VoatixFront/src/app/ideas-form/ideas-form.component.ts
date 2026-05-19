@@ -83,7 +83,7 @@ export class IdeasFormComponent implements OnInit {
 
   constructor(
     private projectService: ProjectService,
-    private ideaService: IdeaService,
+    public ideaService: IdeaService,
     private cdr: ChangeDetectorRef,
     private router: Router,
     private route: ActivatedRoute,
@@ -102,6 +102,15 @@ export class IdeasFormComponent implements OnInit {
       }
     });
 
+    // Initialize with current selected project if available
+    const currentProject = this.projectService.getSelectedProject();
+    if (currentProject) {
+      this.selectedProject = currentProject;
+      this.loadIdeas(currentProject);
+      this.loadProjectAvatar(currentProject);
+    }
+
+    // Subscribe to project changes
     this.projectService.selectedProject$.subscribe(project => {
       this.selectedProject = project;
 
@@ -116,9 +125,10 @@ export class IdeasFormComponent implements OnInit {
     const filterBy = this.mapStatusToBackend(this.selected);
 
     this.ideaService
-      .loadIdeas(project.title, this.page, this.limit, filterBy, this.searchedValue)
+      .loadIdeas(project.id || 0, this.page, this.limit, filterBy, this.searchedValue)
       .subscribe({
         next: (data) => {
+          console.log('🔍 Ideas API response:', data);
           this.ideas = data.content.map((i: any) => ({
             ...i,
             userVote: i.vote === 1
@@ -130,16 +140,24 @@ export class IdeasFormComponent implements OnInit {
           }));
 
           // Load images for each idea
-          this.ideas.forEach(idea => {
-            if (idea.idea.fileKeys && idea.idea.fileKeys.length > 0) {
-              idea.idea.fileKeys.slice(0, 5).forEach(fileKey => {
-                this.loadImageAsBlob(fileKey).then(blobUrl => {
+          this.ideas.forEach((idea, idx) => {
+            // Use fileIds from API (backend no longer returns fileKeys)
+            const fileIds = idea.idea.fileIds || [];
+            
+            console.log(`📸 Idea ${idx} (${idea.idea.title}):`, { 
+              fileIds: fileIds
+            });
+            
+            if (fileIds && fileIds.length > 0) {
+              fileIds.slice(0, 5).forEach((fileId: number) => {
+                const fileIdStr = fileId.toString();
+                this.loadImageAsBlob(fileIdStr).then(blobUrl => {
                   if (!idea.imageUrls) idea.imageUrls = {};
-                  idea.imageUrls[fileKey] = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
-                  console.log(`✓ Image URL установлена для ${fileKey}:`, idea.imageUrls[fileKey]);
+                  idea.imageUrls[fileIdStr] = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+                  console.log(`✓ Image URL установлена для ${fileIdStr}:`, idea.imageUrls[fileIdStr]);
                   this.cdr.detectChanges();
                 }).catch(err => {
-                  console.error(`✗ Failed to load image ${fileKey}:`, err);
+                  console.error(`✗ Failed to load image ${fileIdStr}:`, err);
                 });
               });
             }
@@ -202,6 +220,10 @@ export class IdeasFormComponent implements OnInit {
     }
   }
 
+  getIdeaImageUrl(idea: IdeaWithStats, fileKey: string): string | SafeUrl {
+    return idea.imageUrls?.[fileKey] || this.ideaService.getFileViewUrl(fileKey);
+  }
+
   selectTab(event: any, status: string) {
     this.selected = status;
 
@@ -215,16 +237,16 @@ export class IdeasFormComponent implements OnInit {
 
   toggleLike(idea: IdeaWithStats) {
     if (idea.userVote === 1) {
-      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 0 }).subscribe(() => {});
       idea.likes = idea.likes - 1;
       idea.userVote = 0;
     } else if (idea.userVote === -1) {
-      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 1 }).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
       idea.likes = idea.likes + 1;
       idea.userVote = 1;
     } else {
-      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 1 }).subscribe(() => {});
       idea.likes = idea.likes + 1;
       idea.userVote = 1;
     }
@@ -233,15 +255,15 @@ export class IdeasFormComponent implements OnInit {
   toggleDislike(idea: IdeaWithStats) {
     if (idea.userVote === -1) {
       idea.userVote = 0;
-      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 0 }).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
     } else if (idea.userVote === 1) {
-      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: -1 }).subscribe(() => {});
       idea.likes = idea.likes - 1;
       idea.disLikes = idea.disLikes + 1;
       idea.userVote = -1;
     } else {
-      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: -1 }).subscribe(() => {});
       idea.disLikes = idea.disLikes + 1;
       idea.userVote = -1;
     }
@@ -338,7 +360,7 @@ export class IdeasFormComponent implements OnInit {
     this.isDeleting = true;
     const ideaIdToDelete = this.deleteIdeaId;
 
-    this.ideaService.deleteIdea(ideaIdToDelete).subscribe({
+    this.ideaService.deleteIdea({ ideaId: ideaIdToDelete }).subscribe({
       next: () => {
         // Удаляем идею из списка
         this.ideas = this.ideas.filter(idea => idea.idea.id !== ideaIdToDelete);
@@ -372,12 +394,14 @@ export class IdeasFormComponent implements OnInit {
 
   // Avatar upload
   loadProjectAvatar(project: Project) {
-    if (!project.avatarKey) {
+    // Use fileId (new format) or avatarKey (old format)
+    const avatarKey = project.avatarKey || (project.fileId ? project.fileId.toString() : null);
+    if (!avatarKey) {
       this.projectAvatarUrl = null;
       return;
     }
 
-    this.http.get(`http://localhost:8080/api/files/${project.avatarKey}/view`, {
+    this.http.get(`http://localhost:8080/api/files/${avatarKey}/view`, {
       responseType: 'blob',
       withCredentials: true
     }).subscribe({
@@ -448,18 +472,32 @@ export class IdeasFormComponent implements OnInit {
       const formData = new FormData();
       formData.append('file', new File([blob], 'avatar.png', { type: 'image/png' }));
 
-      this.http.post(`http://localhost:8080/api/projects/${this.selectedProject!.id}/avatar`, formData, {
+      this.http.post(`http://localhost:8080/api/files/upload`, formData, {
         withCredentials: true
       }).subscribe({
         next: (response: any) => {
-          this.selectedProject!.avatarKey = response.avatarKey;
-          this.loadProjectAvatar(this.selectedProject!);
-          this.closeAvatarModal();
-          this.isUploadingAvatar = false;
-          this.cdr.detectChanges();
+          const fileId = response.id;
+          
+          this.projectService.updateProjectAvatar({
+            projectId: this.selectedProject!.id,
+            fileId: fileId
+          }).subscribe({
+            next: () => {
+              this.selectedProject!.avatarKey = fileId;
+              this.loadProjectAvatar(this.selectedProject!);
+              this.closeAvatarModal();
+              this.isUploadingAvatar = false;
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              console.error('Error updating project avatar:', err);
+              this.isUploadingAvatar = false;
+              this.cdr.detectChanges();
+            }
+          });
         },
         error: (err) => {
-          console.error('Error saving avatar:', err);
+          console.error('Error uploading avatar:', err);
           this.isUploadingAvatar = false;
           this.cdr.detectChanges();
         }

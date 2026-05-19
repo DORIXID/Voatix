@@ -13,8 +13,8 @@ import java.util.List;
 public class MessageDTO {
 
     private String text;
-    private String sender;
-    private String receiver;
+    private Long senderId;
+    private Long receiverId;
     private LocalDateTime date;
     private List<String> files;
 }

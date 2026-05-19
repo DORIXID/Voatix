@@ -1,26 +1,25 @@
 package dev.Voatix.controllers.webSocket;
 
-import dev.Voatix.configuration.security.CustomUserDetails;
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.message.MessageDTO;
 import dev.Voatix.dto.message.SendMessageDTO;
 import dev.Voatix.service.MessageService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
-
 @Controller
 @RequiredArgsConstructor
-public class MessageWSController {
+public class MessageWSController extends BaseController {
 
     private final MessageService messageService;
     private final SimpMessagingTemplate messaging;
 
     @MessageMapping("/messages.send")
-    public void sendMessage(SendMessageDTO dto, Authentication auth) {
+    public void sendMessage(@Valid SendMessageDTO dto, Authentication auth) {
 
         Long userId = getUserId(auth);
 
@@ -43,11 +42,6 @@ public class MessageWSController {
                 "/queue/chats",
                 saved
         );
-    }
-
-    Long getUserId(Authentication auth) {
-        CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-        return user.getId();
     }
 }
 

@@ -13,6 +13,7 @@ import { ChatDetailComponent } from '../chat-detail/chat-detail.component';
 import { WebSocketService } from '../service/websocket.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Chat } from '../service/interfaces/chat.interface';
 
 @Component({
   selector: 'messages-form-component',
@@ -30,14 +31,15 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class MessagesFormComponent implements OnInit, OnDestroy {
 
-  chats: any[] = [];
+  chats: Chat[] = [];
   page = 0;
   limit = 10;
   totalPages = 0;
   loading = false;
   avatarUrls: Record<string, SafeUrl> = {};
-  selectedChat: any = null;
+  selectedChat: Chat | null = null;
   currentUsername: string = '';
+  currentUserId?: number;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -60,9 +62,11 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
     // Handle chat parameter from query params
     this.route.queryParamMap.subscribe(params => {
       const chatNickname = params.get('chat');
+      const userIdStr = params.get('userId');
+      const userId = userIdStr ? parseInt(userIdStr, 10) : undefined;
       if (chatNickname) {
         // Try to find and select chat, if not in list yet, it will be selected when loaded
-        this.selectChatByNickname(chatNickname);
+        this.selectChatByNickname(chatNickname, userId);
       }
     });
   }
@@ -75,18 +79,28 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
 
   loadChats(): void {
     this.loading = true;
-    const params = new HttpParams()
-      .set('page', String(this.page))
-      .set('limit', String(this.limit));
+    const payload = {
+      page: this.page,
+      limit: this.limit
+    };
 
-    this.http.get<any>('http://localhost:8080/api/messages/chats', { params, withCredentials: true }).subscribe({
+    this.http.post<any>('http://localhost:8080/api/messages/chats', payload, { withCredentials: true }).subscribe({
       next: res => {
         this.chats = res.content || [];
         this.totalPages = res.totalPages || 0;
-        // Load avatars for all chats
+        console.log('🔍 Loaded chats:', this.chats);
+        // Verify userId in chat objects
+        this.chats.forEach((chat, idx) => {
+          console.log(`Chat ${idx}:`, {userNickname: chat.userNickname, userId: chat.userId, avatarId: chat.avatarId});
+        });
+        // Load avatars for all chats - handle both old (avatarKey) and new (avatarId/fileId) formats
         this.chats.forEach(chat => {
-          if (chat.avatarKey && !this.avatarUrls[chat.avatarKey]) {
-            this.loadImage(chat.avatarKey);
+          const avatarId = chat.avatarId || chat.fileId || chat.avatarKey;
+          if (avatarId) {
+            const avatarIdStr = typeof avatarId === 'number' ? avatarId.toString() : avatarId;
+            if (!this.avatarUrls[avatarIdStr]) {
+              this.loadImage(avatarIdStr);
+            }
           }
         });
         this.loading = false;
@@ -136,10 +150,22 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
         (event) => {
           if (!event) return;
           // Find the chat and clear unread count
-          const chat = this.chats.find(c => c.userNickname === event.chatNickname);
+          // Try to find by userId first (if available), then by nickname
+          const chatId = event.chatId || event.userId;
+          let chat: Chat | undefined;
+          
+          if (chatId) {
+            chat = this.chats.find(c => c.userId === chatId);
+          }
+          
+          if (!chat && event.chatNickname) {
+            chat = this.chats.find(c => c.userNickname === event.chatNickname);
+          }
+          
           if (chat) {
             chat.unreadCount = 0;
             this.cdr.detectChanges();
+            console.log('✓ Cleared unread count for chat:', chat.userId || chat.userNickname);
           }
         },
         (error) => console.error('Error in message received event:', error)
@@ -195,27 +221,33 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
         const payload = token.split('.')[1];
         const decoded = JSON.parse(atob(payload));
         this.currentUsername = decoded.sub || '';
+        // NEW: Extract userId if available in token
+        this.currentUserId = decoded.userId || decoded.id || undefined;
       } catch (e) {
         console.error('Failed to decode token:', e);
       }
     }
   }
 
-  selectChat(chat: any): void {
+  selectChat(chat: Chat): void {
     this.selectedChat = chat;
 
     // Clear unread count locally and notify server that chat is read
-    if (chat && chat.unreadCount && chat.unreadCount > 0) {
-      chat.unreadCount = 0;
+    if (chat && (chat as any).unreadCount && (chat as any).unreadCount > 0) {
+      (chat as any).unreadCount = 0;
       this.cdr.detectChanges();
     }
 
-    if (this.wsService) {
+    if (this.wsService && chat.userId) {
       try {
-        this.wsService.markAsRead(chat.userNickname);
+        // ALWAYS use userId - it's the only reliable identifier
+        this.wsService.markAsRead({ userId: chat.userId });
+        console.log('✓ Marked chat as read with userId:', chat.userId);
       } catch (e) {
         console.error('Failed to mark chat as read via WebSocketService', e);
       }
+    } else if (!chat.userId) {
+      console.warn('⚠️ Chat does not have userId - cannot mark as read');
     }
   }
 
@@ -231,26 +263,38 @@ export class MessagesFormComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Выбрать чат по никнейму пользователя
+   * Выбрать чат по userId (основной способ) или никнейму (fallback)
    */
-  selectChatByNickname(nickname: string): void {
-    // Try to find chat in current list
-    const chat = this.chats.find(c => c.userNickname === nickname);
+  selectChatByNickname(nickname: string, userId?: number): void {
+    // Try to find chat by userId first (most reliable)
+    let chat: Chat | undefined;
+    
+    if (userId) {
+      chat = this.chats.find(c => c.userId === userId);
+      console.log(`🔍 Looking for chat by userId ${userId}:`, chat ? 'found' : 'not found');
+    }
+    
+    // Fall back to nickname search if not found by userId
+    if (!chat) {
+      chat = this.chats.find(c => c.userNickname === nickname);
+      console.log(`🔍 Looking for chat by nickname ${nickname}:`, chat ? 'found' : 'not found');
+    }
+    
     if (chat) {
       this.selectChat(chat);
     } else {
-      // If not found, we'll need to create a new chat session
-      // For now, just try to open it
-      // Create a temporary chat object
-      const newChat = {
-        userNickname: nickname,
-        senderNickname: this.currentUsername,
-        text: '',
-        dateTime: new Date(),
-        unreadCount: 0,
-        avatarKey: null
-      };
-      this.selectChat(newChat);
+      // If not found, create a temporary chat object
+      // Use userId as primary identifier
+      if (userId) {
+        const newChat: Chat = {
+          userNickname: nickname,
+          userId: userId
+        };
+        console.log('📌 Creating new chat session with userId:', userId);
+        this.selectChat(newChat);
+      } else {
+        console.warn('⚠️ Cannot select chat without userId or nickname');
+      }
     }
   }
 }

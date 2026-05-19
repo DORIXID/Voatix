@@ -483,13 +483,22 @@
 // Message images styling
 .message-images {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
     margin-top: 8px;
 
-    .image-container {
-        position: relative;
-        display: inline-flex;
+    .message-image-thumb {
+        max-width: 80px;
+        max-height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #e7c4ff;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+
+        &:hover {
+            transform: scale(1.05);
+        }
     }
 
     .message-image {

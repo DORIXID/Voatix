@@ -23,7 +23,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
         f.id as fileId,
         m.role as roleOfUser
     FROM projects p
-    JOIN files f ON p.avatar = f.id
+    LEFT JOIN files f ON p.avatar = f.id
     JOIN moderators m ON p.id = m.project_id
     WHERE m.user_id = :userId
     """, nativeQuery = true)

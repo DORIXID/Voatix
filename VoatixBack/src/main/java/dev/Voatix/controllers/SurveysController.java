@@ -1,6 +1,7 @@
 package dev.Voatix.controllers;
 
 
+import dev.Voatix.controllers.other.BaseController;
 import dev.Voatix.dto.survey.*;
 import dev.Voatix.service.SurveyService;
 import jakarta.validation.Valid;
@@ -18,7 +19,7 @@ public class SurveysController extends BaseController {
 
     final private SurveyService surveyService;
 
-    @GetMapping("")
+    @PostMapping("get")
     public Page<SurveyResponseDTO> getSurveys(
             @Valid @RequestBody SurveysRequestDTO dto,
             Authentication auth) {

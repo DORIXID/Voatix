@@ -15,10 +15,11 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
-    @EntityGraph(attributePaths = {"user", "user.avatar", "user.credentials"})
     @Query(value = """
             SELECT c
                    FROM CommentEntity c
+                   JOIN FETCH c.user u
+                   JOIN FETCH u.credentials
                    WHERE c.idea.id = :ideaId
                    ORDER BY c.dateTime DESC
             """)

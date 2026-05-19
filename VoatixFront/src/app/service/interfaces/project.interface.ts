@@ -8,4 +8,6 @@ export interface Project {
   key: string; //это ключ для URL аватарки проекта. Например: http://localhost:8080/api/files/КЛЮЧ/view
   id?: number;
   avatarKey?: string;
+  avatarId?: number;  // Numeric avatar ID (new format)
+  fileId?: number;
 }

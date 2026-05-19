@@ -6,6 +6,12 @@ interface StompMessage {
   body: string;
 }
 
+interface MessageReceivedEvent {
+  chatNickname?: string;
+  chatId?: number;
+  userId?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -15,7 +21,7 @@ export class WebSocketService {
   private messageSubject$ = new BehaviorSubject<any>(null);
   private chatsUpdateSubject$ = new BehaviorSubject<any>(null);
   private readNotificationSubject$ = new BehaviorSubject<any>(null);
-  private messageReceivedInChatSubject$ = new BehaviorSubject<{ chatNickname: string } | null>(null);
+  private messageReceivedInChatSubject$ = new BehaviorSubject<MessageReceivedEvent | null>(null);
 
   constructor() {}
 
@@ -25,6 +31,7 @@ export class WebSocketService {
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.stomp && this.stomp.connected) {
+        console.log('WebSocket already connected');
         resolve();
         return;
       }
@@ -35,20 +42,45 @@ export class WebSocketService {
         return;
       }
 
+      console.log('Attempting WebSocket connection to ws://localhost:8080/ws');
+      
       const socket = new WebSocket('ws://localhost:8080/ws');
+      
+      socket.addEventListener('open', () => {
+        console.log('WebSocket socket opened');
+      });
+      
+      socket.addEventListener('error', (event) => {
+        console.error('WebSocket socket error:', event);
+      });
+      
+      socket.addEventListener('close', () => {
+        console.log('WebSocket socket closed');
+        this.connected$.next(false);
+      });
+      
       this.stomp = (window as any).Stomp.over(socket);
+      
+      // Enable debug mode for better logging
+      this.stomp.debug = (msg: string) => {
+        console.log('[STOMP]:', msg);
+      };
 
       this.stomp.connect(
         { Authorization: 'Bearer ' + token },
         (frame: any) => {
+          console.log('✓ WebSocket connected successfully, version:', frame.version);
           this.connected$.next(true);
 
           const username = this.getUsernameFromToken(token);
+          const userId = this.getUserIdFromToken(token);
+          console.log('Current username:', username, 'userId:', userId);
 
           // Subscribe to chats updates (which may include messages)
           this.stomp.subscribe('/user/queue/chats', (msg: StompMessage) => {
             try {
               const data = JSON.parse(msg.body);
+              console.log('📨 Chat update received:', data);
               
               // ALWAYS send chat update event (for list refresh)
               this.chatsUpdateSubject$.next(data);
@@ -66,11 +98,13 @@ export class WebSocketService {
             }
           });
 
-          // Subscribe to incoming messages for current user (direct channel)
-          if (username) {
-            this.stomp.subscribe(`/user/queue/chat.${username}`, (msg: StompMessage) => {
+          // Subscribe to incoming messages for current user (direct channel using userId)
+          if (userId) {
+            console.log(`Subscribing to /user/queue/chat.${userId}`);
+            this.stomp.subscribe(`/user/queue/chat.${userId}`, (msg: StompMessage) => {
               try {
                 const message = JSON.parse(msg.body);
+                console.log('💬 Direct message received:', message);
                 this.messageSubject$.next(message);
               } catch (e) {
                 console.error('Error parsing message:', e);
@@ -81,6 +115,7 @@ export class WebSocketService {
             this.stomp.subscribe('/user/queue/read', (msg: StompMessage) => {
               try {
                 const notification = JSON.parse(msg.body);
+                console.log('✓ Read notification:', notification);
                 this.readNotificationSubject$.next(notification);
               } catch (e) {
                 console.error('Error parsing read notification:', e);
@@ -91,7 +126,7 @@ export class WebSocketService {
           resolve();
         },
         (error: any) => {
-          console.error('WebSocket connection error:', error);
+          console.error('✗ WebSocket connection error:', error);
           this.connected$.next(false);
           reject(error);
         }
@@ -102,34 +137,44 @@ export class WebSocketService {
   /**
    * Отправить сообщение
    */
-  sendMessage(receiver: string, text: string, files: any[] = []): void {
+  sendMessage(receiver: string | number, text: string, files: any[] = []): void {
     if (!this.stomp || !this.stomp.connected) {
-      console.warn('WebSocket not connected, cannot send message');
+      console.warn('✗ WebSocket not connected, cannot send message. Connected:', this.stomp?.connected, 'STOMP:', this.stomp);
       return;
     }
 
-    const message = {
-      text: text.trim(),
-      receiver: receiver,
-      files: files
-    };
+    // If receiver is a number, use it as receiverId; otherwise treat as nickname for backwards compatibility
+    const messagePayload = typeof receiver === 'number' 
+      ? {
+          text: text.trim(),
+          receiverId: receiver,
+          files: files
+        }
+      : {
+          text: text.trim(),
+          receiver: receiver,
+          files: files
+        };
 
-    this.stomp.send('/app/messages.send', {}, JSON.stringify(message));
+    console.log('📤 Sending message via WebSocket:', messagePayload);
+    this.stomp.send('/app/messages.send', {}, JSON.stringify(messagePayload));
   }
 
   /**
    * Отметить сообщения как прочитанные
    */
-  markAsRead(receiver: string): void {
+  markAsRead(receiver: string | { userId: number }): void {
     if (!this.stomp || !this.stomp.connected) {
       console.warn('WebSocket not connected, cannot mark as read');
       return;
     }
 
-    const dto = {
-      receiver: receiver
-    };
+    // ALWAYS use userId if available, never send username
+    const dto = typeof receiver === 'string' 
+      ? { userId: parseInt(receiver, 10) } // Try to parse as number
+      : { userId: receiver.userId };
 
+    console.log('📨 Marking as read:', dto);
     this.stomp.send('/app/messages.read', {}, JSON.stringify(dto));
   }
 
@@ -157,17 +202,17 @@ export class WebSocketService {
   /**
    * Получить Observable событий "сообщение получено в открытом чате"
    */
-  getMessageReceivedInChat$(): Observable<{ chatNickname: string } | null> {
+  getMessageReceivedInChat$(): Observable<MessageReceivedEvent> {
     return this.messageReceivedInChatSubject$.asObservable().pipe(
       filter(event => event !== null)
-    );
+    ) as Observable<MessageReceivedEvent>;
   }
 
   /**
    * Отправить сигнал, что сообщение получено в открытом чате
    */
-  notifyMessageReceivedInChat(chatNickname: string): void {
-    this.messageReceivedInChatSubject$.next({ chatNickname });
+  notifyMessageReceivedInChat(chatNickname: string, userId?: number): void {
+    this.messageReceivedInChatSubject$.next({ chatNickname, userId });
   }
 
   /**
@@ -181,7 +226,7 @@ export class WebSocketService {
    * Проверить, подключен ли WebSocket
    */
   isConnected(): boolean {
-    return this.stomp && this.stomp.connected;
+    return this.stomp && (this.stomp.connected || (this.stomp.ws && this.stomp.ws.readyState === 1));
   }
 
   /**
@@ -212,6 +257,20 @@ export class WebSocketService {
     } catch (e) {
       console.error('Failed to decode token:', e);
       return '';
+    }
+  }
+
+  /**
+   * Извлечь userId из JWT токена
+   */
+  private getUserIdFromToken(token: string): number | undefined {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded.userId || decoded.id || undefined;
+    } catch (e) {
+      console.error('Failed to decode token for userId:', e);
+      return undefined;
     }
   }
 }

@@ -67,6 +67,7 @@ export class IdeaCreateFormComponent implements OnInit {
     file?: File;
     name: string;
     key?: string;
+    fileId?: number;  // Backend fileId (new format)
     progress: number;
     status: 'pending' | 'uploading' | 'done' | 'error';
   }> = [];
@@ -137,16 +138,26 @@ export class IdeaCreateFormComponent implements OnInit {
       this.showToast(`Описание должно содержать не менее ${this.descMin} символов (сейчас ${trimmedDescription.length})`, 'error');
       return;
     }
+    
+    if (!this.selectedProject?.id) {
+      this.showToast('Невозможно создать идею: у проекта отсутствует идентификатор (projectId).', 'error');
+      return;
+    }
     if (trimmedDescription.length > this.descMax) {
       this.showToast(`Описание должно содержать не более ${this.descMax} символов (сейчас ${trimmedDescription.length})`, 'error');
       return;
     }
 
+    // Prepare numeric fileIds array (prefer fileId, fall back to numeric key when possible)
+    const numericFileIds: number[] = this.selectedFiles
+      .filter(f => (f.fileId !== undefined && f.fileId !== null) || (f.key && /^\d+$/.test(f.key)))
+      .map(f => f.fileId ?? parseInt(f.key!, 10));
+
     const payload = {
-      projectName: this.selectedProject.title,
+      projectId: this.selectedProject.id,
       title: trimmedTitle,
       description: trimmedDescription,
-      fileKeys: this.selectedFiles.map(f => f.key).filter(k => !!k)
+      fileIds: numericFileIds
     };
 
     this.submitting = true;
@@ -221,7 +232,12 @@ export class IdeaCreateFormComponent implements OnInit {
             this.selectedFiles[idx].progress = percent;
           } else if (event.type === HttpEventType.Response) {
             const res = event.body;
+            // Backend returns either fileId (new) or key (old format)
+            const fileId = res?.fileId ?? res?.id;
             const key = res?.key ?? res?.name ?? file.name;
+            
+            // Store both for backwards compatibility, but prefer fileId
+            this.selectedFiles[idx].fileId = fileId;
             this.selectedFiles[idx].key = key;
             this.selectedFiles[idx].status = 'done';
             this.selectedFiles[idx].progress = 100;
@@ -295,7 +311,7 @@ export class IdeaCreateFormComponent implements OnInit {
     const filterBy = this.mapStatusToBackend(this.selected);
 
     this.ideaService
-      .loadIdeas(project.title, this.page, this.limit, filterBy, this.searchedValue)
+      .loadIdeas(project.id || 0, this.page, this.limit, filterBy, this.searchedValue)
       .subscribe({
         next: (data) => {
           this.ideas = data.content.map((i: any) => ({
@@ -352,16 +368,16 @@ export class IdeaCreateFormComponent implements OnInit {
 
   toggleLike(idea: IdeaWithStats) {
     if (idea.userVote === 1) {
-      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 0 }).subscribe(() => {});
       idea.likes = idea.likes - 1;
       idea.userVote = 0;
     } else if (idea.userVote === -1) {
-      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 1 }).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
       idea.likes = idea.likes + 1;
       idea.userVote = 1;
     } else {
-      this.ideaService.doVote(idea.idea.id, 1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 1 }).subscribe(() => {});
       idea.likes = idea.likes + 1;
       idea.userVote = 1;
     }
@@ -370,15 +386,15 @@ export class IdeaCreateFormComponent implements OnInit {
   toggleDislike(idea: IdeaWithStats) {
     if (idea.userVote === -1) {
       idea.userVote = 0;
-      this.ideaService.doVote(idea.idea.id, 0).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: 0 }).subscribe(() => {});
       idea.disLikes = idea.disLikes - 1;
     } else if (idea.userVote === 1) {
-      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: -1 }).subscribe(() => {});
       idea.likes = idea.likes - 1;
       idea.disLikes = idea.disLikes + 1;
       idea.userVote = -1;
     } else {
-      this.ideaService.doVote(idea.idea.id, -1).subscribe(() => {});
+      this.ideaService.doVote({ ideaId: idea.idea.id, like: -1 }).subscribe(() => {});
       idea.disLikes = idea.disLikes + 1;
       idea.userVote = -1;
     }

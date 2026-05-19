@@ -17,11 +17,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findById(Long id);
 
-    @EntityGraph(attributePaths = {"avatar"})
     @Query("""
         SELECT u
            FROM UserEntity u
-           JOIN u.avatar a
+           JOIN FETCH u.avatar a
            WHERE u.id IN :userIds
         """)
     List<UserEntity> findUsersByUserIds(
@@ -33,6 +32,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     @Query(value = """
             SELECT
+                u.id as userId,
                 u.nickname as nickname,
                 u.credentials.eMail as email,
                 a.id as fileId

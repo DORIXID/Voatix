@@ -34,14 +34,13 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     @Query("select i.userId from IdeaEntity i where i.id = :id")
     Optional<Long> findUserIdById(Long id);
 
-    @EntityGraph(attributePaths = {"project", "user", "user.avatar", "user.credentials"})
     @Query(value = """
         select i
             from IdeaEntity i
-            join i.project p
-            join i.user u
-            join u.credentials c
-            left join u.avatar a
+            join fetch i.project p
+            join fetch i.user u
+            join fetch u.credentials c
+            left join fetch u.avatar a
             where (i.description ilike CONCAT('%', :search, '%')
                or i.title ilike CONCAT('%', :search, '%'))
               and (:status is null or i.status = :status)
@@ -71,22 +70,21 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     );
 
     @Query(value = """
-            SELECT f.idea_id, f.id as fileId
+            SELECT f.idea_id as ideaId, f.id as fileId
             FROM files f
-            JOIN ideas i ON f.idea_id = i.id
-            WHERE idea_id IN :ideaIds
+            WHERE f.idea_id IN :ideaIds
+            ORDER BY ideaId
             """, nativeQuery = true)
     List<IdeaFileIdProjection> findFilesByIdeaIds(@Param("ideaIds") List<Long> ideaIds);
 
 
     @Query(value = """ 
             SELECT
-                i.id as ideaId,
+                c.idea_id as ideaId,
                 COUNT(c.id) as count
-                    FROM ideas i
-                    LEFT JOIN comments c ON c.idea_id = i.id
-                    WHERE i.id IN :ideaIds
-                    GROUP BY i.id
+                    FROM comments c
+                    WHERE c.idea_id IN :ideaIds
+                    GROUP BY c.idea_id
             """, nativeQuery = true)
     List<CommentCountProjection> getCommentCounts(
             @Param("ideaIds") List<Long> ideaIds
@@ -120,12 +118,11 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
 
     @Query(value = """ 
             SELECT
-                i.id as ideaId,
+                c.idea_id as ideaId,
                 COUNT(c.id) as count
-                    FROM ideas i
-                    LEFT JOIN comments c ON c.idea_id = i.id
-                    WHERE i.id = :id
-                    GROUP BY i.id
+                    FROM comments c
+                    WHERE c.idea_id = :id
+                    GROUP BY c.idea_id
             """, nativeQuery = true)
     Optional<CommentCountProjection> getCommentCountByIdeaId(
             @Param("id") Long id
