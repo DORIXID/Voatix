@@ -26,7 +26,7 @@ class IdeasControllerTest extends BaseIntegrationTest {
             }
         """;
 
-        mockMvc.perform(get("/api/ideas")
+        mockMvc.perform(post("/api/ideas/get")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .header("Authorization", jwtToken))
@@ -42,7 +42,7 @@ class IdeasControllerTest extends BaseIntegrationTest {
             }
         """;
 
-        mockMvc.perform(get("/api/ideas/idea")
+        mockMvc.perform(get("/api/ideas/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .header("Authorization", jwtToken))

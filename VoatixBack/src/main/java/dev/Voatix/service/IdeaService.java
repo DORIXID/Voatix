@@ -9,7 +9,6 @@ import dev.Voatix.mapper.IdeaMapper;
 import dev.Voatix.mapper.VotingEstimateMapper;
 import dev.Voatix.repositories.*;
 import dev.Voatix.utils.exceptions.commonException.RoleOfUserNotFoundException;
-import dev.Voatix.utils.exceptions.fileException.FileOwnershipException;
 import dev.Voatix.utils.exceptions.fileException.FilesNotFoundException;
 import dev.Voatix.utils.exceptions.ideaException.CommentCountNotFoundException;
 import dev.Voatix.utils.exceptions.ideaException.IdeaAccessDeniedException;
@@ -70,7 +69,7 @@ public class IdeaService {
                 .orElseThrow(() -> new VoteStatsNotFoundException(ideaId));
         CommentCountProjection commentCountProjection = ideaRepository.getCommentCountByIdeaId(ideaId)
                 .orElseThrow(() -> new CommentCountNotFoundException(ideaId));
-        List<Long> files = ideaRepository.findIdsByIdeaId(ideaId);
+        List<Long> files = ideaRepository.findFileIdsByIdeaId(ideaId);
         return ideaMapper.toStatsDto(idea, voteStatsProjection, commentCountProjection, files);
     }
 

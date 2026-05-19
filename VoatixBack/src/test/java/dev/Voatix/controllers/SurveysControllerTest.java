@@ -27,7 +27,7 @@ class SurveysControllerTest extends BaseIntegrationTest {
             }
         """;
 
-        mockMvc.perform(get("/api/surveys")
+        mockMvc.perform(post("/api/surveys/get")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .header("Authorization", jwtToken))

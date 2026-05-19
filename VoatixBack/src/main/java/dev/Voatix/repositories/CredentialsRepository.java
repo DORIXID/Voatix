@@ -20,11 +20,10 @@ public interface CredentialsRepository extends JpaRepository<CredentialsEntity, 
         """)
     Optional<CredentialsEntity> findByUserId(Long userId);
 
-    @Query("""
+    @Query(value = """
             SELECT c.role
-            FROM CredentialsEntity c
-            JOIN c.user u
-            where u.id = :userId
-            """)
+            FROM credentials c
+            Where c.user_id = :userId
+            """, nativeQuery = true)
     Optional<RoleOfUserEnum> findRoleOfUserByUserId(Long userId);
 }

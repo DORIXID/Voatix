@@ -8,7 +8,6 @@ import dev.Voatix.entity.IdeaEntity;
 import dev.Voatix.entity.enums.IdeaStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -131,9 +130,8 @@ public interface IdeaRepository extends JpaRepository<IdeaEntity, Long> {
     @Query(value = """
             SELECT f.id
             FROM files f
-            JOIN ideas i ON f.idea_id = i.id
-            WHERE idea_id = :ideaId
+            WHERE f.idea_id = :ideaId
             """, nativeQuery = true)
-    List<Long> findIdsByIdeaId(@Param("ideaId") Long ideaId);
+    List<Long> findFileIdsByIdeaId(@Param("ideaId") Long ideaId);
 
 }

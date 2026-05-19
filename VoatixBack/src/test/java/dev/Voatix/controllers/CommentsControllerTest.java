@@ -25,7 +25,7 @@ class CommentsControllerTest extends BaseIntegrationTest {
         }
     """;
 
-        mockMvc.perform(get("/api/comments")
+        mockMvc.perform(post("/api/comments/get")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .header("Authorization", jwtToken))
